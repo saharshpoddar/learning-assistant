@@ -7,8 +7,7 @@
 ---
 
 ## 📑 Table of Contents
-
-- [Why Customize Copilot?](#why-customize-copilot)
+- [At a Glance](#-at-a-glance)- [Why Customize Copilot?](#why-customize-copilot)
 - [The 5 Official Primitives](#the-5-official-primitives)
 - [Folder Structure](#folder-structure)
 - [This Project's Setup](#this-projects-current-setup)
@@ -23,6 +22,18 @@
 - [Documentation Map](#-documentation-map)
 - [Learning Path](#-learning-path)
 - [Reference Links](#-reference-links)
+
+---
+
+## ⚡ At a Glance
+
+| Action | How |
+|---|---|
+| **Switch persona** | Chat dropdown → select **Designer**, **Debugger**, **Impact-Analyzer**, or **Learning-Mentor** |
+| **Run a workflow** | Type `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, or `/explain` in Chat |
+| **Coding standards** | Automatic — open any `.java` file, instructions load via glob match |
+| **Extra knowledge** | Automatic — ask about building, patterns, or debugging and the matching skill loads |
+| **See everything** | [Documentation Map](#-documentation-map) · [Getting Started Tutorial](docs/getting-started.md) |
 
 ---
 
@@ -238,15 +249,16 @@ You open Main.java and ask a question
 
 ## Priority Order
 
-When multiple files are loaded, Copilot applies them in this order (later = higher priority):
+When multiple files are loaded, Copilot merges them in this order (highest priority wins on conflicts):
 
 | Priority | Source | Example |
 |---|---|---|
-| 1 (lowest) | `copilot-instructions.md` | General project rules |
-| 2 | `*.instructions.md` | Language/path-specific overrides |
-| 3 | Agent instructions | Persona-specific behavior |
-| 4 | Prompt file | Task-specific instructions |
-| **5 (highest)** | **Your message** | What you type in chat |
+| **1 (highest)** | **Your message** | What you type in chat always wins |
+| 2 | Prompt template | Task-specific steps from `/command` |
+| 3 | Agent persona | Specialist behavior from active agent |
+| 4 | Matching skills | Extra knowledge loaded by topic match |
+| 5 | `*.instructions.md` | Path-specific coding standards |
+| 6 (lowest) | `copilot-instructions.md` | General project-wide rules |
 
 ---
 

@@ -255,6 +255,6 @@ Examples:
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md)
+[← Back to main guide](../README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md) · [Customization Guide](../docs/customization-guide.md)
 
 </p>

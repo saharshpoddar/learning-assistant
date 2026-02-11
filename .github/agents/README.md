@@ -101,6 +101,10 @@ Written in Markdown. Can be as detailed as needed.
 | `problems` | Read compile / lint errors |
 | `debugger` | Interact with the VS Code debugger |
 | `findTestFiles` | Locate test files for given source files |
+| `terminalLastCommand` | Get the last command run in the active terminal |
+| `terminalSelection` | Get the current selection in the active terminal |
+| `testFailure` | Access test failure information |
+| `runCommand` | Run a VS Code command programmatically |
 
 > **Tip:** Omitting `tools` gives the agent access to **all** tools. Listing specific tools **restricts** it.
 
@@ -307,6 +311,6 @@ As detailed as needed — 20 lines for simple roles, 200+ for complex specialist
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md)
+[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md) · [Customization Guide](../docs/customization-guide.md)
 
 </p>

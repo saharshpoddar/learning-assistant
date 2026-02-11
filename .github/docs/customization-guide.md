@@ -8,11 +8,11 @@
 ## 📑 Table of Contents
 
 - [The Big Picture](#-the-big-picture)
-- [How the 4 Primitives Work Together](#-how-the-4-primitives-work-together)
-  - [Instructions](#1-instructions--the-rules)
-  - [Agents](#2-agents--the-specialists)
-  - [Prompts](#3-prompts--the-shortcuts)
-  - [Skills](#4-skills--the-toolkits)
+- [How the Primitives Work Together](#-how-the-primitives-work-together)
+  - [Instructions — The Rules](#1-instructions--the-rules)
+  - [Agents — The Specialists](#2-agents--the-specialists)
+  - [Prompts — The Shortcuts](#3-prompts--the-shortcuts)
+  - [Skills — The Toolkits](#4-skills--the-toolkits)
 - [Priority & Stacking Order](#-priority--stacking-order)
 - [Architecture Diagram](#-architecture-diagram)
 - [How to Extend the System](#-how-to-extend-the-system)
@@ -60,7 +60,7 @@ GitHub Copilot customization is a **layered system** that progressively shapes C
 
 ---
 
-## 🔗 How the 4 Primitives Work Together
+## 🔗 How the Primitives Work Together
 
 ### 1. Instructions — The Rules
 
@@ -123,17 +123,20 @@ java-debugging/    ← Activates for: Exceptions, stack traces
 
 ## 📊 Priority & Stacking Order
 
-When multiple customizations apply, Copilot combines them in this order:
+When multiple customizations apply, Copilot merges them. Highest priority wins on conflicts:
 
 | Priority | Source | Loaded When |
 |---|---|---|
-| 1 (highest) | Active agent persona | Agent selected in dropdown |
+| **1 (highest)** | **Your message** | What you type always overrides everything |
 | 2 | Prompt template | `/command` invoked |
-| 3 | Matching skills | Topic matches description |
-| 4 | Path-specific instructions | File matches `applyTo` glob |
-| 5 (lowest) | `copilot-instructions.md` | Always |
+| 3 | Active agent persona | Agent selected in dropdown |
+| 4 | Matching skills | Topic matches skill description |
+| 5 | Path-specific instructions | File matches `applyTo` glob |
+| 6 (lowest) | `copilot-instructions.md` | Always loaded |
 
 > ⚠️ **Conflicts:** If an agent says "use Strategy pattern" but instructions say "avoid complex patterns," the agent's guidance typically wins (higher priority). Design your customizations to complement, not contradict.
+>
+> This table matches the [Priority Order](../README.md#priority-order) in the main README.
 
 ---
 

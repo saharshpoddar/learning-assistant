@@ -291,6 +291,6 @@ The description is **critical** — it determines when the skill gets loaded:
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Getting Started](../docs/getting-started.md)
+[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Getting Started](../docs/getting-started.md) · [Customization Guide](../docs/customization-guide.md)
 
 </p>

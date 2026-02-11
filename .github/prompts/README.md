@@ -350,6 +350,6 @@ Create a test file with tests for ALL public methods, including:
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md)
+[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md) · [Customization Guide](../docs/customization-guide.md)
 
 </p>
