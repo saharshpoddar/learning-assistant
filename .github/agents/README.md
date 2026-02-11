@@ -1,8 +1,23 @@
-# 🤖 Custom Agents — Detailed Guide
+# 🤖 Custom Agents — Guide
 
 > **What:** Custom agents are AI **personas** — specialist roles that Copilot can assume.  
 > **Where:** `.github/agents/*.agent.md`  
 > **How to use:** Select from the agents dropdown in VS Code Chat.
+
+---
+
+## 📑 Table of Contents
+
+- [What Are Custom Agents?](#-what-are-custom-agents)
+- [Agents in This Project](#-agents-in-this-project)
+- [File Format](#-file-format)
+  - [Frontmatter Fields](#frontmatter-fields-reference)
+  - [Available Tools](#available-tools)
+- [Handoffs](#-handoffs)
+- [Examples](#-examples)
+- [How to Create an Agent](#-how-to-create-an-agent)
+- [FAQ](#-faq)
+- [Experiments to Try](#-experiments-to-try)
 
 ---
 
@@ -16,11 +31,23 @@ Think of agents as **hats** Copilot can wear. When you select an agent:
 
 When you switch away from the agent, Copilot reverts to its default behavior.
 
-### Real-World Analogy
+**Without Agents** — you type detailed instructions every time:
+> *"Act as a security reviewer. Only search code, don't edit anything. Focus on input validation, thread safety..."*
 
-| Without Agents | With Agents |
-|---|---|
-| *"Act as a security reviewer. Only search code, don't edit anything. Focus on input validation, thread safety..."* | Select `Security-Reviewer` from dropdown. Done. |
+**With Agents** — you select from a dropdown:
+> Select `Security-Reviewer`. Done.
+
+---
+
+## 🗂️ Agents in This Project
+
+| Agent | Purpose | Tools | Hands Off To |
+|---|---|---|---|
+| [**Designer**](designer.agent.md) | Architecture review, SOLID/GRASP, design patterns | search, codebase, usages, fetch | Impact-Analyzer, Agent |
+| [**Debugger**](debugger.agent.md) | Systematic root cause analysis | search, codebase, debugger, terminal, problems | Impact-Analyzer, Code-Reviewer |
+| [**Impact-Analyzer**](impact-analyzer.agent.md) | Ripple effect analysis, risk assessment | search, codebase, usages, problems | Designer, Code-Reviewer |
+| [**Learning-Mentor**](learning-mentor.agent.md) | Concept teaching with analogies & exercises | search, codebase, usages, fetch | Agent, Code-Reviewer |
+| [**Code-Reviewer**](code-reviewer.agent.md) | Bug detection, style checks (read-only) | search, codebase, usages | — |
 
 ---
 
@@ -34,6 +61,11 @@ name: Agent-Display-Name
 description: 'Short description shown as placeholder in chat input'
 tools: ['search', 'codebase', 'editFiles']
 model: Claude Sonnet 4.5 (copilot)
+handoffs:
+  - label: Next Step
+    agent: agent
+    prompt: Continue with the above.
+    send: false
 ---
 
 # Agent Instructions
@@ -46,14 +78,14 @@ Written in Markdown. Can be as detailed as needed.
 
 | Field | Required? | Description | Example |
 |---|---|---|---|
-| `name` | No | Display name in dropdown. Defaults to filename. | `Planner` |
-| `description` | No | Placeholder text in chat input when agent is active | `'Research-only agent that creates implementation plans'` |
-| `tools` | No | Array of tools the agent can use | `['search', 'codebase', 'editFiles', 'terminal', 'fetch']` |
-| `agents` | No | Sub-agents this agent can invoke. `*` = all | `['implementation']` or `*` |
+| `name` | No | Display name in dropdown (defaults to filename) | `Planner` |
+| `description` | No | Placeholder text when agent is active | `'Research-only planning agent'` |
+| `tools` | No | Array of tools the agent can use | `['search', 'codebase']` |
+| `agents` | No | Sub-agents this agent can invoke (`*` = all) | `['implementation']` |
 | `model` | No | AI model to use | `Claude Sonnet 4.5 (copilot)` |
-| `handoffs` | No | Workflow transitions to other agents | See [Handoffs](#-handoffs) below |
-| `user-invokable` | No | Set `false` to hide from dropdown | `false` (for subagent-only agents) |
-| `disable-model-invocation` | No | Prevent use as subagent | `true` |
+| `handoffs` | No | Workflow transitions to other agents | See [Handoffs](#-handoffs) |
+| `user-invokable` | No | Set `false` to hide from dropdown | `false` |
+| `disable-model-invocation` | No | Prevent use as a subagent | `true` |
 
 ### Available Tools
 
@@ -61,19 +93,52 @@ Written in Markdown. Can be as detailed as needed.
 |---|---|
 | `search` | Search through workspace files |
 | `codebase` | Understand code structure and relationships |
-| `editFiles` | Create/edit/delete files |
+| `editFiles` | Create / edit / delete files |
 | `terminal` | Run commands in terminal |
 | `fetch` | Fetch web pages |
 | `githubRepo` | Search GitHub repositories |
-| `usages` | Find references/usages of symbols |
+| `usages` | Find references / usages of symbols |
+| `problems` | Read compile / lint errors |
+| `debugger` | Interact with the VS Code debugger |
+| `findTestFiles` | Locate test files for given source files |
 
 > **Tip:** Omitting `tools` gives the agent access to **all** tools. Listing specific tools **restricts** it.
 
 ---
 
-## ✍️ Complete Examples
+## 🔀 Handoffs
 
-### Example 1: Code Reviewer (Read-Only)
+Handoffs let you chain agents into **workflows**. After the first agent responds, a button appears to transition to the next agent.
+
+```yaml
+handoffs:
+  - label: Start Implementation       # Button text
+    agent: agent                       # Target agent
+    prompt: Implement the plan above.  # Pre-filled prompt
+    send: false                        # false = user reviews first
+```
+
+### Workflow Diagram
+
+```
+┌──────────┐     handoff      ┌────────────────┐     handoff      ┌──────────────┐
+│ Designer │ ──────────────→  │     Agent      │ ──────────────→  │ Code-Reviewer│
+│ (search  │  "Start          │ (editFiles,    │  "Review         │ (search,     │
+│  only)   │   Implementation" │  terminal)     │   Changes"      │  codebase)   │
+└──────────┘                  └────────────────┘                  └──────────────┘
+```
+
+| `send` value | Behavior |
+|---|---|
+| `true` | Prompt is sent automatically — no user review |
+| `false` | Prompt is pre-filled, user reviews and presses Enter |
+
+---
+
+## ✍️ Examples
+
+<details>
+<summary><strong>Example 1: Code Reviewer (Read-Only)</strong></summary>
 
 This agent can only search and read — it cannot edit files or run terminal commands.
 
@@ -91,28 +156,20 @@ You are a senior Java code reviewer. You review code for:
 ## Focus Areas
 - **Bug detection:** Null pointer risks, off-by-one errors, resource leaks
 - **Style:** Naming conventions, code organization, method length
-- **Best practices:** Proper exception handling, immutability, encapsulation
-- **Performance:** Unnecessary allocations, N+1 patterns, string concatenation in loops
+- **Best practices:** Exception handling, immutability, encapsulation
 
 ## Rules
 - Do NOT edit files — you are read-only
 - Always cite specific line numbers
-- Suggest concrete fixes with code snippets
 - Rate each issue: Critical / Warning / Suggestion
-
-## Output Format
-For each finding:
-1. **Severity:** Critical / Warning / Suggestion
-2. **Line:** approximate location
-3. **Issue:** what's wrong
-4. **Fix:** what to change (show code)
 ```
 
-> **Try it:** Select `Code-Reviewer` from the agent dropdown → ask *"Review Main.java"*
+> **Try it:** Select `Code-Reviewer` → ask *"Review Main.java"*
 
----
+</details>
 
-### Example 2: Planner (Research + Handoff)
+<details>
+<summary><strong>Example 2: Planner (Research + Handoff)</strong></summary>
 
 This agent researches and plans, then hands off to the default agent for implementation.
 
@@ -130,36 +187,24 @@ handoffs:
 
 # Planner Agent
 
-You are a planning specialist. Your job is to research the codebase and create
+You are a planning specialist. Research the codebase and create
 a detailed implementation plan — but NEVER edit files yourself.
 
-## Your Workflow
-1. Analyze the user's request
-2. Search the codebase for relevant files and patterns
-3. Create a step-by-step plan
-
 ## Output Format
-For each change needed:
+For each change:
 1. **File:** full path
 2. **What:** describe the change
-3. **Before:** current code snippet
-4. **After:** proposed code snippet
+3. **Before:** current code
+4. **After:** proposed code
 5. **Risk:** any concerns
-
-## Rules
-- Do NOT create or edit files
-- Always list ALL files that need to change
-- Show concrete code snippets, not vague descriptions
-- Note dependencies between changes
 ```
 
-> **Try it:** Select `Planner` → ask your question → review the plan → click **"Start Implementation"** button to hand off to the editing agent.
+> **Try it:** Select `Planner` → ask your question → click **"Start Implementation"**
 
----
+</details>
 
-### Example 3: Java Tutor (Educational)
-
-Perfect for a learning project — explains concepts instead of just writing code.
+<details>
+<summary><strong>Example 3: Java Tutor (Educational)</strong></summary>
 
 ```markdown
 ---
@@ -177,70 +222,22 @@ You are a patient, encouraging Java programming tutor.
 - Use simple analogies for complex concepts
 - Show both the wrong way and the right way
 - Include a small exercise after each explanation
-- Build on concepts the student already knows
-
-## When Writing Code
-- Add comments explaining each line
-- Start with a simple version, then improve it
-- Show common mistakes and how to avoid them
-
-## When Answering Questions
-- First check what the student already knows
-- Break complex answers into numbered steps
-- End with "Try this:" followed by a small challenge
-
-## Topics You Excel At
-- Object-Oriented Programming (classes, interfaces, inheritance, polymorphism)
-- Collections (List, Set, Map, and when to use which)
-- Exception handling patterns
-- Java streams and lambdas
-- Design patterns (explain when they're useful, not just how)
 ```
 
-> **Try it:** Select `Java-Tutor` → ask *"Explain interfaces to me using a real-world analogy"*
+> **Try it:** Select `Java-Tutor` → ask *"Explain interfaces using a real-world analogy"*
 
----
-
-## 🔀 Handoffs
-
-Handoffs let you chain agents into **workflows**. After the first agent responds, a button appears to transition to the next agent:
-
-```yaml
-handoffs:
-  - label: Start Implementation       # Button text shown after response
-    agent: agent                       # Target agent to switch to
-    prompt: Implement the plan above.  # Pre-filled prompt
-    send: false                        # false = user reviews before sending
-```
-
-### Workflow Example
-
-```
-┌──────────┐     handoff      ┌────────────────┐     handoff      ┌──────────────┐
-│ Planner  │ ──────────────→  │ Implementation │ ──────────────→  │ Code Review  │
-│ (search  │  "Start          │ (editFiles,    │  "Review         │ (search,     │
-│  only)   │   Implementation" │  terminal)     │   Changes"      │  codebase)   │
-└──────────┘                  └────────────────┘                  └──────────────┘
-```
-
-### How `send` Works
-
-| `send` value | Behavior |
-|---|---|
-| `true` | Prompt is sent automatically — no user review |
-| `false` | Prompt is pre-filled, user reviews and presses Enter |
+</details>
 
 ---
 
 ## 📂 How to Create an Agent
 
-### Option A — VS Code Command (Recommended for Beginners)
+### Option A — VS Code Command (Recommended)
 
 1. Press `Ctrl+Shift+P`
-2. Type: `Chat: New Custom Agent`
-3. Choose **"Workspace"** (saves to `.github/agents/`)
-4. Enter a filename (e.g., `my-agent`)
-5. VS Code generates a template — edit it
+2. Type: **Chat: New Custom Agent**
+3. Choose **Workspace** (saves to `.github/agents/`)
+4. Enter a filename → VS Code generates a template → edit it
 
 ### Option B — Manual
 
@@ -256,26 +253,46 @@ handoffs:
 | `.github/agents/` | Workspace | Shared with team via Git |
 | User profile folder | Personal | Available across ALL your workspaces |
 
-> **Tip:** For learning, use `.github/agents/` (workspace scope) so you can see the files easily.
-
 ---
 
 ## ❓ FAQ
 
-**Q: How do I switch to an agent?**  
-A: In the Chat view, click the agent dropdown (top of chat input) and select your agent.
+<details>
+<summary><strong>How do I switch to an agent?</strong></summary>
 
-**Q: Can I use agents AND instructions at the same time?**  
-A: Yes! When you select an agent, `copilot-instructions.md` and matching `*.instructions.md` files are still loaded alongside the agent's instructions.
+In the Chat view, click the agent dropdown (top of chat input) and select your agent.
 
-**Q: An agent doesn't appear in the dropdown?**  
-A: Check: (1) file is in `.github/agents/`, (2) extension is `.agent.md`, (3) YAML frontmatter is valid. Right-click in Chat → Diagnostics to see errors.
+</details>
 
-**Q: What's the difference between agents and prompts?**  
-A: Agents are **persistent personas** (active throughout the conversation). Prompts are **one-shot tasks** (run once and done).
+<details>
+<summary><strong>Can I use agents AND instructions at the same time?</strong></summary>
 
-**Q: How detailed should agent instructions be?**  
-A: As detailed as needed — 20 lines is fine for simple roles, 200+ lines for complex specialists. But remember: longer = more tokens consumed per request.
+Yes! When you select an agent, `copilot-instructions.md` and matching `*.instructions.md` files are still loaded alongside the agent's instructions.
+
+</details>
+
+<details>
+<summary><strong>An agent doesn't appear in the dropdown?</strong></summary>
+
+Check: (1) file is in `.github/agents/`, (2) extension is `.agent.md`, (3) YAML frontmatter is valid.  
+Right-click in Chat → **Diagnostics** to see errors.
+
+</details>
+
+<details>
+<summary><strong>What's the difference between agents and prompts?</strong></summary>
+
+Agents are **persistent personas** (active throughout the conversation).  
+Prompts are **one-shot tasks** (run once and done).
+
+</details>
+
+<details>
+<summary><strong>How detailed should agent instructions be?</strong></summary>
+
+As detailed as needed — 20 lines for simple roles, 200+ for complex specialists. Longer = more tokens consumed per request.
+
+</details>
 
 ---
 
@@ -288,8 +305,8 @@ A: As detailed as needed — 20 lines is fine for simple roles, 200+ lines for c
 
 ---
 
-## 🔗 Links
+<p align="center">
 
-- [VS Code: Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents)
-- [Community Examples](https://github.com/github/awesome-copilot/tree/main/agents)
-- ← Back to [main guide](../README.md)
+[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md)
+
+</p>

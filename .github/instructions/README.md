@@ -1,25 +1,55 @@
-# 📋 Path-Specific Instructions — Detailed Guide
+# 📐 Custom Instructions — Guide
 
-> **What:** Markdown files with coding rules that automatically activate when you edit files matching a glob pattern.  
+> **What:** Markdown files with coding standards that Copilot auto-loads based on the file you're editing.  
 > **Where:** `.github/instructions/*.instructions.md`  
-> **How to use:** Just save them — they activate automatically. No manual action needed.
+> **How to use:** Automatic — Copilot matches the `applyTo` glob pattern to the file you have open.
 
 ---
 
-## 📌 What Are Path-Specific Instructions?
+## 📑 Table of Contents
 
-These are **conditional rules**. Instead of burdening every Copilot request with every rule, you say:
+- [What Are Custom Instructions?](#-what-are-custom-instructions)
+- [Instructions in This Project](#-instructions-in-this-project)
+- [File Format](#-file-format)
+- [Glob Pattern Reference](#-glob-pattern-reference)
+- [Examples](#-examples)
+- [How to Create an Instruction File](#-how-to-create-an-instruction-file)
+- [Verification & Troubleshooting](#-verification--troubleshooting)
+- [Tips & Best Practices](#-tips--best-practices)
+- [Experiments to Try](#-experiments-to-try)
 
-> *"Only apply these test rules when I'm editing files in `test/`"*
+---
 
-This keeps each request focused and avoids overwhelming Copilot's context window.
+## 📌 What Are Custom Instructions?
 
-### Real-World Analogy
+Custom instructions are **path-scoped coding standards**. They tell Copilot *how* to write code for specific file types — naming conventions, patterns, error handling, style rules, etc.
 
-| Type | Analogy |
-|---|---|
-| `copilot-instructions.md` | Company-wide employee handbook (applies to everyone) |
-| `*.instructions.md` | Department-specific rules (only when you're in that department) |
+**Key characteristics:**
+- 🎯 **Auto-activated** — no manual setup, no slash commands
+- 🗂️ **Path-scoped** — only apply to files matching a glob pattern
+- 📝 **Additive** — stack on top of `copilot-instructions.md` (project-wide rules)
+- 🔄 **Always active** — apply in Chat, Inline Chat, Edits, and Agent modes
+
+**How they differ from `copilot-instructions.md`:**
+
+| Aspect | `copilot-instructions.md` | `*.instructions.md` |
+|---|---|---|
+| Scope | Entire project | Files matching a glob pattern |
+| Location | `.github/copilot-instructions.md` | `.github/instructions/` |
+| When active | Always | When editing a matching file |
+| Purpose | Project-wide rules | File-type-specific rules |
+| Stacking | Base layer | Adds on top of base layer |
+
+---
+
+## 🗂️ Instructions in This Project
+
+| File | Applies To | What It Enforces |
+|---|---|---|
+| [`java.instructions.md`](java.instructions.md) | `**/*.java` | Java naming, structure, Javadoc, error handling |
+| [`clean-code.instructions.md`](clean-code.instructions.md) | `**/*.java` | Code smells, SOLID hints, refactoring cues |
+
+> Both files apply to `**/*.java` — they **stack together** when you edit any `.java` file.
 
 ---
 
@@ -27,232 +57,204 @@ This keeps each request focused and avoids overwhelming Copilot's context window
 
 ```markdown
 ---
-applyTo: "**/*.java"
+applyTo: "glob/pattern/**/*.ext"
 ---
 
-# Rules for Java Files
-
-Your rules go here.
-Written in Markdown.
+Your instructions go here in plain Markdown.
+Be specific, concise, and actionable.
 ```
 
-### The Frontmatter
-
-The top section between `---` markers is YAML **frontmatter**. It controls when the file activates:
+### Frontmatter Fields
 
 | Field | Required? | Description | Example |
 |---|---|---|---|
-| `applyTo` | **Recommended** | Glob pattern — instructions activate when current file matches | `"**/*.java"` |
-| `name` | No | Display name in UI | `'Java Standards'` |
-| `description` | No | Shown on hover in Chat view | `'Coding conventions for Java files'` |
-| `excludeAgent` | No | Hide from specific Copilot features | `"code-review"` or `"coding-agent"` |
+| `applyTo` | **Yes** | Glob pattern matching files this applies to | `**/*.java`, `src/test/**` |
 
-> **If `applyTo` is omitted:** The file is NOT applied automatically. You'd have to manually attach it to a chat prompt.
+### Rules for the Body
 
----
-
-## 🎯 Glob Pattern Reference
-
-Globs define which files trigger the instructions. Here's the complete syntax:
-
-| Pattern | What It Matches | Example Matches |
-|---|---|---|
-| `*` | All files in current directory only | `Foo.java`, `Bar.java` |
-| `**` or `**/*` | All files recursively everywhere | Every file in the project |
-| `*.java` | `.java` files in current directory | `Foo.java` (not `src/Foo.java`) |
-| `**/*.java` | `.java` files recursively everywhere | `src/Foo.java`, `src/a/b/Foo.java` |
-| `src/*.java` | `.java` files directly in `src/` | `src/Foo.java` (not `src/sub/Foo.java`) |
-| `src/**/*.java` | `.java` files recursively under `src/` | `src/Foo.java`, `src/sub/Foo.java` |
-| `**/*.xml` | All XML files anywhere | `pom.xml`, `config/app.xml` |
-| `**/*.{java,kt}` | Java AND Kotlin files everywhere | All `.java` and `.kt` files |
-| `**/test/**/*.java` | Java files under any `test/` folder | `src/test/FooTest.java` |
-| `**/*.ts,**/*.tsx` | Multiple patterns (comma-separated) | All TypeScript files |
-
-### Pattern Gotchas
-
-| ❌ Common Mistake | ✅ Correct Pattern | Why |
-|---|---|---|
-| `*.java` | `**/*.java` | Without `**`, only matches root-level files |
-| `src/test/` | `src/test/**` | Need `/**` to match files inside the folder |
-| `*.java *.xml` | `**/*.java,**/*.xml` | Use comma to separate patterns, not space |
+- ✅ Be **specific** — "Use `Objects.requireNonNull()` for null checks"
+- ✅ Be **actionable** — instructions Copilot can follow immediately
+- ✅ Be **concise** — shorter instructions = better compliance
+- ❌ Don't be vague — "Write clean code" gives Copilot nothing to work with
+- ❌ Don't write essays — long blocks get diluted in context
 
 ---
 
-## ✍️ Complete Examples
+## 🔤 Glob Pattern Reference
 
-### Example 1: Java Source Files
+| Pattern | Matches | Example Match |
+|---|---|---|
+| `**/*.java` | All `.java` files, any depth | `src/Main.java`, `src/com/pkg/Foo.java` |
+| `src/**` | Everything under `src/` | `src/Main.java`, `src/pkg/Util.java` |
+| `src/test/**` | Only test files | `src/test/FooTest.java` |
+| `**/*.{xml,json}` | `.xml` and `.json` files | `pom.xml`, `config.json` |
+| `**/README.md` | All README files | `README.md`, `docs/README.md` |
+| `*.java` | Only root-level `.java` files | `Main.java` (NOT `src/Main.java`) |
+
+### Common Gotchas
+
+| Mistake | Problem | Fix |
+|---|---|---|
+| `*.java` | Only matches root directory | `**/*.java` |
+| `src/` | Matches nothing (trailing slash) | `src/**` |
+| Missing quotes | YAML parsing error | Always quote: `"**/*.java"` |
+
+---
+
+## ✍️ Examples
+
+<details>
+<summary><strong>Example 1: Java Source Files</strong></summary>
 
 ```markdown
 ---
 applyTo: "**/*.java"
 ---
 
-# Java Coding Conventions
+# Java Standards
 
-## Naming
-- Classes: `UpperCamelCase` (e.g., `CustomerService`)
-- Methods/variables: `lowerCamelCase` (e.g., `getCustomerName`)
-- Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRY_COUNT`)
-- Packages: all lowercase (e.g., `com.example.service`)
-
-## Structure
-- One public class per file
-- Class name must match filename
-- Order: fields → constructors → public methods → private methods
-
-## Best Practices
 - Use `final` for variables that don't change
-- Prefer `var` for local variables when type is obvious (Java 10+)
-- Always close resources with try-with-resources
-- Never catch `Exception` or `Throwable` — catch specific exceptions
-- Use `Objects.requireNonNull()` for null-checking parameters
+- Prefer `var` for local variables when the type is obvious
+- Use `Objects.requireNonNull()` for null-checking constructor parameters
+- Add `@Override` on all overridden methods
+- Use try-with-resources for closeable resources
+- Add Javadoc to all public methods
 ```
 
----
+</details>
 
-### Example 2: Test Files
+<details>
+<summary><strong>Example 2: Test Files Only</strong></summary>
 
 ```markdown
 ---
-applyTo: "**/test/**/*.java,**/*Test.java,**/*Tests.java"
-name: 'Test Conventions'
+applyTo: "src/test/**/*.java"
 ---
 
-# Test File Standards
+# Test Conventions
 
-## Framework
-- Use JUnit 5 (`@Test`, `@BeforeEach`, `@AfterEach`)
-- Use AssertJ for fluent assertions: `assertThat(result).isEqualTo(expected)`
-
-## Naming
-- Test class: `<ClassName>Test.java` (e.g., `CalculatorTest.java`)
-- Test method: `should_<expected>_when_<condition>`
-  - Example: `should_returnZero_when_dividingZeroByAny`
-- Use `@DisplayName` for readable names in reports
-
-## Structure (Arrange-Act-Assert)
-```java
-@Test
-@DisplayName("Adding two positive numbers returns their sum")
-void should_returnSum_when_addingPositiveNumbers() {
-    // Arrange
-    Calculator calc = new Calculator();
-    
-    // Act
-    int result = calc.add(2, 3);
-    
-    // Assert
-    assertThat(result).isEqualTo(5);
-}
-```
-
-## Rules
+- Class name: `<ClassName>Test.java`
+- Method: `should_<expected>_when_<condition>()`
+- Pattern: Arrange → Act → Assert (with blank-line separators)
+- Use `@DisplayName` with human-readable descriptions
 - One assertion concept per test
-- No logic in tests (no if/else, no loops)
-- Use `@ParameterizedTest` for multiple inputs
-- Mock external dependencies, don't mock the class under test
+- Never catch exceptions in tests — let them propagate
 ```
 
----
+</details>
 
-### Example 3: Configuration / XML Files
+<details>
+<summary><strong>Example 3: Configuration Files</strong></summary>
 
 ```markdown
 ---
-applyTo: "**/*.xml,**/*.properties,**/*.yml,**/*.yaml"
-name: 'Configuration Files'
+applyTo: "**/*.{xml,yaml,yml,json}"
 ---
 
-# Configuration File Rules
+# Config File Conventions
 
-- Never hardcode secrets, passwords, or API keys
-- Use environment variables or property placeholders: `${DB_PASSWORD}`
-- Always include a comment explaining non-obvious settings
-- Keep config files sorted alphabetically when order doesn't matter
-- Use descriptive property names: `database.connection.timeout` not `db.conn.to`
+- Always add comments explaining non-obvious settings
+- Group related settings together
+- Use consistent indentation (2 spaces for YAML/JSON, 4 for XML)
+- Include a brief header comment describing the file's purpose
 ```
 
----
+</details>
 
-### Example 4: Markdown / Documentation Files
+<details>
+<summary><strong>Example 4: Markdown Documentation</strong></summary>
 
 ```markdown
 ---
 applyTo: "**/*.md"
-name: 'Documentation Standards'
 ---
 
-# Documentation Conventions
+# Documentation Standards
 
-- Use ATX-style headings (`#` prefix, not underline style)
-- One sentence per line (better for version control diffs)
-- Use fenced code blocks with language identifiers: ```java, ```sh, ```xml
-- Include a brief description at the top of each document
-- Use relative links for internal references, not absolute paths
-- Tables: use consistent column alignment
+- Use ATX-style headings (# not underlines)
+- Include a table of contents for files longer than 3 sections
+- Use fenced code blocks with language identifiers
+- Keep lines under 120 characters when possible
+- Use relative links for internal references
 ```
 
+</details>
+
 ---
 
-## 📂 How to Create a New Instruction File
+## 📂 How to Create an Instruction File
 
 ### Step-by-Step
 
+1. Create the folder (if missing): `.github/instructions/`
+2. Create a file: `.github/instructions/<name>.instructions.md`
+3. Add the `applyTo` frontmatter with a glob pattern
+4. Write your instructions in the body (Markdown)
+5. Save — instructions apply immediately
+
+### Naming Convention
+
 ```
-1. Navigate to:              .github/instructions/
-2. Create a new file:        <descriptive-name>.instructions.md
-3. Add the frontmatter:      ---
-                              applyTo: "your/glob/pattern/**/*.java"
-                              ---
-4. Write your rules below the frontmatter in Markdown
-5. Save — it takes effect immediately
+<scope>.instructions.md
 ```
 
-### Using VS Code Command
-
-1. Press `Ctrl+Shift+P`
-2. Type: `Chat: New Instructions File`
-3. Choose **"Workspace"**
-4. Enter filename
-5. Edit the generated template
+Examples:
+- `java.instructions.md` — Java coding standards
+- `testing.instructions.md` — Testing conventions
+- `api.instructions.md` — REST API design rules
+- `clean-code.instructions.md` — Clean code practices
 
 ---
 
-## ✅ How to Verify Instructions Are Loading
+## ✅ Verification & Troubleshooting
 
-1. Open a file that should match your glob pattern
-2. Open Copilot Chat (`Ctrl+Shift+I`)
-3. Ask any question
-4. After Copilot responds, expand **"References"** at the top of the response
-5. Your instruction file should appear in the list
+### How to Verify Instructions Are Loading
 
-Alternative: Right-click in Chat → **Diagnostics** → see all loaded instructions.
+1. Open a file that matches your glob pattern (e.g., `Main.java`)
+2. Open GitHub Copilot Chat
+3. Ask: *"What instructions are you following for this file?"*
+4. Copilot should mention your specific rules
+
+### Quick Tests
+
+| Test | How To | Expected |
+|---|---|---|
+| Naming rules | Ask "Write a method to add two numbers" | Method named `addNumbers`, not `add` or `a` |
+| Javadoc | Ask "Add javadoc to this class" | Full `@param`, `@return` tags |
+| Error handling | Ask "Add error handling" | Specific exceptions, not `catch (Exception e)` |
+
+### Troubleshooting
+
+| Symptom | Likely Cause | Fix |
+|---|---|---|
+| Rules not applied | Glob pattern doesn't match | Test with `**/*.java` (broadest match) |
+| Only some rules work | Instructions too long | Shorten — prioritize top rules |
+| Conflicting behavior | Two instructions contradict | Review all `applyTo` overlaps |
 
 ---
 
-## 💡 Tips
+## 💡 Tips & Best Practices
 
-- **One concern per file** — don't mix database rules with UI rules
-- **Keep each file focused** — 50-200 lines is ideal
-- **Be specific** — "Use `lowerCamelCase` for methods" beats "follow naming conventions"
-- **Include code examples** — 5 lines of code teaches more than a paragraph of text
-- **Test your globs** — open a file that should match, ask Copilot something, expand References to verify
-- **Multiple files can match** — if a file matches multiple patterns, ALL matching instruction files are loaded together
-- **Use `name` field** — makes it easier to identify in References/Diagnostics
+1. **Start broad, refine later** — begin with `**/*.java`, split into `src/main/**` and `src/test/**` when needed
+2. **Keep it short** — 10-20 bullet points per file is ideal
+3. **Prioritize top rules** — if context is tight, Copilot weighs earlier lines more
+4. **Use concrete examples** — "Use `Objects.requireNonNull(param, "param must not be null")`" beats "Validate parameters"
+5. **Don't duplicate `copilot-instructions.md`** — path-specific files add to it, not replace it
+6. **Test after creating** — verify with the tests above
 
 ---
 
 ## 🧪 Experiments to Try
 
-1. **Create a `*.java` instruction** with a naming rule → open a Java file → ask Copilot to write a method → does it follow your rule?
-2. **Create two instruction files** with overlapping patterns → verify both load (check References)
-3. **Try different glob patterns** → create a `.md` instruction, a `test/` instruction, and see when each activates
-4. **Remove `applyTo`** from an instruction file → notice it no longer loads automatically
+1. **Create a test instruction** → `testing.instructions.md` with `applyTo: "**/*Test.java"` → ask Copilot to write a test → does it follow your conventions?
+2. **Check stacking** → open `Main.java` → verify both `java.instructions.md` AND `clean-code.instructions.md` apply
+3. **Try a narrow glob** → create `controllers.instructions.md` with `applyTo: "src/controller/**"` → verify it only activates for controller files
+4. **Break it on purpose** → use `*.java` (no `**`) → open `src/Main.java` → notice instructions don't load → fix to `**/*.java`
 
 ---
 
-## 🔗 Links
+<p align="center">
 
-- [VS Code: Custom Instructions](https://code.visualstudio.com/docs/copilot/customization/custom-instructions)
-- [GitHub: Path-Specific Instructions](https://docs.github.com/en/copilot/customizing-copilot/adding-repository-custom-instructions-for-github-copilot)
-- ← Back to [main guide](../README.md)
+[← Back to main guide](../README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Getting Started](../docs/getting-started.md)
+
+</p>

@@ -1,8 +1,24 @@
-# 🛠️ Agent Skills — Detailed Guide
+# 🛠️ Agent Skills — Guide
 
 > **What:** Folders containing instructions + scripts + resources that Copilot loads automatically when the task matches.  
 > **Where:** `.github/skills/<skill-name>/SKILL.md`  
 > **How to use:** Just ask Copilot a matching question — skills load automatically.
+
+---
+
+## 📑 Table of Contents
+
+- [What Are Agent Skills?](#-what-are-agent-skills)
+- [Skills in This Project](#-skills-in-this-project)
+- [How Skills Differ from Other Primitives](#how-skills-differ-from-other-primitives)
+- [Directory Structure](#-directory-structure)
+- [SKILL.md Format](#-skillmd-format)
+- [How Copilot Uses Skills (3-Level Loading)](#-how-copilot-uses-skills-3-level-loading)
+- [Examples](#-examples)
+- [How to Create a Skill](#-how-to-create-a-skill)
+  - [Writing Good Descriptions](#choosing-a-good-description)
+- [Skill Ideas](#-skill-ideas)
+- [Experiments to Try](#-experiments-to-try)
 
 ---
 
@@ -18,22 +34,32 @@ Skills are the most powerful customization primitive. Unlike instructions (text 
 
 Skills are also an **open standard** ([agentskills.io](https://agentskills.io/)) — they work across VS Code, Copilot CLI, and Copilot coding agent.
 
-### Real-World Analogy
+**Analogy:**
 
-| Type | Analogy |
+| Type | Like... |
 |---|---|
 | Instructions | Telling someone how to cook (just words) |
-| **Skills** | Giving them a recipe card + pre-measured ingredients + cooking tools |
+| **Skills** | Giving them a recipe card + pre-measured ingredients + tools |
 
 ### How Skills Differ from Other Primitives
 
 | Aspect | Instructions | Prompts | **Skills** |
 |---|---|---|---|
-| Includes scripts? | ❌ | ❌ | ✅ **Yes** |
-| Includes examples? | ❌ | Via links only | ✅ **In-directory** |
-| Activation | Glob pattern match | Manual (`/command`) | **Auto** (task description match) |
+| Includes scripts? | ❌ | ❌ | ✅ |
+| Includes examples? | ❌ | Via links | ✅ In-directory |
+| Activation | Glob pattern | Manual (`/command`) | **Auto** (description match) |
 | Portable? | VS Code + GitHub | VS Code only | **Open standard** |
-| Location | Single `.md` file | Single `.md` file | **Folder** with `SKILL.md` + resources |
+| Location | Single `.md` file | Single `.md` file | **Folder** with resources |
+
+---
+
+## 🗂️ Skills in This Project
+
+| Skill | Folder | Triggers On | What It Provides |
+|---|---|---|---|
+| [`java-build`](java-build/SKILL.md) | `skills/java-build/` | Compile, run, build | Compile commands, common errors |
+| [`design-patterns`](design-patterns/SKILL.md) | `skills/design-patterns/` | Design patterns, SOLID | Pattern decision guide, SOLID reference |
+| [`java-debugging`](java-debugging/SKILL.md) | `skills/java-debugging/` | Exceptions, debugging | Exception diagnosis, fix patterns |
 
 ---
 
@@ -43,6 +69,7 @@ Each skill is a **folder** (not a single file):
 
 ```
 .github/skills/
+│
 ├── java-build/                    ← Skill folder
 │   ├── SKILL.md                   ← Required: skill definition
 │   ├── build-verify.sh            ← Optional: helper script
@@ -73,17 +100,18 @@ description: >
 # Skill Instructions
 
 Detailed instructions, procedures, and guidelines go here.
-You can reference files in this directory using relative paths.
+You can reference files in this directory using relative paths:
+[template](./ClassTemplate.java)
 ```
 
 ### Frontmatter Fields
 
 | Field | Required? | Description | Constraints |
 |---|---|---|---|
-| `name` | **Yes** | Unique identifier for the skill | Lowercase, hyphens for spaces, max 64 chars |
-| `description` | **Yes** | What the skill does and when to use it | Max 1024 chars. **Be specific!** |
+| `name` | **Yes** | Unique identifier for the skill | Lowercase, hyphens, max 64 chars |
+| `description` | **Yes** | What the skill does and when to use it | Max 1024 chars — **be specific!** |
 
-> **Critical:** The `description` is how Copilot decides whether to load the skill. Vague descriptions = skill never loads. Specific descriptions = skill loads at the right time.
+> ⚠️ The `description` is how Copilot decides whether to load the skill. Vague descriptions = skill never loads. Specific descriptions = loads at the right time.
 
 ---
 
@@ -93,31 +121,33 @@ Skills use **progressive disclosure** — they don't dump everything into contex
 
 ```
 Level 1: DISCOVERY (always loaded — very lightweight)
-├── Copilot reads: name + description from frontmatter
-├── Cost: ~10-20 tokens per skill
-└── Happens: Every request
+  ├── Copilot reads: name + description from frontmatter
+  ├── Cost: ~10-20 tokens per skill
+  └── Happens: Every request
 
 Level 2: INSTRUCTIONS (loaded when task matches)
-├── Copilot reads: Full SKILL.md body
-├── Cost: Depends on file size
-└── Happens: Only when description matches your prompt
+  ├── Copilot reads: Full SKILL.md body
+  ├── Cost: Depends on file size
+  └── Happens: Only when description matches your prompt
 
 Level 3: RESOURCES (loaded on demand)
-├── Copilot reads: Scripts, templates, examples in the directory
-├── Cost: Only what it references
-└── Happens: Only when the AI decides it needs them
+  ├── Copilot reads: Scripts, templates, examples in the directory
+  ├── Cost: Only what it references
+  └── Happens: Only when the AI decides it needs them
 ```
 
 **This means you can have many skills installed without performance impact** — only relevant ones get loaded.
 
 ---
 
-## ✍️ Complete Examples
+## ✍️ Examples
 
-### Example 1: Java Build Skill
+<details>
+<summary><strong>Example 1: Java Build Skill</strong></summary>
 
+**Directory:**
 ```
-.github/skills/java-build/
+java-build/
 ├── SKILL.md
 └── common-errors.md
 ```
@@ -133,49 +163,21 @@ description: >
 
 # Java Build Skill
 
-## Compile a Single File
-```sh
-javac src/Main.java
-```
-
-## Compile All Files
-```sh
-javac src/*.java
-```
-
-## Run
-```sh
-java -cp src Main
-```
-
-## Compile and Run in One Step
-```sh
+## Compile and Run
 javac src/Main.java && java -cp src Main
-```
 
 ## Common Errors
 See [common-errors.md](./common-errors.md) for troubleshooting.
 ```
 
-**common-errors.md:**
-```markdown
-# Common Java Build Errors
+</details>
 
-| Error | Cause | Fix |
-|---|---|---|
-| `cannot find symbol` | Typo in class/method name, missing import | Check spelling, add `import` |
-| `class not found` | Wrong classpath or wrong class name | Use `-cp src` and correct class name |
-| `unreported exception` | Checked exception not handled | Add `try/catch` or `throws` |
-| `incompatible types` | Type mismatch in assignment | Check variable types match |
-| `reached end of file` | Missing closing brace `}` | Count your braces |
+<details>
+<summary><strong>Example 2: Run Tests Skill (with template file)</strong></summary>
+
+**Directory:**
 ```
-
----
-
-### Example 2: Run Tests Skill
-
-```
-.github/skills/run-tests/
+run-tests/
 ├── SKILL.md
 └── examples/
     └── SampleTest.java
@@ -187,72 +189,28 @@ See [common-errors.md](./common-errors.md) for troubleshooting.
 name: run-tests
 description: >
   Run JUnit 5 tests for the Java learning project.
-  Use when asked to run tests, fix failing tests, or create new test files.
+  Use when asked to run tests, fix failing tests, or create test files.
 ---
 
 # Run Tests Skill
 
-## Prerequisites
-- JUnit 5 JARs on classpath
-- Test files in `test/` directory
-
-## Running Tests
-
-### With Maven (if available)
-```sh
-mvn test
-```
-
-### With Gradle (if available)
-```sh
-./gradlew test
-```
-
-### Manual (no build tool)
-```sh
-javac -cp .:junit-platform-console-standalone.jar test/*.java
-java -jar junit-platform-console-standalone.jar --class-path test --scan-class-path
-```
-
 ## Test Conventions
-- File naming: `<ClassName>Test.java`
-- Method naming: `should_<expected>_when_<condition>`
-- Use `@DisplayName` for readability
-- Follow Arrange-Act-Assert pattern
+- File: `<ClassName>Test.java`
+- Method: `should_<expected>_when_<condition>`
+- Pattern: Arrange-Act-Assert
 
 ## Template
-See [SampleTest.java](./examples/SampleTest.java) for the standard test structure.
+See [SampleTest.java](./examples/SampleTest.java) for standard structure.
 ```
 
-**examples/SampleTest.java:**
-```java
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import static org.junit.jupiter.api.Assertions.*;
+</details>
 
-class SampleTest {
+<details>
+<summary><strong>Example 3: Create Class Skill (with Java template)</strong></summary>
 
-    @Test
-    @DisplayName("Example: adding two numbers returns their sum")
-    void should_returnSum_when_addingTwoNumbers() {
-        // Arrange
-        int a = 2, b = 3;
-
-        // Act
-        int result = a + b;
-
-        // Assert
-        assertEquals(5, result);
-    }
-}
+**Directory:**
 ```
-
----
-
-### Example 3: Create Class Skill (with Template)
-
-```
-.github/skills/create-class/
+create-class/
 ├── SKILL.md
 └── ClassTemplate.java
 ```
@@ -263,69 +221,18 @@ class SampleTest {
 name: create-class
 description: >
   Create a new Java class following project conventions.
-  Use when asked to create, scaffold, or generate a new Java class or interface.
+  Use when asked to create, scaffold, or generate a new Java class.
 ---
 
 # Create Class Skill
 
 Use [ClassTemplate.java](./ClassTemplate.java) as the starting point.
 
-## Conventions
-- One public class per file
-- Class name matches filename
-- UpperCamelCase for class names
-- lowerCamelCase for methods and fields
-- Include Javadoc on public methods
-- Include `toString()` for data classes
-- Include `equals()` and `hashCode()` for data classes
-
-## File Location
-- Place in `src/` directory
-- Use package directories if packages are defined
-
 ## Structure Order
-1. Fields (private, then protected, then public)
-2. Constructors
-3. Public methods
-4. Private methods
-5. toString / equals / hashCode
+1. Fields → 2. Constructors → 3. Public methods → 4. Private methods → 5. toString/equals/hashCode
 ```
 
-**ClassTemplate.java:**
-```java
-/**
- * Brief description of what this class does.
- *
- * @author Your Name
- */
-public class ClassName {
-
-    private final String name;
-
-    /**
-     * Creates a new ClassName instance.
-     *
-     * @param name the name to assign
-     */
-    public ClassName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Gets the name.
-     *
-     * @return the name
-     */
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return "ClassName{name='" + name + "'}";
-    }
-}
-```
+</details>
 
 ---
 
@@ -333,34 +240,32 @@ public class ClassName {
 
 ### Step-by-Step
 
-```
-1. Create the skills root (if missing):  .github/skills/
-2. Create a subdirectory:                .github/skills/<skill-name>/
-3. Create the definition file:           .github/skills/<skill-name>/SKILL.md
-4. Add YAML frontmatter with name (required) and description (required)
+1. Create the skills root (if missing): `.github/skills/`
+2. Create a subdirectory: `.github/skills/<skill-name>/`
+3. Create: `.github/skills/<skill-name>/SKILL.md`
+4. Add YAML frontmatter with `name` (required) and `description` (required)
 5. Write instructions in the body
-6. (Optional) Add scripts, templates, or examples alongside SKILL.md
+6. *(Optional)* Add scripts, templates, or examples alongside SKILL.md
 7. Save — skill is available immediately
-```
 
-### Choosing a Good `description`
+### Choosing a Good Description
 
 The description is **critical** — it determines when the skill gets loaded:
 
 | ❌ Bad (Too Vague) | ✅ Good (Specific) |
 |---|---|
-| `Helps with building` | `Compile and run Java source files from the command line. Use when asked to build, compile, run, or troubleshoot Java compilation errors.` |
-| `Testing stuff` | `Run JUnit 5 tests for the Java project. Use when asked to run tests, fix failing tests, or create new test files.` |
-| `Class creation` | `Create a new Java class following project conventions. Use when asked to create, scaffold, or generate a new Java class or interface.` |
+| `Helps with building` | `Compile and run Java source files. Use when asked to build, compile, run, or troubleshoot compilation errors.` |
+| `Testing stuff` | `Run JUnit 5 tests. Use when asked to run tests, fix failing tests, or create test files.` |
+| `Class creation` | `Create a new Java class following project conventions. Use when asked to create, scaffold, or generate a new class.` |
 
-**Tips for descriptions:**
-- Include **action verbs** the user might use: "build", "compile", "run", "create", "test"
+**Tips:**
+- Include **action verbs** users might say: "build", "compile", "run", "create", "test"
 - Include **synonyms**: "build" AND "compile", "create" AND "scaffold"
-- Be explicit about **when to use**: "Use when asked to..."
+- Be explicit: "Use when asked to..."
 
 ---
 
-## 💡 Skill Ideas for Your Learning Project
+## 💡 Skill Ideas
 
 | Skill Name | Description | Resources to Include |
 |---|---|---|
@@ -376,17 +281,16 @@ The description is **critical** — it determines when the skill gets loaded:
 
 ## 🧪 Experiments to Try
 
-1. **Create `java-build` skill** → ask Copilot *"How do I compile Main.java?"* → does it use your skill?
+1. **Create `java-build` skill** → ask *"How do I compile Main.java?"* → does it use your skill?
 2. **Check skill loading** → right-click Chat → Diagnostics → verify skill appears
 3. **Add a resource file** to your skill → ask Copilot about it → does it read the resource?
-4. **Make a vague description** → notice the skill doesn't load → make it specific → now it loads
+4. **Make a vague description** → notice skill doesn't load → make it specific → now it loads
 5. **Create a skill with a script** → add a `.sh` or `.bat` file → ask Copilot to run it
 
 ---
 
-## 🔗 Links
+<p align="center">
 
-- [VS Code: Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
-- [Agent Skills Open Standard](https://agentskills.io/)
-- [Community Skills](https://github.com/github/awesome-copilot/tree/main/skills)
-- ← Back to [main guide](../README.md)
+[← Back to main guide](../README.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Getting Started](../docs/getting-started.md)
+
+</p>

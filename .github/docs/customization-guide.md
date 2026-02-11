@@ -1,274 +1,404 @@
-````markdown
-# 🧰 Copilot Customization Guide — Understanding the System
+# 🧩 Customization Guide — Architecture Deep-Dive
 
-> **Audience:** Developer learning how to customize GitHub Copilot  
-> **Prerequisites:** Read `.github/README.md` and follow `docs/getting-started.md` first  
-> **Goal:** Understand the architecture behind the modular agent/skill/prompt system
+> **Audience:** You've read the [Getting Started](getting-started.md) tutorial and want to understand how everything fits together.  
+> **Goal:** See the big picture, learn the architecture, and know how to extend the system.
 
 ---
 
-## The Big Picture — Why Modular Customization?
+## 📑 Table of Contents
 
-Think of Copilot customization like building a toolbox, not a single tool:
+- [The Big Picture](#-the-big-picture)
+- [How the 4 Primitives Work Together](#-how-the-4-primitives-work-together)
+  - [Instructions](#1-instructions--the-rules)
+  - [Agents](#2-agents--the-specialists)
+  - [Prompts](#3-prompts--the-shortcuts)
+  - [Skills](#4-skills--the-toolkits)
+- [Priority & Stacking Order](#-priority--stacking-order)
+- [Architecture Diagram](#-architecture-diagram)
+- [How to Extend the System](#-how-to-extend-the-system)
+  - [Adding a New Agent](#adding-a-new-agent)
+  - [Adding a New Skill](#adding-a-new-skill)
+  - [Adding a New Prompt](#adding-a-new-prompt)
+  - [Adding a New Instruction](#adding-a-new-instruction)
+- [Real-World Workflow Examples](#-real-world-workflow-examples)
+- [Tips & Best Practices](#-tips--best-practices)
+- [Further Reading](#-further-reading)
 
-```
-Without customization:
-┌──────────────────────────┐
-│   Generic Copilot        │  ← Same response regardless of task
-│   "One size fits all"    │
-└──────────────────────────┘
+---
 
-With modular customization:
-┌──────────────────────────────────────────────────────────────┐
-│                     Your Copilot Toolkit                     │
-│                                                              │
-│  🏗️ Designer        → Thinks in architecture & patterns      │
-│  🔍 Debugger        → Thinks in evidence & root causes       │
-│  💥 Impact-Analyzer → Thinks in dependencies & risk          │
-│  📘 Learning-Mentor → Thinks in analogies & understanding    │
-│  📋 Code-Reviewer   → Thinks in quality & best practices     │
-│                                                              │
-│  Each agent brings different:                                │
-│    • Mindset & expertise                                     │
-│    • Available tools                                         │
-│    • Output format                                           │
-│    • Next-step recommendations (handoffs)                    │
-└──────────────────────────────────────────────────────────────┘
-```
+## 🌍 The Big Picture
 
-## How the Primitives Work Together
-
-### 1. Instructions = The Foundation (Always Running)
-
-Instructions define your baseline rules. They load **automatically** — you never need to invoke them.
+GitHub Copilot customization is a **layered system** that progressively shapes Copilot's behavior:
 
 ```
-copilot-instructions.md          ← Loads on EVERY request
-  "Use Java 21+, follow our naming rules..."
-
-instructions/java.instructions.md   ← Loads when editing *.java files
-  "Use var, records, pattern matching..."
-
-instructions/clean-code.instructions.md  ← Loads when editing *.java files
-  "Methods do ONE thing, avoid code smells..."
+┌─────────────────────────────────────────────────┐
+│                  YOUR QUESTION                  │
+│          "Review Main.java for SOLID"           │
+└────────────────────┬────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────┐
+│              COPILOT ENGINE                     │
+│                                                 │
+│  1. Load copilot-instructions.md    (always)    │
+│  2. Load matching *.instructions.md (by file)   │
+│  3. Load active agent persona       (if set)    │
+│  4. Load matching skills            (by topic)  │
+│  5. Execute prompt template         (if /cmd)   │
+│                                                 │
+│         Everything merges → AI responds         │
+└─────────────────────────────────────────────────┘
 ```
 
-**Key concept:** Instructions are **additive**. When you edit a `.java` file, BOTH `copilot-instructions.md` AND the java-specific instructions load together. Copilot sees all of them combined.
+**Key insight:** These aren't separate features — they **stack together**. When you ask the Designer agent to review `Main.java` using `/design-review`, Copilot combines:
 
-**When to create a new instruction file:**
-- You find yourself repeating the same rule in every chat → add it to instructions
-- Different file types need different rules → use `applyTo` glob patterns
-- You want consistent behavior without remembering to ask for it
+- Project-wide rules from `copilot-instructions.md`
+- Java-specific rules from `java.instructions.md` + `clean-code.instructions.md`
+- Designer agent's persona and expertise
+- Design-patterns skill (if the topic matches)
+- The review structure from `design-review.prompt.md`
 
-### 2. Agents = Specialized Personas (You Choose)
+---
 
-Agents are like switching hats. Each one changes:
-- **Mindset:** How Copilot thinks about your question
-- **Tools:** What Copilot can access (read-only vs. full editing)
-- **Format:** How the response is structured
+## 🔗 How the 4 Primitives Work Together
 
-```yaml
-# Key fields in an agent file
-name: Designer           # Shows in the agent dropdown
-description: '...'       # Shown when you hover
-tools: ['search', ...]   # Controls capabilities
-handoffs:                # Suggested next steps
-  - label: Start Implementation
-    agent: agent
-```
-
-**How to choose an agent:**
-
-| I want to... | Select this agent |
-|---|---|
-| Review architecture or class design | **Designer** |
-| Investigate a bug or error | **Debugger** |
-| Understand what a change will break | **Impact-Analyzer** |
-| Learn or understand a concept | **Learning-Mentor** |
-| Get a code quality review | **Code-Reviewer** |
-| Write/edit code (default) | **Agent** (built-in) |
-
-**The handoff pattern:** After the Designer reviews your code and suggests changes, a "Start Implementation" button appears. Click it to switch to the default Agent mode with your design context carried over. This creates a natural workflow:
+### 1. Instructions — The Rules
 
 ```
-Think (Designer) → Assess Risk (Impact-Analyzer) → Build (Agent) → Review (Code-Reviewer)
+copilot-instructions.md          ← Base layer (always on)
+     +
+java.instructions.md             ← When editing *.java
+     +
+clean-code.instructions.md       ← When editing *.java (stacks!)
+     =
+Combined coding standards        ← What Copilot follows
 ```
 
-### 3. Prompts = Reusable Tasks (You Invoke with /)
+**Role:** Define *how* code should be written — naming, structure, patterns, style.  
+**Activation:** Automatic, based on the file being edited.  
+**Docs:** [Instructions Guide](../instructions/README.md)
 
-Prompts are saved tasks you trigger with `/command`. Unlike agents (which change the persona), prompts define a **specific task** with a predefined workflow.
-
-```
-/design-review  → Run a SOLID/GRASP review of the current file
-/debug          → Start a systematic debugging investigation
-/impact         → Map the ripple effects of changing this file
-/teach          → Learn the concepts used in this file
-/refactor       → Find and apply refactoring opportunities
-/explain        → Get a beginner-friendly explanation
-```
-
-**Prompts + Agents work together:** Each prompt specifies which agent to use. `/design-review` uses the Designer agent, `/debug` uses the Debugger. This means the prompt gets the agent's full persona PLUS the specific task instructions.
-
-**When to create a prompt vs. just chatting:**
-- If you do the same task more than twice with similar instructions → make it a prompt
-- If the task has a specific structure you want consistently → make it a prompt
-- If it's a one-off question → just chat directly
-
-### 4. Skills = Auto-Loading Knowledge Packs
-
-Skills are the most automatic primitive. You don't invoke them — Copilot loads them when your question matches the skill's description.
+### 2. Agents — The Specialists
 
 ```
-Ask: "How do I compile this?"
-  → Copilot reads skill descriptions
-  → Matches java-build skill ("compile, run, build...")
-  → Loads SKILL.md into context
-  → Gives accurate answer
-
-Ask: "Should I use Strategy or Template Method here?"
-  → Matches design-patterns skill
-  → Loads the pattern decision guide
-  → Gives contextual recommendation
+Default (Ask)  ← General-purpose Copilot
+Designer       ← Thinks in patterns, SOLID, architecture
+Debugger       ← Thinks in hypotheses, root causes, evidence
+Impact Analyzer← Thinks in ripple effects, dependencies, risk
+Learning Mentor← Thinks in analogies, exercises, progression
 ```
 
-**Three-level progressive loading:**
-1. **Discovery:** Copilot always knows skill names and descriptions (lightweight)
-2. **Instructions:** When matched, loads the SKILL.md body (detailed guidance)
-3. **Resources:** Can access additional files in the skill folder (scripts, templates, etc.)
+**Role:** Define *who* Copilot becomes — the persona, expertise, and approach.  
+**Activation:** Manual — you select from the dropdown in Chat.  
+**Docs:** [Agents Guide](../agents/README.md)
 
-**When to create a skill vs. an instruction:**
+### 3. Prompts — The Shortcuts
 
-| Feature | Skill | Instruction |
+```
+/design-review  → Runs design review workflow with Designer agent
+/debug          → Runs debugging workflow with Debugger agent
+/teach          → Runs teaching workflow with Learning Mentor agent
+/impact         → Runs impact analysis with Impact Analyzer agent
+/refactor       → Runs refactoring suggestions with Designer agent
+/explain        → Runs file explanation with default Ask agent
+```
+
+**Role:** Define *what* to do — pre-built workflows you trigger with a command.  
+**Activation:** Manual — type `/command` in Chat.  
+**Docs:** [Prompts Guide](../prompts/README.md)
+
+### 4. Skills — The Toolkits
+
+```
+java-build/        ← Activates for: compile, build, run
+design-patterns/   ← Activates for: Pattern decisions, SOLID
+java-debugging/    ← Activates for: Exceptions, stack traces
+```
+
+**Role:** Provide *extra knowledge* — scripts, templates, domain expertise.  
+**Activation:** Automatic — Copilot matches your question to skill descriptions.  
+**Docs:** [Skills Guide](../skills/README.md)
+
+---
+
+## 📊 Priority & Stacking Order
+
+When multiple customizations apply, Copilot combines them in this order:
+
+| Priority | Source | Loaded When |
 |---|---|---|
-| Loading | On-demand, task-matched | Always-on or glob-matched |
-| Content | Instructions + scripts + examples | Instructions only |
-| Portability | Works in VS Code, CLI, coding agent | VS Code only (mostly) |
-| Best for | Specialized workflows | Coding standards |
+| 1 (highest) | Active agent persona | Agent selected in dropdown |
+| 2 | Prompt template | `/command` invoked |
+| 3 | Matching skills | Topic matches description |
+| 4 | Path-specific instructions | File matches `applyTo` glob |
+| 5 (lowest) | `copilot-instructions.md` | Always |
 
-## Architecture of This Setup
+> ⚠️ **Conflicts:** If an agent says "use Strategy pattern" but instructions say "avoid complex patterns," the agent's guidance typically wins (higher priority). Design your customizations to complement, not contradict.
+
+---
+
+## 🏗️ Architecture Diagram
 
 ```
-                    ┌─ copilot-instructions.md ─── Always loaded
-                    │
-    INSTRUCTIONS ───┤─ java.instructions.md ────── Loaded for *.java
-                    │
-                    └─ clean-code.instructions.md ─ Loaded for *.java
-
-
-                    ┌─ Designer ──────── design review, architecture
-                    │     └─ uses: design-patterns skill
-                    │
-                    ├─ Debugger ──────── bug investigation
-    AGENTS ─────────┤     └─ uses: java-debugging skill
-                    │
-                    ├─ Impact-Analyzer ─ change assessment
-                    │
-                    ├─ Learning-Mentor ─ concept teaching
-                    │
-                    └─ Code-Reviewer ─── quality check (read-only)
-
-
-                    ┌─ /design-review → uses Designer agent
-                    ├─ /debug ────────→ uses Debugger agent
-    PROMPTS ────────┤─ /impact ───────→ uses Impact-Analyzer agent
-                    ├─ /teach ────────→ uses Learning-Mentor agent
-                    ├─ /refactor ─────→ uses Designer agent
-                    └─ /explain ──────→ uses Ask agent (read-only)
-
-
-                    ┌─ java-build ──── compile/run procedures
-    SKILLS ─────────┤─ design-patterns ─ SOLID, GoF, clean architecture
-                    └─ java-debugging ── exception patterns, debug techniques
+                         YOU
+                          │
+                ┌─────────┴─────────┐
+                │   VS Code Chat    │
+                │                   │
+                │  Agent: Designer  │ ← You chose this
+                │  /design-review   │ ← You typed this
+                └─────────┬─────────┘
+                          │
+               ┌──────────┴──────────┐
+               │   COPILOT ENGINE    │
+               │                     │
+               │  ┌───────────────┐  │
+               │  │  Base Rules   │  │ ← copilot-instructions.md
+               │  ├───────────────┤  │
+               │  │  Java Rules   │  │ ← java.instructions.md
+               │  ├───────────────┤  │
+               │  │ Clean Code    │  │ ← clean-code.instructions.md
+               │  ├───────────────┤  │
+               │  │ Designer      │  │ ← designer.agent.md
+               │  │ Persona       │  │
+               │  ├───────────────┤  │
+               │  │ Design        │  │ ← design-patterns/SKILL.md
+               │  │ Patterns      │  │
+               │  ├───────────────┤  │
+               │  │ Prompt        │  │ ← design-review.prompt.md
+               │  │ Template      │  │
+               │  └───────┬───────┘  │
+               │          │          │
+               │    MERGED CONTEXT   │
+               │          │          │
+               └──────────┴──────────┘
+                          │
+                    AI RESPONSE
+                  (fully customized)
 ```
 
-## How to Extend This System
+### Handoff Flow Between Agents
+
+Agents can **hand off** to each other for multi-step workflows:
+
+```
+Designer ──handoff──▶ Impact Analyzer ──handoff──▶ Code Reviewer
+   │                       │                           │
+   │ "Here's my            │ "Here's what              │ "Here's the
+   │  design review"       │  changes would            │  code quality
+   │                       │  affect"                  │  assessment"
+   ▼                       ▼                           ▼
+Design                 Ripple-effect              Code quality
+recommendations        analysis                   feedback
+```
+
+---
+
+## 🔧 How to Extend the System
 
 ### Adding a New Agent
 
-1. Create `.github/agents/your-agent.agent.md`
-2. Define: name, description, tools, handoffs
-3. Write the persona and instructions in the body
-4. Test: select it from the dropdown, ask a question
+<details>
+<summary><strong>Template</strong></summary>
 
-**Template:**
+Create `.github/agents/<name>.agent.md`:
+
 ```markdown
 ---
-name: Your-Agent-Name
-description: 'What this agent does — shown in dropdown'
-tools: ['search', 'codebase']
+description: One-line summary of what this agent specializes in
+tools:
+  - search
+  - codebase
+  - usages
 handoffs:
-  - label: Next Step
-    agent: agent
-    prompt: Follow up on the above.
+  - agent-name-1
+  - agent-name-2
 ---
 
-# Persona Description
+You are a [ROLE]. Your expertise is [DOMAIN].
 
-You are a [role] who [approach].
+When the user asks you to [TASK]:
 
-## How You Work
-[Step-by-step process]
-
-## Output Format
-[Consistent structure for responses]
+1. First, [STEP 1]
+2. Then, [STEP 2]
+3. Finally, [STEP 3]
 
 ## Rules
-[Constraints and guardrails]
+- Always [RULE 1]
+- Never [RULE 2]
+- Prefer [PREFERENCE]
 ```
+
+</details>
 
 ### Adding a New Skill
 
-1. Create folder: `.github/skills/your-skill/`
-2. Create `SKILL.md` with name + description in frontmatter
-3. Add instructions, code examples, and reference material in the body
-4. Optionally add scripts/templates as additional files in the folder
+<details>
+<summary><strong>Template</strong></summary>
 
-**Key:** The `description` field is critical — it's how Copilot decides whether to load your skill. Use specific action verbs:
-```yaml
-# GOOD — specific, matchable
+1. Create folder: `.github/skills/<skill-name>/`
+2. Create `.github/skills/<skill-name>/SKILL.md`:
+
+```markdown
+---
+name: skill-name
 description: >
-  Analyze database query performance, identify slow queries, suggest index optimizations.
-  Use when asked about SQL performance, query plans, or database optimization.
+  Specific description of what this skill provides.
+  Use when asked to [ACTION 1], [ACTION 2], or [ACTION 3].
+---
 
-# BAD — too vague
-description: > 
-  Database stuff.
+# Skill Name
+
+## Quick Reference
+- Key fact 1
+- Key fact 2
+
+## Detailed Instructions
+...
 ```
+
+3. *(Optional)* Add resource files alongside SKILL.md
+
+</details>
 
 ### Adding a New Prompt
 
-1. Create `.github/prompts/your-prompt.prompt.md`
-2. Define: name, description, agent, tools
-3. Write the task instructions in the body, using `${file}`, `${selection}`, etc.
-4. Test: type `/your-prompt` in chat
+<details>
+<summary><strong>Template</strong></summary>
 
-### Adding a New Instruction File
+Create `.github/prompts/<name>.prompt.md`:
 
-1. Create `.github/instructions/your-rules.instructions.md`
-2. Set `applyTo` glob pattern to control when it loads
-3. Write concise, specific rules
-4. Test: open a matching file, chat, check References
+```markdown
+---
+agent: agent-name
+description: What this prompt does (shown in autocomplete)
+---
 
-## Tips From Real-World Usage
+Your task: [CLEAR INSTRUCTION]
 
-1. **Start small.** Use the agents for a week before creating new ones. Learn what's missing.
-2. **Iterate on prompts.** Use the play button in the editor to test and refine prompt files.
-3. **Check diagnostics.** Right-click Chat → Diagnostics shows what's loaded and any errors.
-4. **Don't over-instruct.** Shorter, clearer instructions work better than long essays.
-5. **Use handoffs.** They create natural workflows — Design → Impact → Implement → Review.
-6. **Keep skills focused.** One skill = one capability. Don't create a mega-skill.
-7. **Reference, don't duplicate.** Use Markdown links in prompts/agents to reference instruction files instead of copying rules.
+Steps:
+1. [STEP 1]
+2. [STEP 2]
+3. [STEP 3]
 
-## Further Reading
+Format your response as:
+## Section 1
+...
+## Section 2
+...
+```
 
-- [VS Code: Custom Instructions](https://code.visualstudio.com/docs/copilot/customization/custom-instructions)
-- [VS Code: Custom Agents](https://code.visualstudio.com/docs/copilot/customization/custom-agents)
-- [VS Code: Prompt Files](https://code.visualstudio.com/docs/copilot/customization/prompt-files)
-- [VS Code: Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)
-- [Agent Skills Open Standard](https://agentskills.io/)
-- [Community Examples](https://github.com/github/awesome-copilot)
-- [Clean Code by Robert C. Martin](https://www.oreilly.com/library/view/clean-code/9780136083238/)
-- [Design Patterns: Elements of Reusable OO Software (GoF)](https://www.oreilly.com/library/view/design-patterns-elements/0201633612/)
-- [Refactoring by Martin Fowler](https://refactoring.com/)
+</details>
 
-````
+### Adding a New Instruction
+
+<details>
+<summary><strong>Template</strong></summary>
+
+Create `.github/instructions/<name>.instructions.md`:
+
+```markdown
+---
+applyTo: "glob/pattern/**/*.ext"
+---
+
+# Category Name
+
+- Rule 1: Be specific and actionable
+- Rule 2: Include concrete examples
+- Rule 3: Keep it concise (10-20 rules max)
+```
+
+</details>
+
+---
+
+## 🎯 Real-World Workflow Examples
+
+<details>
+<summary><strong>Workflow 1: Full Design Review</strong></summary>
+
+1. Select **Designer** agent
+2. Type `/design-review`
+3. Get design analysis with SOLID/GRASP assessment
+4. Designer offers handoff to **Impact Analyzer**
+5. Accept → get ripple-effect analysis
+6. Impact Analyzer offers handoff to **Code Reviewer**
+7. Accept → get code quality feedback
+8. **Result:** Complete design + impact + quality review in one flow
+
+</details>
+
+<details>
+<summary><strong>Workflow 2: Debug a Tricky Bug</strong></summary>
+
+1. Select **Debugger** agent
+2. Type `/debug`
+3. Describe the symptom: "NullPointerException on line 42"
+4. Debugger forms hypotheses and guides investigation
+5. Root cause found → Debugger offers handoff to **Impact Analyzer**
+6. Accept → understand what else the fix might affect
+7. **Result:** Systematic bug fix with confidence in impact
+
+</details>
+
+<details>
+<summary><strong>Workflow 3: Learn a New Concept</strong></summary>
+
+1. Select **Learning Mentor** agent
+2. Type `/teach`
+3. Enter topic: "Observer pattern"
+4. Get structured lesson: theory → analogy → code → exercise
+5. Try the exercise → ask follow-up questions
+6. **Result:** Deep understanding with hands-on practice
+
+</details>
+
+---
+
+## 💡 Tips & Best Practices
+
+### Design Principles
+
+1. **Complement, don't contradict** — agents and instructions should reinforce each other
+2. **Keep instructions short** — 10-20 bullet points per instruction file
+3. **Keep agent personas focused** — one specialty per agent
+4. **Use handoffs** — let agents collaborate instead of making one agent do everything
+5. **Include action verbs in skill descriptions** — compile, build, run, debug, test
+
+### Common Mistakes
+
+| Mistake | Problem | Fix |
+|---|---|---|
+| Giant instruction files | Rules get diluted | Split into focused files with narrow `applyTo` |
+| Agent does everything | Persona is unfocused | One specialty per agent, use handoffs |
+| Vague skill descriptions | Skill never loads | Include specific keywords and "Use when..." |
+| Duplicate rules | Conflicting behavior | Put shared rules in `copilot-instructions.md` |
+| Too many prompts | Hard to remember | Keep to 5-8 core workflows |
+
+### Performance
+
+- **Instructions:** Very cheap — plain text, small context cost
+- **Agents:** Medium — persona adds to context but worth it
+- **Skills:** Cheap at rest (only name+description), medium when loaded
+- **Prompts:** Cheap — just a template
+
+---
+
+## 📚 Further Reading
+
+| Resource | Link |
+|---|---|
+| Custom Instructions docs | [VS Code docs](https://code.visualstudio.com/docs/copilot/customization/custom-instructions) |
+| Custom Agents docs | [VS Code docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents) |
+| Prompt Files docs | [VS Code docs](https://code.visualstudio.com/docs/copilot/customization/prompt-files) |
+| Agent Skills spec | [agentskills.io](https://agentskills.io/) |
+| Copilot customization overview | [VS Code docs](https://code.visualstudio.com/docs/copilot/customization) |
+
+---
+
+<p align="center">
+
+[← Back to main guide](../README.md) · [Getting Started](getting-started.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Instructions](../instructions/README.md)
+
+</p>
