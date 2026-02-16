@@ -239,7 +239,7 @@ This learning project includes working samples of each primitive, organized into
 | `design-patterns` | [`skills/design-patterns/`](skills/design-patterns/SKILL.md) | Design patterns, SOLID, architecture questions |
 | `java-debugging` | [`skills/java-debugging/`](skills/java-debugging/SKILL.md) | Exception analysis, debugging techniques |
 | `java-learning-resources` | [`skills/java-learning-resources/`](skills/java-learning-resources/SKILL.md) | Java-specific learning resources, official docs, tutorials |
-| `software-engineering-resources` | [`skills/software-engineering-resources/`](skills/software-engineering-resources/SKILL.md) | Comprehensive SE/CS: DSA, system design, OS, networking, DBMS, testing, DevOps, frameworks, books |
+| `software-engineering-resources` | [`skills/software-engineering-resources/`](skills/software-engineering-resources/SKILL.md) | Comprehensive SE/CS: DSA, system design, OS, networking, DBMS, testing, DevOps, build tools, Git, security, industry concepts, tech trends, frameworks, books |
 | `daily-assistant-resources` | [`skills/daily-assistant-resources/`](skills/daily-assistant-resources/SKILL.md) | Finance basics, productivity methods, news sources, research tools |
 | `career-resources` | [`skills/career-resources/`](skills/career-resources/SKILL.md) | Tech career roles, skills matrices, compensation data, roadmaps |
 
