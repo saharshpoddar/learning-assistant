@@ -136,7 +136,7 @@ java-build/                ← Activates for: compile, build, run
 design-patterns/           ← Activates for: Pattern decisions, SOLID
 java-debugging/            ← Activates for: Exceptions, stack traces
 java-learning-resources/   ← Activates for: Java learning, tutorials, docs
-software-engineering-resources/ ← Activates for: DSA, system design, OS, networking, DBMS, testing, DevOps, frameworks
+software-engineering-resources/ ← Activates for: DSA, system design, OS, networking, DBMS, testing, DevOps, build tools, Git, security, industry concepts, tech trends
 daily-assistant-resources/  ← Activates for: Finance, productivity, news, daily planning
 career-resources/           ← Activates for: Job roles, salaries, career paths, skills
 ```

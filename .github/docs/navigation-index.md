@@ -93,7 +93,7 @@
 | `design-patterns` | Patterns, SOLID | Pattern decision guide |
 | `java-debugging` | Exceptions, debugging | Exception diagnosis |
 | `java-learning-resources` | Java tutorials, docs | Java resource index |
-| `software-engineering-resources` | DSA, system design, OS, DevOps, frameworks | Comprehensive SE/CS resources |
+| `software-engineering-resources` | DSA, system design, OS, DevOps, Git, build tools, security, industry, trends | Comprehensive SE/CS resources |
 | `daily-assistant-resources` | Finance, productivity, news | Daily life resources |
 | `career-resources` | Job roles, salaries, career | Career data and roadmaps |
 
