@@ -30,10 +30,10 @@
 | Action | How |
 |---|---|
 | **Switch persona** | Chat dropdown → select **Designer**, **Debugger**, **Impact-Analyzer**, or **Learning-Mentor** |
-| **Run a workflow** | Type `/hub`, `/dsa`, `/system-design`, `/devops`, `/language-guide`, `/tech-stack`, `/sdlc`, `/daily-assist`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, `/interview-prep`, `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
+| **Run a workflow** | Type `/hub`, `/dsa`, `/system-design`, `/devops`, `/language-guide`, `/tech-stack`, `/sdlc`, `/career-roles`, `/daily-assist`, `/multi-session`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, `/interview-prep`, `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
 | **Coding standards** | Automatic — open any `.java` file, instructions load via glob match |
 | **Extra knowledge** | Automatic — ask about building, patterns, or debugging and the matching skill loads |
-| **See everything** | [Documentation Map](#-documentation-map) · [File Reference](docs/file-reference.md) · [Getting Started Tutorial](docs/getting-started.md) |
+| **See everything** | [Navigation Index](docs/navigation-index.md) · [Documentation Map](#-documentation-map) · [File Reference](docs/file-reference.md) · [Getting Started Tutorial](docs/getting-started.md) |
 
 ---
 
@@ -109,6 +109,8 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
 │   ├── tech-stack.prompt.md                /tech-stack (frameworks, databases)
 │   ├── sdlc.prompt.md                      /sdlc (phases & methodologies)
 │   ├── daily-assist.prompt.md              /daily-assist (finance, productivity)
+│   ├── career-roles.prompt.md              /career-roles (job roles, skills, pay)
+│   ├── multi-session.prompt.md             /multi-session (cross-session state)
 │   ├── design-review.prompt.md             /design-review
 │   ├── debug.prompt.md                     /debug
 │   ├── impact.prompt.md                    /impact
@@ -132,12 +134,14 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
 │   ├── java-debugging/SKILL.md             Exception patterns & debug techniques
 │   ├── java-learning-resources/SKILL.md    Curated Java learning resource index
 │   ├── software-engineering-resources/SKILL.md  Comprehensive SE/CS resource index
-│   └── daily-assistant-resources/SKILL.md  Daily assistant resources (finance, productivity, news)
+│   ├── daily-assistant-resources/SKILL.md  Daily assistant resources (finance, productivity, news)
+│   └── career-resources/SKILL.md           Career data (roles, skills, pay, roadmaps)
 │
 └── docs/                                ← Documentation & tutorials
     ├── getting-started.md                  Step-by-step tutorial
     ├── customization-guide.md              Architecture deep-dive
-    └── file-reference.md                   Who reads what (Copilot vs developer)
+    ├── file-reference.md                   Who reads what (Copilot vs developer)
+    └── navigation-index.md                 Master index of all commands & files
 ```
 
 ### What's NOT Official
@@ -201,6 +205,8 @@ This learning project includes working samples of each primitive, organized into
 | `/tech-stack` | [`tech-stack.prompt.md`](prompts/tech-stack.prompt.md) | Frameworks, libraries, databases — compare & learn |
 | `/sdlc` | [`sdlc.prompt.md`](prompts/sdlc.prompt.md) | SDLC phases, methodologies, engineering practices |
 | `/daily-assist` | [`daily-assist.prompt.md`](prompts/daily-assist.prompt.md) | Finance, productivity, news, daily life tasks |
+| `/career-roles` | [`career-roles.prompt.md`](prompts/career-roles.prompt.md) | Job roles, skills, pay ranges, career roadmaps |
+| `/multi-session` | [`multi-session.prompt.md`](prompts/multi-session.prompt.md) | Manage state across multiple chat sessions |
 
 > 📖 **Deep dive:** [Prompts Guide →](prompts/README.md)
 
@@ -232,6 +238,7 @@ This learning project includes working samples of each primitive, organized into
 | `java-learning-resources` | [`skills/java-learning-resources/`](skills/java-learning-resources/SKILL.md) | Java-specific learning resources, official docs, tutorials |
 | `software-engineering-resources` | [`skills/software-engineering-resources/`](skills/software-engineering-resources/SKILL.md) | Comprehensive SE/CS: DSA, system design, OS, networking, DBMS, testing, DevOps, frameworks, books |
 | `daily-assistant-resources` | [`skills/daily-assistant-resources/`](skills/daily-assistant-resources/SKILL.md) | Finance basics, productivity methods, news sources, research tools |
+| `career-resources` | [`skills/career-resources/`](skills/career-resources/SKILL.md) | Tech career roles, skills matrices, compensation data, roadmaps |
 
 > 📖 **Deep dive:** [Skills Guide →](skills/README.md)
 
@@ -337,7 +344,8 @@ When multiple files are loaded, Copilot merges them in this order (highest prior
 │    └── skills/README.md ················ Skill folders, progressive loading
 │
 ├─── Reference
-│    └── docs/file-reference.md ·········· Who reads what (🤖 Copilot vs 👤 developer)
+│    ├── docs/file-reference.md ·········· Who reads what (🤖 Copilot vs 👤 developer)
+│    └── docs/navigation-index.md ········ Master index: all commands, files, workflows
 │
 └─── Tutorials & Deep Dives
      ├── docs/getting-started.md ········· Hands-on: verify setup, try each primitive
@@ -349,6 +357,7 @@ When multiple files are loaded, Copilot merges them in this order (highest prior
 | [Getting Started →](docs/getting-started.md) | Verify setup, try each primitive hands-on | ~30 min |
 | [Customization Guide →](docs/customization-guide.md) | Architecture, how primitives connect, extending | ~20 min |
 | [File Reference →](docs/file-reference.md) | Which files Copilot reads vs. developer docs | ~5 min |
+| [Navigation Index →](docs/navigation-index.md) | Master lookup: all commands, agents, skills, file map | ~5 min |
 | [Instructions Guide →](instructions/README.md) | Glob patterns, conditional rules, examples | ~15 min |
 | [Agents Guide →](agents/README.md) | Custom personas, tools, handoffs, examples | ~15 min |
 | [Prompts Guide →](prompts/README.md) | Slash commands, variables, meta-prompts | ~15 min |
@@ -413,6 +422,6 @@ Not every file in `.github/` is read by Copilot. Understanding who reads what pr
 
 <p align="center">
 
-**Navigation:** [Getting Started →](docs/getting-started.md) · [Customization Guide →](docs/customization-guide.md) · [File Reference →](docs/file-reference.md) · [Instructions](instructions/README.md) · [Agents](agents/README.md) · [Prompts](prompts/README.md) · [Skills](skills/README.md)
+**Navigation:** [Getting Started →](docs/getting-started.md) · [Customization Guide →](docs/customization-guide.md) · [File Reference →](docs/file-reference.md) · [Navigation Index →](docs/navigation-index.md) · [Instructions](instructions/README.md) · [Agents](agents/README.md) · [Prompts](prompts/README.md) · [Skills](skills/README.md)
 
 </p>

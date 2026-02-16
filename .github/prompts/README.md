@@ -71,6 +71,8 @@ Result:      Structured explanation of Main.java
 | `/tech-stack` | [`tech-stack.prompt.md`](tech-stack.prompt.md) | Learning-Mentor | Frameworks, libraries, databases — compare & learn |
 | `/sdlc` | [`sdlc.prompt.md`](sdlc.prompt.md) | Learning-Mentor | SDLC phases, methodologies, practices |
 | `/daily-assist` | [`daily-assist.prompt.md`](daily-assist.prompt.md) | Daily-Assistant | Finance, productivity, news, daily life tasks |
+| `/career-roles` | [`career-roles.prompt.md`](career-roles.prompt.md) | Learning-Mentor | Job roles, skills, pay, career roadmaps |
+| `/multi-session` | [`multi-session.prompt.md`](multi-session.prompt.md) | Agent | Manage state across multiple chat sessions |
 
 ---
 

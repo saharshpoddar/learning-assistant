@@ -290,6 +290,123 @@ Lock-Free Data Structures → CAS Operations
 
 ---
 
+## Distributed Systems
+
+### Books
+| Book | Author | Core Topics |
+|---|---|---|
+| **Designing Data-Intensive Applications** | Martin Kleppmann | Replication, partitioning, consistency, stream processing |
+| **Distributed Systems (3rd Ed.)** | Tanenbaum & Van Steen | Architectures, processes, communication, naming, consistency |
+| **Understanding Distributed Systems** | Roberto Vitillo | Practical guide, communication, coordination, scalability |
+| **Database Internals** | Alex Petrov | Storage engines, distributed transactions, consensus |
+
+### Online Resources
+| Resource | URL | Best For |
+|---|---|---|
+| **Distributed Systems for Fun and Profit** | `http://book.mixu.net/distsys/` | Free, concise distributed systems intro |
+| **MIT 6.824 (Distributed Systems)** | `https://pdos.csail.mit.edu/6.824/` | Academic course with labs (Raft, MapReduce) |
+| **Jepsen** | `https://jepsen.io/` | Distributed systems correctness testing |
+| **The Morning Paper** | `https://blog.acolyer.org/` | CS paper summaries (archived, still valuable) |
+| **Martin Kleppmann's Blog** | `https://martin.kleppmann.com/` | Distributed data, CRDTs, formal verification |
+
+### Replication Topologies
+```
+Single-Leader (Master-Slave / Primary-Replica)
+────────────────────────────────────────────
+  Write → [Leader] → replicates to → [Follower 1]
+                                    → [Follower 2]
+                                    → [Follower N]
+  Read  ← [any node]
+
+  ✅ Simple, strong consistency on leader
+  ❌ Leader is SPOF, writes don't scale
+  📌 Used by: PostgreSQL streaming replication, MySQL
+
+Multi-Leader (Master-Master / Active-Active)
+────────────────────────────────────────────
+  Write → [Leader A] ←→ sync ←→ [Leader B]
+  Read  ← [any leader]
+
+  ✅ Writes scale, geo-distributed writes
+  ❌ Conflict resolution is hard
+  📌 Used by: CouchDB, multi-region setups
+
+Leaderless (Peer-to-Peer / Dynamo-style)
+────────────────────────────────────────
+  Write → [Node A, Node B, Node C]   (W quorum)
+  Read  ← [Node A, Node B, Node C]   (R quorum)
+  Rule:   W + R > N  for consistency
+
+  ✅ High availability, no SPOF
+  ❌ Eventual consistency, read repair needed
+  📌 Used by: Cassandra, DynamoDB, Riak
+```
+
+### Consensus Algorithms
+| Algorithm | Approach | Used By |
+|---|---|---|
+| **Raft** | Leader-based, understandable | etcd, CockroachDB, Consul |
+| **Paxos** | Quorum-based, theoretical foundation | Chubby (Google), original academia |
+| **Multi-Paxos** | Paxos optimized for repeated decisions | Spanner (Google) |
+| **ZAB** | Zookeeper Atomic Broadcast | Apache ZooKeeper |
+| **PBFT** | Byzantine fault tolerant | Blockchain, adversarial environments |
+| **Viewstamped Replication** | View-change based consensus | Research, some production systems |
+
+### Consistency Models
+```
+Strong Consistency
+  └── Linearizability — operations appear instantaneous, globally ordered
+  └── Sequential Consistency — all processes see same order
+
+Weak Consistency
+  └── Eventual Consistency — all replicas converge eventually
+  └── Causal Consistency — causally related ops in order, concurrent ops unordered
+  └── Read-Your-Writes — a client always sees its own writes
+  └── Monotonic Reads — a client never sees older data after seeing newer data
+```
+
+### Distributed Systems Concepts Map
+```
+Communication:
+  RPC → REST → gRPC → Message Queues → Event Streaming →
+  Pub/Sub → Request-Reply → Async Messaging
+
+Replication:
+  Single-Leader → Multi-Leader → Leaderless →
+  Synchronous vs Async → Quorum (W + R > N) →
+  Chain Replication → Log Replication
+
+Consistency & Ordering:
+  Linearizability → Sequential → Causal → Eventual →
+  Vector Clocks → Lamport Timestamps → Happens-Before
+
+Fault Tolerance:
+  Failure Detection (heartbeats, φ accrual) →
+  Leader Election → Fencing → Split-Brain Prevention →
+  Circuit Breaker → Bulkhead → Retry with Backoff
+
+Coordination:
+  Consensus (Raft/Paxos) → Distributed Locks →
+  Leader Election → Barrier → Two-Phase Commit (2PC) →
+  Saga Pattern → Outbox Pattern
+
+Partitioning (Sharding):
+  Hash Partitioning → Range Partitioning →
+  Consistent Hashing → Virtual Nodes →
+  Rebalancing → Hot Spots
+```
+
+### Key Theorems & Trade-offs
+| Theorem | Statement | Implication |
+|---|---|---|
+| **CAP** | Choose 2 of: Consistency, Availability, Partition tolerance | In network partitions, choose C or A |
+| **PACELC** | If Partition → choose A or C; Else → choose Latency or Consistency | Extends CAP to normal operation trade-offs |
+| **FLP Impossibility** | No deterministic consensus in async systems with even 1 failure | Consensus algorithms use timeouts/randomization |
+| **Two Generals** | Cannot guarantee agreement over unreliable channel | At-least-once / idempotency needed |
+| **Byzantine Generals** | Agreement possible if > 2/3 nodes are honest | Foundation for BFT algorithms |
+
+---
+
 ## DevOps, CI/CD & Infrastructure
 
 ### CI/CD Tools

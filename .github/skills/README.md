@@ -63,6 +63,7 @@ Skills are also an **open standard** ([agentskills.io](https://agentskills.io/))
 | [`java-learning-resources`](java-learning-resources/SKILL.md) | `skills/java-learning-resources/` | Learning, tutorials, docs, resources | Curated index of Java-specific docs, tutorials, blogs, OSS projects |
 | [`software-engineering-resources`](software-engineering-resources/SKILL.md) | `skills/software-engineering-resources/` | DSA, system design, OS, networking, DBMS, testing, DevOps, frameworks, interview, books, SE concepts | Comprehensive SE/CS resource index — books, online resources, patterns, protocols, DevOps tools, frameworks |
 | [`daily-assistant-resources`](daily-assistant-resources/SKILL.md) | `skills/daily-assistant-resources/` | Finance, budgeting, productivity, time management, news, research, daily planning | Curated daily life resources — productivity methods, finance basics, news sources, research tools |
+| [`career-resources`](career-resources/SKILL.md) | `skills/career-resources/` | Job roles, salaries, career, skills matrix, interview, roadmap, tech careers | Tech career resources — role hierarchies, skills matrices, compensation data, interview processes |
 
 ---
 

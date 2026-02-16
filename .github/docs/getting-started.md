@@ -60,6 +60,8 @@ Your `.github/` folder contains everything Copilot uses to customize its behavio
 │   ├── tech-stack.prompt.md             ← /tech-stack (frameworks, DBs)
 │   ├── sdlc.prompt.md                   ← /sdlc (phases & methodologies)
 │   ├── daily-assist.prompt.md           ← /daily-assist (finance, productivity)
+│   ├── career-roles.prompt.md           ← /career-roles (job roles, pay)
+│   ├── multi-session.prompt.md          ← /multi-session (cross-session state)
 │   ├── design-review.prompt.md          ← /design-review
 │   ├── debug.prompt.md                  ← /debug
 │   ├── impact.prompt.md                 ← /impact
@@ -82,12 +84,14 @@ Your `.github/` folder contains everything Copilot uses to customize its behavio
 │   ├── java-debugging/SKILL.md          ← Exception diagnosis
 │   ├── java-learning-resources/SKILL.md ← Curated Java learning resource index
 │   ├── software-engineering-resources/SKILL.md ← Comprehensive SE/CS resource index
-│   └── daily-assistant-resources/SKILL.md ← Daily life resources (finance, productivity)
+│   ├── daily-assistant-resources/SKILL.md ← Daily life resources (finance, productivity)
+│   └── career-resources/SKILL.md    ← Career data (roles, skills, pay)
 │
 └── docs/                                ← Documentation (you are here)
     ├── getting-started.md               ← This tutorial
     ├── customization-guide.md           ← Architecture deep-dive
-    └── file-reference.md                ← Who reads what (🤖 vs 👤)
+    ├── file-reference.md                ← Who reads what (🤖 vs 👤)
+    └── navigation-index.md              ← Master index of all commands & files
 ```
 
 > 💡 **Important distinction:** Not all files in `.github/` are read by Copilot. Files like `README.md` and `docs/*.md` are for **you** (the developer). Files like `*.agent.md`, `*.prompt.md`, `*.instructions.md`, and `SKILL.md` are read by **Copilot** (the AI). See [File Reference](file-reference.md) for the complete breakdown.
@@ -343,6 +347,21 @@ Eight specialized prompts provide **hierarchical navigation** across all learnin
 2. Enter category: `finance` (or `productivity`, `news`, `research`)
 3. Enter request: `explain SIP vs lumpsum investing` (or `create a weekly study plan`)
 4. ✅ **Expected:** Structured, actionable guidance with frameworks and tools
+
+### Try /career-roles — Tech Career Exploration
+
+1. Type: `/career-roles`
+2. Enter role: `MLE` (or `SDE`, `DevOps`, `Software Architect`, `Tech Lead`)
+3. Enter goal: `overview` (or `skills`, `pay`, `compare`, `roadmap`)
+4. Enter level: `mid`
+5. ✅ **Expected:** Full role profile with skills matrix, pay ranges, synonymous titles, and career roadmap
+
+### Try /multi-session — Cross-Session State
+
+1. Type: `/multi-session`
+2. Enter action: `save-state`
+3. Enter task: describe your current work
+4. ✅ **Expected:** A session state file or handoff summary that you can paste into a new chat to resume work
 
 ---
 

@@ -36,6 +36,8 @@
 │   ├── tech-stack.prompt.md             🤖 Loaded when /tech-stack invoked
 │   ├── sdlc.prompt.md                   🤖 Loaded when /sdlc invoked
 │   ├── daily-assist.prompt.md           🤖 Loaded when /daily-assist invoked
+│   ├── career-roles.prompt.md           🤖 Loaded when /career-roles invoked
+│   ├── multi-session.prompt.md          🤖 Loaded when /multi-session invoked
 │   ├── design-review.prompt.md          🤖 Loaded when /design-review invoked
 │   ├── debug.prompt.md                  🤖 Loaded when /debug invoked
 │   ├── impact.prompt.md                 🤖 Loaded when /impact invoked
@@ -58,7 +60,8 @@
 │   ├── java-debugging/SKILL.md         🤖 Auto-loaded when topic matches
 │   ├── java-learning-resources/SKILL.md 🤖 Auto-loaded when topic matches
 │   ├── software-engineering-resources/SKILL.md 🤖 Auto-loaded when topic matches
-│   └── daily-assistant-resources/SKILL.md 🤖 Auto-loaded when topic matches
+│   ├── daily-assistant-resources/SKILL.md 🤖 Auto-loaded when topic matches
+│   └── career-resources/SKILL.md    🤖 Auto-loaded when topic matches
 │
 │  ┌─────────────────────────────────────────────────────────┐
 │  │  👤 FILES FOR DEVELOPERS (documentation & learning)    │
@@ -81,7 +84,8 @@
 └── docs/
     ├── getting-started.md               👤 Hands-on tutorial (~30 min)
     ├── customization-guide.md           👤 Architecture deep-dive
-    └── file-reference.md               👤 This file — who reads what
+    ├── file-reference.md               👤 This file — who reads what
+    └── navigation-index.md             👤 Master index of all commands & files
 ```
 
 ---

@@ -98,11 +98,26 @@ You are the **navigation hub** for all available assistants and learning command
 │    ├── Open Source Study
 │    │   └── /explore-project ······· Learn from OSS architecture & patterns
 │    │
-│    └── CS Fundamentals (/hub cs)
-│        ├── /learn-concept os ······ Operating Systems
-│        ├── /learn-concept networking · Networking & Protocols
-│        ├── /learn-concept dbms ···· Databases & Storage
-│        └── /learn-concept concurrency · Concurrency & Multithreading
+│    ├── CS Fundamentals (/hub cs)
+│    │   ├── /learn-concept os ······ Operating Systems
+│    │   ├── /learn-concept networking · Networking & Protocols
+│    │   ├── /learn-concept dbms ···· Databases & Storage
+│    │   ├── /learn-concept concurrency · Concurrency & Multithreading
+│    │   └── /learn-concept distributed · Distributed Systems
+│    │       ├── replication ········ Single-leader, multi-leader, leaderless
+│    │       ├── consensus ·········· Raft, Paxos, ZAB
+│    │       ├── consistency ········ Linearizability, eventual, causal
+│    │       ├── partitioning ······· Sharding, consistent hashing
+│    │       └── fault-tolerance ···· Leader election, circuit breakers, sagas
+│    │
+│    └── Career & Roles (/hub career)
+│        └── /career-roles ·········· Tech career exploration
+│            ├── overview ··········· Full role profile + day-in-the-life
+│            ├── skills ············· Skills matrix by role & level
+│            ├── pay ················ Compensation data (web-scraped)
+│            ├── compare ············ Side-by-side role comparison
+│            ├── roadmap ············ Career transition plan
+│            └── interview-prep ····· Role-specific interview guide
 │
 ├─── DAILY ASSISTANT (/hub daily)
 │    └── /daily-assist ·············· Non-SE daily productivity
@@ -114,7 +129,12 @@ You are the **navigation hub** for all available assistants and learning command
 ├─── META COMMANDS (control HOW the assistant works)
 │    ├── /composite ················· Combine multiple modes in one session
 │    ├── /context ··················· Continue prior conversation or start fresh
-│    └── /scope ····················· Generic learning vs code-specific
+│    ├── /scope ····················· Generic learning vs code-specific
+│    └── /multi-session ············· Manage state across chat sessions
+│        ├── save-state ············· Save progress to session file
+│        ├── resume ················· Resume from checkpoint
+│        ├── handoff ················ Transfer context to new session
+│        └── status ················· Check session health & token usage
 │
 └─── AGENTS (select from dropdown instead of typing)
      ├── Learning-Mentor ············ Teaching with theory, analogies, code
@@ -154,6 +174,8 @@ Quick Commands:
   /tech-stack       → Frameworks & tech comparison
   /sdlc             → Development lifecycle & methods
   /interview-prep   → Interview preparation
+  /career-roles   → Job roles, skills, pay, career paths
+  /multi-session   → Save/resume across chat sessions
   /daily-assist     → Finance, productivity, news
   /deep-dive        → Progressive concept mastery
   /reading-plan     → Structured study plan

@@ -119,6 +119,8 @@ Learning Mentor← Thinks in analogies, exercises, progression
 /tech-stack   → Frameworks, libraries, databases — compare & learn
 /sdlc         → SDLC phases, methodologies, engineering practices
 /daily-assist → Finance, productivity, news, daily life tasks
+/career-roles → Job roles, skills, pay, career roadmaps
+/multi-session → Manage state across multiple chat sessions
 ```
 
 **Role:** Define *what* to do — pre-built workflows you trigger with a command.  
@@ -136,6 +138,7 @@ java-debugging/            ← Activates for: Exceptions, stack traces
 java-learning-resources/   ← Activates for: Java learning, tutorials, docs
 software-engineering-resources/ ← Activates for: DSA, system design, OS, networking, DBMS, testing, DevOps, frameworks
 daily-assistant-resources/  ← Activates for: Finance, productivity, news, daily planning
+career-resources/           ← Activates for: Job roles, salaries, career paths, skills
 ```
 
 **Role:** Provide *extra knowledge* — scripts, templates, domain expertise.  
