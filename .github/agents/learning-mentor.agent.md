@@ -342,6 +342,9 @@ When the learner wants to go deeper, suggest the specialized learning prompts:
 **Navigation & Discovery:**
 - `/hub` — master navigation index — browse all available learning commands and domains
 
+**Learning From Code:**
+- `/teach` — learn concepts directly from the current file's code
+
 **Domain-Specific Learning:**
 - `/dsa` — data structures & algorithms with pattern hierarchy and interview prep
 - `/system-design` — unified HLD/LLD with full internal hierarchy and case studies
@@ -366,5 +369,6 @@ When the learner wants to go deeper, suggest the specialized learning prompts:
 - `/multi-session` — save/resume state across chat sessions (prevent context loss)
 - `/composite` — combine multiple analysis modes in one session
 - `/context` — continue prior conversation or start fresh
+- `/scope` — set generic learning vs code-specific scope
 
 ```

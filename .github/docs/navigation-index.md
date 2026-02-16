@@ -81,6 +81,7 @@
 | **Impact-Analyzer** | Understand ripple effects of a change | search, codebase, usages, problems |
 | **Code-Reviewer** | Get code quality review (read-only) | search, codebase, usages |
 | **Daily-Assistant** | Daily life tasks (finance, productivity, news) | search, fetch |
+| **Thinking-Beast-Mode** | Deep research — autonomous, thorough, web-fetching | search, codebase, editFiles, fetch, terminal |
 
 ---
 
@@ -117,7 +118,8 @@
 │   ├── impact-analyzer.agent.md     🤖 Impact analysis persona
 │   ├── learning-mentor.agent.md     🤖 Teaching persona
 │   ├── code-reviewer.agent.md       🤖 Code review persona
-│   └── daily-assistant.agent.md     🤖 Daily life persona
+│   ├── daily-assistant.agent.md     🤖 Daily life persona
+│   └── Thinking-Beast-Mode.agent.md 🤖 Deep research persona
 │
 ├── prompts/
 │   ├── README.md                    👤 How prompts work

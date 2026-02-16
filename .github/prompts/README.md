@@ -63,7 +63,7 @@ Result:      Structured explanation of Main.java
 | `/reading-plan` | [`reading-plan.prompt.md`](reading-plan.prompt.md) | Learning-Mentor | Structured reading/learning plan with resources |
 | `/learn-concept` | [`learn-concept.prompt.md`](learn-concept.prompt.md) | Learning-Mentor | Learn any CS/SE concept (language-agnostic) |
 | `/interview-prep` | [`interview-prep.prompt.md`](interview-prep.prompt.md) | Learning-Mentor | DSA patterns, system design, interview strategies |
-| `/hub` | [`hub.prompt.md`](hub.prompt.md) | Ask | Master navigation index — browse all commands |
+| `/hub` | [`hub.prompt.md`](hub.prompt.md) | Learning-Mentor | Master navigation index — browse all commands |
 | `/dsa` | [`dsa.prompt.md`](dsa.prompt.md) | Learning-Mentor | Data structures & algorithms with pattern hierarchy |
 | `/system-design` | [`system-design.prompt.md`](system-design.prompt.md) | Learning-Mentor | Unified HLD/LLD with full internal hierarchy |
 | `/devops` | [`devops.prompt.md`](devops.prompt.md) | Learning-Mentor | CI/CD, Docker, Kubernetes, cloud, IaC, monitoring |

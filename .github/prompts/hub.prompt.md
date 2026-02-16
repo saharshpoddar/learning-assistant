@@ -142,7 +142,8 @@ You are the **navigation hub** for all available assistants and learning command
      ├── Debugger ··················· Systematic root cause analysis
      ├── Impact-Analyzer ············ Change ripple effect analysis
      ├── Code-Reviewer ·············· Bug detection, best practices
-     └── Daily-Assistant ············ Finance, productivity, news, research
+     ├── Daily-Assistant ············ Finance, productivity, news, research
+     └── Thinking-Beast-Mode ········ Deep research agent with web fetching
 ```
 
 ### How to Respond
@@ -165,20 +166,46 @@ You are the **navigation hub** for all available assistants and learning command
 
 ```
 Quick Commands:
-  /hub              → This navigation hub
-  /learn-concept    → Learn any concept
-  /dsa              → Data structures & algorithms
-  /system-design    → System design (HLD/LLD)
-  /devops           → CI/CD, Docker, K8s, cloud
-  /language-guide   → Language-specific learning
-  /tech-stack       → Frameworks & tech comparison
-  /sdlc             → Development lifecycle & methods
-  /interview-prep   → Interview preparation
-  /career-roles   → Job roles, skills, pay, career paths
-  /multi-session   → Save/resume across chat sessions
-  /daily-assist     → Finance, productivity, news
-  /deep-dive        → Progressive concept mastery
-  /reading-plan     → Structured study plan
+
+  Navigation & Meta:
+    /hub              → This navigation hub
+    /composite        → Combine multiple modes in one session
+    /context          → Continue prior conversation or start fresh
+    /scope            → Generic learning vs code-specific
+    /multi-session    → Save/resume state across chat sessions
+
+  Learning & Concepts:
+    /learn-concept    → Learn any CS/SE concept
+    /deep-dive        → Progressive multi-layered exploration
+    /learn-from-docs  → Learn via official documentation
+    /reading-plan     → Structured study plan with resources
+    /teach            → Learn concepts from current file
+
+  Domain-Specific:
+    /dsa              → Data structures & algorithms
+    /system-design    → System design (HLD/LLD)
+    /devops           → CI/CD, Docker, K8s, cloud
+    /language-guide   → Language-specific learning
+    /tech-stack       → Frameworks & tech comparison
+    /sdlc             → Development lifecycle & methods
+    /interview-prep   → Interview preparation
+    /career-roles     → Job roles, skills, pay, career paths
+
+  Code Quality & Analysis:
+    /design-review    → SOLID/GRASP design review
+    /refactor         → Identify refactoring opportunities
+    /explain          → Beginner-friendly file explanation
+    /debug            → Systematic bug investigation
+    /impact           → Change impact analysis
+    /explore-project  → Learn from open-source projects
+
+  Daily Life:
+    /daily-assist     → Finance, productivity, news
+
+  Agents (select from dropdown):
+    @Learning-Mentor      @Designer          @Debugger
+    @Impact-Analyzer      @Code-Reviewer     @Daily-Assistant
+    @Thinking-Beast-Mode
 ```
 
 ### Rules

@@ -25,7 +25,8 @@
 │   ├── impact-analyzer.agent.md         🤖 Loaded when agent selected
 │   ├── learning-mentor.agent.md         🤖 Loaded when agent selected
 │   ├── code-reviewer.agent.md           🤖 Loaded when agent selected
-│   └── daily-assistant.agent.md         🤖 Loaded when agent selected
+│   ├── daily-assistant.agent.md         🤖 Loaded when agent selected
+│   └── Thinking-Beast-Mode.agent.md     🤖 Loaded when agent selected
 │
 ├── prompts/
 │   ├── hub.prompt.md                    🤖 Loaded when /hub invoked

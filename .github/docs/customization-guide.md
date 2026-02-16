@@ -219,6 +219,14 @@ Designer ──handoff──▶ Impact Analyzer ──handoff──▶ Code Revi
    ▼                       ▼                           ▼
 Design                 Ripple-effect              Code quality
 recommendations        analysis                   feedback
+
+Learning-Mentor ──handoff──▶ Agent (practice) ──handoff──▶ Code-Reviewer (verify)
+
+Daily-Assistant ──handoff──▶ Learning-Mentor (learn deeper)
+                                │
+                                └──▶ Agent (implement)
+
+Thinking-Beast-Mode: Autonomous (no handoffs — fully self-contained deep research)
 ```
 
 ---

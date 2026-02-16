@@ -29,7 +29,7 @@
 
 | Action | How |
 |---|---|
-| **Switch persona** | Chat dropdown → select **Designer**, **Debugger**, **Impact-Analyzer**, or **Learning-Mentor** |
+| **Switch persona** | Chat dropdown → select **Designer**, **Debugger**, **Impact-Analyzer**, **Learning-Mentor**, **Daily-Assistant**, or **Thinking-Beast-Mode** |
 | **Run a workflow** | Type `/hub`, `/dsa`, `/system-design`, `/devops`, `/language-guide`, `/tech-stack`, `/sdlc`, `/career-roles`, `/daily-assist`, `/multi-session`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, `/interview-prep`, `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
 | **Coding standards** | Automatic — open any `.java` file, instructions load via glob match |
 | **Extra knowledge** | Automatic — ask about building, patterns, or debugging and the matching skill loads |
@@ -97,7 +97,8 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
 │   ├── impact-analyzer.agent.md            Change impact analysis
 │   ├── learning-mentor.agent.md            Teaching & learning
 │   ├── code-reviewer.agent.md             Read-only code review
-│   └── daily-assistant.agent.md            Daily life assistant (non-SE)
+│   ├── daily-assistant.agent.md            Daily life assistant (non-SE)
+│   └── Thinking-Beast-Mode.agent.md        Deep research agent (autonomous)
 │
 ├── prompts/                             ← Slash commands (type /command)
 │   ├── 🎯 README.md                         Guide: how prompts work
@@ -171,6 +172,7 @@ This learning project includes working samples of each primitive, organized into
 | **Learning-Mentor** | [`learning-mentor.agent.md`](agents/learning-mentor.agent.md) | Concept teaching with theory, analogies, and hands-on code |
 | **Code-Reviewer** | [`code-reviewer.agent.md`](agents/code-reviewer.agent.md) | Bug detection, style checks, best practices (read-only) |
 | **Daily-Assistant** | [`daily-assistant.agent.md`](agents/daily-assistant.agent.md) | Finance, productivity, news, daily life tasks |
+| **Thinking-Beast-Mode** | [`Thinking-Beast-Mode.agent.md`](agents/Thinking-Beast-Mode.agent.md) | Deep research agent — autonomous, thorough, web-fetching |
 
 > 📖 **Deep dive:** [Agents Guide →](agents/README.md)
 
@@ -280,7 +282,10 @@ The agents support **handoff buttons** for seamless multi-step workflows:
            │
            └──→ Agent
                 (implement)
-```
+  ┌──────────────────────┐
+  │ Thinking-Beast-Mode  │  Autonomous — no handoffs, fully self-contained
+  │ (deep research)      │  Uses web fetching, terminal, code editing
+  └──────────────────────┘```
 
 ---
 

@@ -49,7 +49,8 @@ Your `.github/` folder contains everything Copilot uses to customize its behavio
 │   ├── impact-analyzer.agent.md         ← Change impact assessor
 │   ├── learning-mentor.agent.md         ← Concept teacher
 │   ├── code-reviewer.agent.md           ← Code quality reviewer
-│   └── daily-assistant.agent.md         ← Daily life assistant (non-SE)
+│   ├── daily-assistant.agent.md            ← Daily life assistant (non-SE)
+│   └── Thinking-Beast-Mode.agent.md        ← Deep research agent (autonomous)
 │
 ├── prompts/                             ← Reusable slash commands
 │   ├── hub.prompt.md                    ← /hub (master navigation)

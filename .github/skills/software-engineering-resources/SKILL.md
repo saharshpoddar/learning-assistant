@@ -134,6 +134,8 @@ Union-Find → Topological Sort → Segment Tree → Monotonic Stack
 | Detect cycles | DFS / Union-Find | Back edges / connectivity |
 
 ### System Design
+
+#### Online Resources
 | Resource | URL | Best For |
 |---|---|---|
 | **System Design Primer** | `https://github.com/donnemartin/system-design-primer` | Comprehensive free guide |
@@ -142,6 +144,9 @@ Union-Find → Topological Sort → Segment Tree → Monotonic Stack
 | **High Scalability** | `http://highscalability.com/` | Real-world architecture case studies |
 | **Martin Fowler's Blog** | `https://martinfowler.com/` | Architectural patterns, enterprise design |
 | **InfoQ Architecture** | `https://www.infoq.com/architecture-design/` | Conference talks, architecture trends |
+| **Awesome System Design** | `https://github.com/madd86/awesome-system-design` | Curated links, papers, talks |
+| **System Design 101 (ByteByteGo)** | `https://github.com/ByteByteGoHq/system-design-101` | Visual cheat sheets for system design topics |
+| **Educative.io System Design** | `https://www.educative.io/courses/grokking-modern-system-design-interview-for-engineers-managers` | Modern interactive system design course |
 
 #### System Design Topics Map
 ```
@@ -155,6 +160,291 @@ LLD (Low-Level Design):
   Class Design → SOLID → Design Patterns → OOP Modeling →
   API Design (REST/gRPC) → Schema Design → State Machines →
   Concurrency Control → Error Handling Strategy → Logging
+```
+
+#### HLD — High-Level Design Components (Deep Dive)
+
+##### Load Balancing
+| Concept | Description | Examples |
+|---|---|---|
+| **L4 (Transport)** | Routes by IP/port, no payload inspection | AWS NLB, HAProxy (TCP mode) |
+| **L7 (Application)** | Routes by HTTP headers, URL, cookies | Nginx, AWS ALB, Envoy |
+| **Algorithms** | Round Robin, Least Connections, IP Hash, Weighted, Consistent Hashing | — |
+| **Health Checks** | Active (ping), Passive (track errors) | Heartbeat, TCP check, HTTP 200 |
+| **Global (DNS-based)** | Geo-routing via DNS | Route 53, Cloudflare LB |
+| **Service Mesh LB** | Sidecar proxy handles LB per-service | Istio, Linkerd |
+
+##### Caching Strategies
+```
+Caching Layers:
+  Client Cache (browser, app)
+    → CDN Cache (edge, static assets)
+      → API Gateway Cache (response cache)
+        → Application Cache (in-process, e.g., Guava, Caffeine)
+          → Distributed Cache (Redis, Memcached)
+            → Database Cache (query cache, materialized views)
+```
+
+| Strategy | Description | When to Use |
+|---|---|---|
+| **Cache-Aside (Lazy)** | App checks cache → miss → reads DB → writes cache | General purpose, read-heavy |
+| **Write-Through** | App writes cache + DB simultaneously | Consistency-critical, slower writes |
+| **Write-Behind (Back)** | App writes cache → async flush to DB | Write-heavy, eventual consistency OK |
+| **Read-Through** | Cache itself fetches from DB on miss | Transparent to application |
+| **Refresh-Ahead** | Pre-fetch before expiry based on access patterns | Predictable access, low latency |
+
+| Eviction Policy | How It Works | Use Case |
+|---|---|---|
+| **LRU** | Evict least recently used | General purpose |
+| **LFU** | Evict least frequently used | Hot-spot heavy workloads |
+| **TTL** | Expire after time-to-live | Time-sensitive data |
+| **FIFO** | Evict oldest entry | Simple, predictable |
+
+##### Content Delivery Network (CDN)
+| Concept | Description |
+|---|---|
+| **Push CDN** | Origin proactively pushes content to edge | 
+| **Pull CDN** | Edge fetches from origin on first request, then caches |
+| **Edge Computing** | Run logic at CDN edge (Cloudflare Workers, Lambda@Edge) |
+| **Cache Invalidation** | Purge by URL, tag, or prefix; versioned filenames (`app.v2.js`) |
+| **Providers** | Cloudflare, AWS CloudFront, Akamai, Fastly |
+
+##### Database Sharding & Partitioning
+| Strategy | How It Works | Pros | Cons |
+|---|---|---|---|
+| **Horizontal (Sharding)** | Split rows across DB instances by shard key | Scales writes, each shard smaller | Cross-shard queries hard |
+| **Vertical** | Split columns into separate tables/services | Isolate hot columns | Joins across partitions |
+| **Hash-Based** | Hash(key) % N → shard | Even distribution | Rebalancing on shard add/remove |
+| **Range-Based** | Key ranges → shards (A-M, N-Z) | Range queries easy | Hot spots if uneven |
+| **Consistent Hashing** | Hash ring with virtual nodes | Minimal redistribution on changes | Complexity |
+| **Directory-Based** | Lookup table maps key → shard | Flexible | Directory is SPOF |
+
+##### Message Queues & Event-Driven Architecture
+```
+Point-to-Point (Queue):
+  Producer → [Queue] → Consumer (one consumer gets each message)
+  Used: Task distribution, order processing
+  Examples: SQS, RabbitMQ (default)
+
+Pub/Sub (Fan-out):
+  Publisher → [Topic] → Subscriber A
+                      → Subscriber B
+                      → Subscriber N
+  Used: Notifications, event broadcasting
+  Examples: SNS, Kafka topics, Redis Pub/Sub
+
+Event Streaming:
+  Producer → [Log/Partition] → Consumer Group A (parallel consumers)
+                              → Consumer Group B
+  Used: Real-time analytics, audit trail, replay
+  Examples: Kafka, Pulsar, Kinesis
+```
+
+| Pattern | Description | Use Case |
+|---|---|---|
+| **CQRS** | Separate read/write models | Read-heavy with different query needs |
+| **Event Sourcing** | Store events, not state; replay to reconstruct | Audit trail, temporal queries |
+| **Outbox Pattern** | Write to DB + outbox table → relay to queue | Reliable event publishing |
+| **Saga Pattern** | Distributed transaction via compensating events | Cross-service workflows |
+| **Dead Letter Queue** | Failed messages go to DLQ for inspection | Error handling, debugging |
+
+##### Microservices Architecture
+| Concept | Description |
+|---|---|
+| **Service Decomposition** | Split by bounded context (DDD), not by technical layer |
+| **API Gateway** | Single entry point: routing, auth, rate limiting, aggregation |
+| **Service Mesh** | Sidecar proxies handle networking (mTLS, retries, LB) — Istio, Linkerd |
+| **Service Discovery** | Dynamic lookup: Consul, Eureka, K8s DNS |
+| **Saga vs 2PC** | Saga (eventual) for most distributed txns; 2PC (strong) for critical atomicity |
+| **Sidecar Pattern** | Co-deploy helper process alongside main service (logging, proxy) |
+| **Strangler Fig** | Incrementally replace monolith by routing to new services |
+| **Backend for Frontend (BFF)** | Separate API layers per client type (mobile, web, IoT) |
+
+##### Rate Limiting
+| Algorithm | How It Works | Pros | Cons |
+|---|---|---|---|
+| **Token Bucket** | Tokens added at fixed rate, consumed per request | Allows bursts, simple | Burst size tuning |
+| **Leaky Bucket** | Requests processed at fixed rate, overflow dropped | Smooth output | No burst support |
+| **Fixed Window** | Count requests per time window | Simple | Burst at window edges |
+| **Sliding Window Log** | Track timestamp of each request, count in window | Accurate | Memory-heavy |
+| **Sliding Window Counter** | Weighted count across current + previous window | Good balance | Approximation |
+
+##### Reliability & Resilience Patterns
+| Pattern | Description | Example |
+|---|---|---|
+| **Circuit Breaker** | Stop calling failing service → fallback → retry after timeout | Netflix Hystrix, Resilience4j |
+| **Bulkhead** | Isolate resources (thread pools, connections) per service | Separate pools per dependency |
+| **Retry with Backoff** | Exponential backoff + jitter on transient failures | `retry(3, backoff=2^n + jitter)` |
+| **Timeout** | Bound waiting time for external calls | HTTP client timeout, gRPC deadline |
+| **Idempotency** | Same request = same result, safe to retry | Idempotency keys (Stripe API) |
+| **Failover** | Active-passive or active-active redundancy | Database failover, DNS failover |
+| **Graceful Degradation** | Reduce features instead of total failure | Show cached data when DB is down |
+| **Health Checks** | Liveness (alive?) + Readiness (ready to serve?) | K8s probes, ELB health checks |
+
+#### LLD — Low-Level Design Patterns (Deep Dive)
+
+##### SOLID Principles Quick Reference
+| Principle | Full Name | One-Liner | Violation Sign |
+|---|---|---|---|
+| **S** | Single Responsibility | One class = one reason to change | "and" in class description |
+| **O** | Open/Closed | Open for extension, closed for modification | Modifying existing code to add features |
+| **L** | Liskov Substitution | Subtypes must be substitutable for base types | Overriding methods that break contracts |
+| **I** | Interface Segregation | Many specific interfaces > one fat interface | Implementing methods that throw `UnsupportedOperationException` |
+| **D** | Dependency Inversion | Depend on abstractions, not concretions | `new ConcreteClass()` inside business logic |
+
+##### Design Pattern Categories for LLD
+| Category | Patterns | When to Use |
+|---|---|---|
+| **Creational** | Singleton, Factory Method, Abstract Factory, Builder, Prototype | Object creation complexity, hide instantiation details |
+| **Structural** | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy | Compose objects, interface adaptation |
+| **Behavioral** | Strategy, Observer, Command, State, Template Method, Iterator, Chain of Responsibility, Mediator, Visitor | Object interaction, algorithms, state changes |
+
+##### API Design Checklist
+| Aspect | REST Best Practice | gRPC Best Practice |
+|---|---|---|
+| **Naming** | Nouns for resources (`/users`), verbs via HTTP methods | Service + Method (`UserService.GetUser`) |
+| **Versioning** | URL (`/v2/users`) or header (`Accept-Version: v2`) | Package version (`user.v2.UserService`) |
+| **Errors** | Standard HTTP status codes + error body | gRPC status codes + `google.rpc.Status` |
+| **Pagination** | `?page=2&size=20` or cursor-based (`?cursor=abc`) | `page_token` + `page_size` in request message |
+| **Filtering** | Query params (`?status=active&sort=name`) | Repeated fields or `FieldMask` |
+| **Auth** | Bearer token (JWT), OAuth2, API key | Metadata headers, mutual TLS |
+| **Rate Limits** | `X-RateLimit-*` headers, `429 Too Many Requests` | Deadline propagation, backpressure |
+
+##### State Machine Design
+```
+Example: Order State Machine
+
+  [CREATED] ──place──▶ [PLACED] ──pay──▶ [PAID] ──ship──▶ [SHIPPED] ──deliver──▶ [DELIVERED]
+       │                   │                │                   │
+       └──cancel──▶ [CANCELLED]  ◀──cancel──┘      ◀──return──┘──▶ [RETURNED]
+
+Rules:
+  - Define all STATES (enum)
+  - Define all EVENTS/TRANSITIONS
+  - Guard conditions (can cancel only if not shipped)
+  - Side effects per transition (send email, update inventory)
+  - Use State Pattern or state machine library (Spring StateMachine, XState)
+```
+
+##### Schema Design Principles
+| Concept | Relational (SQL) | Document (NoSQL) |
+|---|---|---|
+| **Normalize** | 3NF+ — eliminate redundancy, use JOINs | Denormalize — embed related data |
+| **When to denormalize** | Read-heavy + joins are bottleneck | Always start denormalized |
+| **Relationships** | Foreign keys + junction tables | Embed (1:few) or reference (1:many, many:many) |
+| **Indexing** | B-Tree (default), Hash, GIN (full-text), partial indexes | Compound indexes, TTL indexes |
+| **Migration** | Schema migrations (Flyway, Liquibase, Alembic) | Schema-less, validation at app layer |
+
+#### Classic System Design Case Studies
+
+##### HLD Case Studies — Approach Template
+```
+For each system:
+1. Requirements     → Functional + Non-functional
+2. Estimation       → QPS, Storage, Bandwidth, Memory
+3. API Design       → Core endpoints / RPCs
+4. High-Level Arch  → ASCII diagram with all components
+5. Data Model       → Schema + storage choice (SQL/NoSQL/both)
+6. Deep Dive        → 2-3 most interesting components
+7. Scaling          → How to handle 10x → 100x → 1000x
+8. Trade-offs       → Key decisions with alternatives
+9. Bottlenecks      → Failure modes + mitigations
+```
+
+| Case Study | Key Components | Key Concepts |
+|---|---|---|
+| **URL Shortener** | Hash generation, KGS, DB, cache, analytics | Base62 encoding, collision handling, read-heavy |
+| **Rate Limiter** | Token bucket, sliding window, distributed counter | Redis atomic ops, race conditions, distributed sync |
+| **Chat System** | WebSocket servers, presence, message store, push | Fan-out, delivery guarantees, offline queuing |
+| **News Feed** | Fan-out service, ranking, cache, notification | Fan-out-on-write vs fan-out-on-read, celebrity problem |
+| **Video Streaming** | Transcoding, CDN, chunk delivery, recommendation | Adaptive bitrate, DAG task queue, cold storage |
+| **Web Crawler** | Frontier, fetcher, parser, deduplication, DNS resolver | Politeness, URL prioritization, trap detection |
+| **Notification System** | Priority queue, template engine, delivery service | Multi-channel (push/SMS/email), throttling, retry |
+| **Search Autocomplete** | Trie, top-K, data collection, aggregation pipeline | Trie pruning, frequency updates, shard by prefix |
+| **Distributed Cache** | Consistent hashing, cache cluster, eviction | Cache stampede, hot key, replication |
+| **Payment System** | Payment gateway, ledger, reconciliation, idempotency | Double-entry bookkeeping, exactly-once, PCI compliance |
+| **Ride-Sharing** | Geo-index, matching, trip, ETA, surge pricing | Geohash/S2/H3, supply-demand, real-time location |
+| **Distributed File Storage** | Metadata service, chunk servers, replication | GFS/HDFS model, heartbeats, chunk checksums |
+
+##### LLD Case Studies — Approach Template
+```
+For each system:
+1. Use Cases        → Actors + user stories
+2. Class Diagram    → Entities + relationships (UML)
+3. Design Patterns  → Which patterns + why
+4. SOLID Check      → Verify each principle
+5. Code Skeleton    → Key classes/interfaces
+6. State Diagrams   → For stateful entities
+7. Extensibility    → How to add features
+8. Testing Plan     → What + how to test
+```
+
+| Case Study | Key Classes | Key Patterns |
+|---|---|---|
+| **Parking Lot** | ParkingLot, Floor, Slot, Vehicle, Ticket | Strategy (pricing), Factory (vehicle), Observer (display) |
+| **LRU Cache** | LRUCache, DoublyLinkedList, HashMap | — (data structure design) |
+| **Elevator System** | Elevator, Floor, Request, Scheduler | Strategy (scheduling), State (elevator), Observer (display) |
+| **Library Management** | Library, Book, Member, Loan, Fine | Observer (due date), Strategy (fine calc) |
+| **Online Shopping** | Cart, Order, Product, Payment, User | Strategy (payment), Observer (notifications), State (order) |
+| **Tic-Tac-Toe / Chess** | Board, Player, Piece, Move, Game | Command (moves), Strategy (AI), Template Method (game flow) |
+| **Hotel Booking** | Hotel, Room, Booking, Guest, Payment | Strategy (pricing by season), State (room status) |
+| **Vending Machine** | VendingMachine, Inventory, Coin, Product | State (idle/selecting/dispensing), Strategy (payment) |
+
+#### Architecture Styles Comparison
+| Style | When to Use | Pros | Cons | Examples |
+|---|---|---|---|---|
+| **Monolith** | Small team, early stage, simple domain | Simple deploy, easy debugging | Scaling limits, tight coupling | Early-stage startups |
+| **Microservices** | Large team, complex domain, independent scaling | Scale independently, tech diversity | Operational complexity, distributed debugging | Netflix, Uber, Amazon |
+| **Serverless** | Event-driven, variable load, rapid prototyping | Zero ops, auto-scale, pay-per-use | Cold starts, vendor lock-in, time limits | Lambda, Cloud Functions |
+| **Event-Driven** | Async workflows, loose coupling, audit trails | Decoupled, replay, temporal queries | Eventual consistency, debugging complexity | Event sourcing systems |
+| **Hexagonal (Ports & Adapters)** | Domain-centric, testable, swappable infra | Domain isolation, easy testing | More boilerplate | DDD applications |
+| **CQRS** | Separate read/write scaling, complex queries | Optimized read models, event replay | Eventual consistency, complexity | High-read analytics systems |
+| **Service-Oriented (SOA)** | Enterprise integration, reusable services | Reuse, standards (WSDL/SOAP) | Heavyweight, ESB complexity | Enterprise IT |
+
+#### Estimation Cheat Sheet (Back-of-Envelope)
+| Metric | Quick Estimate |
+|---|---|
+| **Seconds in a day** | ~86,400 ≈ ~100K |
+| **Seconds in a month** | ~2.5M |
+| **Seconds in a year** | ~31.5M ≈ ~32M |
+| **1 million requests/day** | ~12 QPS |
+| **1 billion requests/day** | ~12K QPS |
+| **1 char** | 1 byte (ASCII) / 2-4 bytes (UTF-8) |
+| **1 image (average)** | ~300 KB |
+| **1 short video (1 min)** | ~5 MB |
+| **1 TB** | 1,000 GB = 1,000,000 MB |
+| **Read:Write ratio (social)** | ~100:1 or higher |
+| **80/20 rule (caching)** | 20% of data serves 80% of reads |
+
+#### Common System Design Interview Framework
+```
+Step 1: Clarify Requirements (5 min)
+  → Functional requirements (what the system does)
+  → Non-functional requirements (scale, latency, availability, durability)
+  → Out of scope (explicitly state what you won't cover)
+
+Step 2: Estimate Scale (5 min)
+  → DAU / MAU → QPS (read + write)
+  → Storage (per record × records × retention period)
+  → Bandwidth (QPS × avg response size)
+  → Memory for cache (80/20 rule: 20% of daily data)
+
+Step 3: High-Level Design (10-15 min)
+  → Draw architecture diagram (clients, LB, servers, DB, cache, queues)
+  → Identify core APIs (REST / gRPC)
+  → Choose database (SQL vs NoSQL, justify)
+  → Show data flow for main use cases
+
+Step 4: Deep Dive (10-15 min)
+  → Pick 2-3 most interesting/challenging components
+  → Discuss trade-offs (consistency vs availability, latency vs throughput)
+  → Show scaling strategy (sharding, caching, replication)
+  → Address failure modes (what if X goes down?)
+
+Step 5: Wrap Up (5 min)
+  → Summarize key design decisions
+  → Mention what you'd add with more time (monitoring, analytics, ML)
+  → Discuss potential improvements and scaling path
 ```
 
 ### Networking & Protocols
