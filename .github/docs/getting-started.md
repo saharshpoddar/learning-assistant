@@ -59,12 +59,20 @@ Your `.github/` folder contains everything Copilot uses to customize its behavio
 │   ├── explain.prompt.md                ← /explain
 │   ├── composite.prompt.md              ← /composite (combine modes)
 │   ├── context.prompt.md                ← /context (continue/fresh)
-│   └── scope.prompt.md                  ← /scope (generic/specific)
+│   ├── scope.prompt.md                  ← /scope (generic/specific)
+│   ├── learn-from-docs.prompt.md        ← /learn-from-docs (official docs)
+│   ├── explore-project.prompt.md        ← /explore-project (OSS study)
+│   ├── deep-dive.prompt.md              ← /deep-dive (concept mastery)
+│   ├── reading-plan.prompt.md           ← /reading-plan (study plan)
+│   ├── learn-concept.prompt.md          ← /learn-concept (any CS/SE concept)
+│   └── interview-prep.prompt.md         ← /interview-prep (DSA/system design)
 │
 ├── skills/                              ← Auto-loaded tool kits
 │   ├── java-build/SKILL.md              ← Compile & run help
 │   ├── design-patterns/SKILL.md         ← Pattern decision guide
-│   └── java-debugging/SKILL.md          ← Exception diagnosis
+│   ├── java-debugging/SKILL.md          ← Exception diagnosis
+│   ├── java-learning-resources/SKILL.md ← Curated Java learning resource index
+│   └── software-engineering-resources/SKILL.md ← Comprehensive SE/CS resource index
 │
 └── docs/                                ← Documentation (you are here)
     ├── getting-started.md               ← This tutorial
@@ -218,7 +226,57 @@ Three special prompts control **how** Copilot works, not just what it works on.
 
 ---
 
-## Step 8: Create Your Own
+## Step 8: Try the Learning Prompts
+
+Four prompts are designed for **learning from external resources** — documentation, open-source projects, and structured study.
+
+### Try /learn-from-docs
+
+1. Type: `/learn-from-docs`
+2. Enter concept: `sealed classes`
+3. ✅ **Expected:** Explanation grounded in official Oracle/JEP documentation, with simplified translations of formal language, practical code examples, and links to the original docs
+
+### Try /explore-project
+
+1. Type: `/explore-project`
+2. Enter project: `Guava`
+3. Enter focus: `API design`
+4. ✅ **Expected:** Architecture walkthrough, design patterns identified with specific class references, coding practices to learn from, and files to read first
+
+### Try /deep-dive
+
+1. Type: `/deep-dive`
+2. Enter concept: `generics`
+3. Enter level: `intermediate`
+4. ✅ **Expected:** Multi-layered explanation starting from your level, progressing through official docs, real-world patterns, edge cases, and a practice exercise
+
+### Try /reading-plan
+
+1. Type: `/reading-plan`
+2. Enter topic: `design patterns`
+3. Enter time: `30 min/day for 2 weeks`
+4. Enter level: `beginner`
+5. ✅ **Expected:** A phased learning roadmap with a day-by-day schedule, curated resources (official docs, tutorials, books, OSS projects), and practice checkpoints
+
+### Try /learn-concept
+
+1. Type: `/learn-concept`
+2. Enter concept: `CAP theorem` (or any CS/SE concept like `deadlocks`, `B-trees`, `TCP handshake`)
+3. Enter domain: `system design` (or leave blank for auto-detect)
+4. Enter level: `beginner`
+5. ✅ **Expected:** Language-agnostic explanation with analogy, visual representation, real-world systems, connections, and a hands-on exercise
+
+### Try /interview-prep
+
+1. Type: `/interview-prep`
+2. Enter type: `DSA` (or `system-design-HLD`, `system-design-LLD`)
+3. Enter topic: `sliding window` (or `design URL shortener`, etc.)
+4. Enter level: `mid-level`
+5. ✅ **Expected:** Pattern identification, template code, problem progression with LeetCode references, and interview strategy tips
+
+---
+
+## Step 9: Create Your Own
 
 Now that you've tried everything, create your own customization! Pick one:
 

@@ -105,6 +105,12 @@ Learning Mentor← Thinks in analogies, exercises, progression
 /composite      → Combines multiple modes into a unified analysis
 /context        → Continues prior conversation or starts fresh
 /scope          → Sets generic-learning vs code-specific scope
+/learn-from-docs→ Learn concepts via official documentation
+/explore-project→ Learn by studying open-source projects
+/deep-dive      → Multi-layered progressive concept exploration
+/reading-plan   → Structured reading/learning plan with resources
+/learn-concept  → Learn any CS/SE concept (language-agnostic)
+/interview-prep → DSA patterns, system design, interview strategies
 ```
 
 **Role:** Define *what* to do — pre-built workflows you trigger with a command.  
@@ -116,9 +122,11 @@ Learning Mentor← Thinks in analogies, exercises, progression
 ### 4. Skills — The Toolkits
 
 ```
-java-build/        ← Activates for: compile, build, run
-design-patterns/   ← Activates for: Pattern decisions, SOLID
-java-debugging/    ← Activates for: Exceptions, stack traces
+java-build/                ← Activates for: compile, build, run
+design-patterns/           ← Activates for: Pattern decisions, SOLID
+java-debugging/            ← Activates for: Exceptions, stack traces
+java-learning-resources/   ← Activates for: Java learning, tutorials, docs
+software-engineering-resources/ ← Activates for: DSA, system design, OS, networking, DBMS, testing, SE books
 ```
 
 **Role:** Provide *extra knowledge* — scripts, templates, domain expertise.  

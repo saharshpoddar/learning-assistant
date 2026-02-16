@@ -57,6 +57,12 @@ Result:      Structured explanation of Main.java
 | `/composite` | [`composite.prompt.md`](composite.prompt.md) | Agent | Combine multiple modes in one session |
 | `/context` | [`context.prompt.md`](context.prompt.md) | Agent | Continue prior conversation or start fresh |
 | `/scope` | [`scope.prompt.md`](scope.prompt.md) | Agent | Generic learning vs code/domain-specific |
+| `/learn-from-docs` | [`learn-from-docs.prompt.md`](learn-from-docs.prompt.md) | Learning-Mentor | Learn concepts via official documentation |
+| `/explore-project` | [`explore-project.prompt.md`](explore-project.prompt.md) | Learning-Mentor | Learn by studying open-source projects |
+| `/deep-dive` | [`deep-dive.prompt.md`](deep-dive.prompt.md) | Learning-Mentor | Multi-layered progressive concept exploration |
+| `/reading-plan` | [`reading-plan.prompt.md`](reading-plan.prompt.md) | Learning-Mentor | Structured reading/learning plan with resources |
+| `/learn-concept` | [`learn-concept.prompt.md`](learn-concept.prompt.md) | Learning-Mentor | Learn any CS/SE concept (language-agnostic) |
+| `/interview-prep` | [`interview-prep.prompt.md`](interview-prep.prompt.md) | Learning-Mentor | DSA patterns, system design, interview strategies |
 
 ---
 
@@ -343,6 +349,10 @@ Create a test file with tests for ALL public methods, including:
 | `/composite` | Combine multiple analysis modes in one pass |
 | `/context` | Continue from a prior conversation or start clean |
 | `/scope` | Set generic-learning vs code-specific scope |
+| `/learn-from-docs` | Learn a concept through official documentation |
+| `/explore-project` | Study an open-source project's patterns & architecture |
+| `/deep-dive` | Progressive multi-layer concept deep-dive |
+| `/reading-plan` | Generate a structured study plan with curated resources |
 
 ---
 

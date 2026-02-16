@@ -30,7 +30,7 @@
 | Action | How |
 |---|---|
 | **Switch persona** | Chat dropdown → select **Designer**, **Debugger**, **Impact-Analyzer**, or **Learning-Mentor** |
-| **Run a workflow** | Type `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
+| **Run a workflow** | Type `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, `/scope`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, or `/interview-prep` in Chat |
 | **Coding standards** | Automatic — open any `.java` file, instructions load via glob match |
 | **Extra knowledge** | Automatic — ask about building, patterns, or debugging and the matching skill loads |
 | **See everything** | [Documentation Map](#-documentation-map) · [File Reference](docs/file-reference.md) · [Getting Started Tutorial](docs/getting-started.md) |
@@ -108,13 +108,21 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
 │   ├── explain.prompt.md                   /explain
 │   ├── composite.prompt.md                 /composite (combine modes)
 │   ├── context.prompt.md                   /context (continue/fresh)
-│   └── scope.prompt.md                     /scope (generic/specific)
+│   ├── scope.prompt.md                     /scope (generic/specific)
+│   ├── learn-from-docs.prompt.md           /learn-from-docs (official docs)
+│   ├── explore-project.prompt.md           /explore-project (OSS study)
+│   ├── deep-dive.prompt.md                 /deep-dive (concept mastery)
+│   ├── reading-plan.prompt.md              /reading-plan (study plan)
+│   ├── learn-concept.prompt.md             /learn-concept (any CS/SE concept)
+│   └── interview-prep.prompt.md            /interview-prep (DSA/system design)
 │
 ├── skills/                              ← Agent skills (auto by task match)
 │   ├── 🛠️ README.md                         Guide: how skills work
 │   ├── java-build/SKILL.md                 Compile & run Java
 │   ├── design-patterns/SKILL.md            OOP patterns & SOLID reference
-│   └── java-debugging/SKILL.md             Exception patterns & debug techniques
+│   ├── java-debugging/SKILL.md             Exception patterns & debug techniques
+│   ├── java-learning-resources/SKILL.md    Curated Java learning resource index
+│   └── software-engineering-resources/SKILL.md  Comprehensive SE/CS resource index
 │
 └── docs/                                ← Documentation & tutorials
     ├── getting-started.md                  Step-by-step tutorial
@@ -168,6 +176,12 @@ This learning project includes working samples of each primitive, organized into
 | `/composite` | [`composite.prompt.md`](prompts/composite.prompt.md) | Combine multiple modes in one session |
 | `/context` | [`context.prompt.md`](prompts/context.prompt.md) | Continue prior conversation or start fresh |
 | `/scope` | [`scope.prompt.md`](prompts/scope.prompt.md) | Generic learning vs code/domain-specific |
+| `/learn-from-docs` | [`learn-from-docs.prompt.md`](prompts/learn-from-docs.prompt.md) | Learn concepts via official documentation |
+| `/explore-project` | [`explore-project.prompt.md`](prompts/explore-project.prompt.md) | Learn by studying open-source projects |
+| `/deep-dive` | [`deep-dive.prompt.md`](prompts/deep-dive.prompt.md) | Multi-layered progressive concept exploration |
+| `/reading-plan` | [`reading-plan.prompt.md`](prompts/reading-plan.prompt.md) | Structured reading/learning plan with resources |
+| `/learn-concept` | [`learn-concept.prompt.md`](prompts/learn-concept.prompt.md) | Learn any CS/SE concept (language-agnostic) |
+| `/interview-prep` | [`interview-prep.prompt.md`](prompts/interview-prep.prompt.md) | DSA patterns, system design, interview strategies |
 
 > 📖 **Deep dive:** [Prompts Guide →](prompts/README.md)
 
@@ -196,6 +210,8 @@ This learning project includes working samples of each primitive, organized into
 | `java-build` | [`skills/java-build/`](skills/java-build/SKILL.md) | Compile, run, build questions |
 | `design-patterns` | [`skills/design-patterns/`](skills/design-patterns/SKILL.md) | Design patterns, SOLID, architecture questions |
 | `java-debugging` | [`skills/java-debugging/`](skills/java-debugging/SKILL.md) | Exception analysis, debugging techniques |
+| `java-learning-resources` | [`skills/java-learning-resources/`](skills/java-learning-resources/SKILL.md) | Java-specific learning resources, official docs, tutorials |
+| `software-engineering-resources` | [`skills/software-engineering-resources/`](skills/software-engineering-resources/SKILL.md) | Comprehensive SE/CS: DSA, system design, OS, networking, DBMS, testing, books |
 
 > 📖 **Deep dive:** [Skills Guide →](skills/README.md)
 

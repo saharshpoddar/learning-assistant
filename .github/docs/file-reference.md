@@ -35,12 +35,20 @@
 │   ├── explain.prompt.md               🤖 Loaded when /explain invoked
 │   ├── composite.prompt.md             🤖 Loaded when /composite invoked
 │   ├── context.prompt.md               🤖 Loaded when /context invoked
-│   └── scope.prompt.md                 🤖 Loaded when /scope invoked
+│   ├── scope.prompt.md                 🤖 Loaded when /scope invoked
+│   ├── learn-from-docs.prompt.md       🤖 Loaded when /learn-from-docs invoked
+│   ├── explore-project.prompt.md       🤖 Loaded when /explore-project invoked
+│   ├── deep-dive.prompt.md             🤖 Loaded when /deep-dive invoked
+│   ├── reading-plan.prompt.md          🤖 Loaded when /reading-plan invoked
+│   ├── learn-concept.prompt.md         🤖 Loaded when /learn-concept invoked
+│   └── interview-prep.prompt.md        🤖 Loaded when /interview-prep invoked
 │
 ├── skills/
 │   ├── java-build/SKILL.md             🤖 Auto-loaded when topic matches
 │   ├── design-patterns/SKILL.md        🤖 Auto-loaded when topic matches
-│   └── java-debugging/SKILL.md         🤖 Auto-loaded when topic matches
+│   ├── java-debugging/SKILL.md         🤖 Auto-loaded when topic matches
+│   ├── java-learning-resources/SKILL.md 🤖 Auto-loaded when topic matches
+│   └── software-engineering-resources/SKILL.md 🤖 Auto-loaded when topic matches
 │
 │  ┌─────────────────────────────────────────────────────────┐
 │  │  👤 FILES FOR DEVELOPERS (documentation & learning)    │
