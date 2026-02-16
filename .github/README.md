@@ -1,4 +1,4 @@
-# GitHub Copilot Customization — Learning Guide
+# learning-assistant
 
 > **Purpose:** Learn how to customize GitHub Copilot using all 5 official primitives.  
 > **Project:** `learning-assistant` — a simple Java project for hands-on experimentation.  
