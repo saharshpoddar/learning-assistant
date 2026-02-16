@@ -86,7 +86,8 @@
     ├── getting-started.md               👤 Hands-on tutorial (~30 min)
     ├── customization-guide.md           👤 Architecture deep-dive
     ├── file-reference.md               👤 This file — who reads what
-    └── navigation-index.md             👤 Master index of all commands & files
+    ├── navigation-index.md             👤 Master index of all commands & files
+    └── slash-commands.md               👤 Developer slash command reference
 ```
 
 ---
@@ -125,6 +126,7 @@ These files are **documentation for humans**. Copilot does NOT read these to sha
 | **Getting Started** | `.github/docs/getting-started.md` | Step-by-step hands-on tutorial | Second — try everything |
 | **Customization Guide** | `.github/docs/customization-guide.md` | Architecture, how primitives connect | When you want the big picture |
 | **File Reference** | `.github/docs/file-reference.md` | This file — which files are for whom | When confused about a file's purpose |
+| **Slash Commands Ref** | `.github/docs/slash-commands.md` | All 25 slash commands with aliases, inputs, composition | When looking up a specific command |
 
 #### Key rules for developer files:
 - **Content is explanation for humans** — write clearly, use examples, add links
@@ -180,6 +182,6 @@ A: Files alongside `SKILL.md` (like `.sh` scripts, `.java` templates) are 🤖 C
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Getting Started](getting-started.md) · [Customization Guide](customization-guide.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md)
+[← Back to main guide](../README.md) · [Getting Started](getting-started.md) · [Customization Guide](customization-guide.md) · [Slash Commands](slash-commands.md) · [Instructions](../instructions/README.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md)
 
 </p>

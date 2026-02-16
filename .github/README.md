@@ -33,7 +33,7 @@
 | **Run a workflow** | Type `/hub`, `/dsa`, `/system-design`, `/devops`, `/language-guide`, `/tech-stack`, `/sdlc`, `/career-roles`, `/daily-assist`, `/multi-session`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, `/interview-prep`, `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
 | **Coding standards** | Automatic — open any `.java` file, instructions load via glob match |
 | **Extra knowledge** | Automatic — ask about building, patterns, or debugging and the matching skill loads |
-| **See everything** | [Navigation Index](docs/navigation-index.md) · [Documentation Map](#-documentation-map) · [File Reference](docs/file-reference.md) · [Getting Started Tutorial](docs/getting-started.md) |
+| **See everything** | [Navigation Index](docs/navigation-index.md) · [Slash Commands](docs/slash-commands.md) · [Documentation Map](#-documentation-map) · [File Reference](docs/file-reference.md) · [Getting Started Tutorial](docs/getting-started.md) |
 
 ---
 
@@ -142,7 +142,8 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
     ├── getting-started.md                  Step-by-step tutorial
     ├── customization-guide.md              Architecture deep-dive
     ├── file-reference.md                   Who reads what (Copilot vs developer)
-    └── navigation-index.md                 Master index of all commands & files
+    ├── navigation-index.md                 Master index of all commands & files
+    └── slash-commands.md                   Developer slash command reference
 ```
 
 ### What's NOT Official
@@ -350,7 +351,8 @@ When multiple files are loaded, Copilot merges them in this order (highest prior
 │
 ├─── Reference
 │    ├── docs/file-reference.md ·········· Who reads what (🤖 Copilot vs 👤 developer)
-│    └── docs/navigation-index.md ········ Master index: all commands, files, workflows
+│    ├── docs/navigation-index.md ········ Master index: all commands, files, workflows
+│    └── docs/slash-commands.md ·········· All 25 slash commands: aliases, inputs, composition
 │
 └─── Tutorials & Deep Dives
      ├── docs/getting-started.md ········· Hands-on: verify setup, try each primitive
@@ -363,6 +365,7 @@ When multiple files are loaded, Copilot merges them in this order (highest prior
 | [Customization Guide →](docs/customization-guide.md) | Architecture, how primitives connect, extending | ~20 min |
 | [File Reference →](docs/file-reference.md) | Which files Copilot reads vs. developer docs | ~5 min |
 | [Navigation Index →](docs/navigation-index.md) | Master lookup: all commands, agents, skills, file map | ~5 min |
+| [Slash Commands →](docs/slash-commands.md) | All 25 commands: details, aliases, inputs, composition | ~5 min |
 | [Instructions Guide →](instructions/README.md) | Glob patterns, conditional rules, examples | ~15 min |
 | [Agents Guide →](agents/README.md) | Custom personas, tools, handoffs, examples | ~15 min |
 | [Prompts Guide →](prompts/README.md) | Slash commands, variables, meta-prompts | ~15 min |
@@ -427,6 +430,6 @@ Not every file in `.github/` is read by Copilot. Understanding who reads what pr
 
 <p align="center">
 
-**Navigation:** [Getting Started →](docs/getting-started.md) · [Customization Guide →](docs/customization-guide.md) · [File Reference →](docs/file-reference.md) · [Navigation Index →](docs/navigation-index.md) · [Instructions](instructions/README.md) · [Agents](agents/README.md) · [Prompts](prompts/README.md) · [Skills](skills/README.md)
+**Navigation:** [Getting Started →](docs/getting-started.md) · [Customization Guide →](docs/customization-guide.md) · [File Reference →](docs/file-reference.md) · [Navigation Index →](docs/navigation-index.md) · [Slash Commands →](docs/slash-commands.md) · [Instructions](instructions/README.md) · [Agents](agents/README.md) · [Prompts](prompts/README.md) · [Skills](skills/README.md)
 
 </p>

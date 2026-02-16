@@ -382,6 +382,7 @@ These files are **never loaded by Copilot**. They exist as reference material fo
 | `getting-started.md` | `docs/` | Hands-on tutorial |
 | `customization-guide.md` | `docs/` | Architecture deep-dive (this file) |
 | `file-reference.md` | `docs/` | Complete breakdown of who reads what |
+| `slash-commands.md` | `docs/` | All 25 slash commands: aliases, inputs, composition |
 
 **How to write them:**
 - Write as **explanation for humans**: clear prose, examples, links
@@ -489,6 +490,6 @@ These files are **never loaded by Copilot**. They exist as reference material fo
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Getting Started](getting-started.md) · [File Reference](file-reference.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Instructions](../instructions/README.md)
+[← Back to main guide](../README.md) · [Getting Started](getting-started.md) · [File Reference](file-reference.md) · [Slash Commands](slash-commands.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Instructions](../instructions/README.md)
 
 </p>

@@ -8,7 +8,7 @@
 
 ## 📑 Table of Contents
 
-- [Slash Command Quick Reference](#-slash-command-quick-reference)
+- [Slash Command Quick Reference](#-slash-command-quick-reference) · [Full Slash Command Reference →](slash-commands.md)
 - [Agents Quick Reference](#-agents-quick-reference)
 - [Skills Quick Reference](#-skills-quick-reference)
 - [File Map — All .md Files](#-file-map--all-md-files)
@@ -173,7 +173,8 @@
     ├── getting-started.md           👤 Hands-on tutorial
     ├── customization-guide.md       👤 Architecture deep-dive
     ├── file-reference.md            👤 Who reads what (🤖 vs 👤)
-    └── navigation-index.md          👤 This file — master index
+    ├── navigation-index.md          👤 This file — master index
+    └── slash-commands.md            👤 Developer slash command reference
 ```
 
 **Legend:** 🤖 = Copilot reads this file | 👤 = Developer documentation only
@@ -301,6 +302,6 @@ The `/multi-session` prompt can create/update `.github/session-state.md` — a p
 
 <p align="center">
 
-[← Main README](../README.md) · [Getting Started](getting-started.md) · [Customization Guide](customization-guide.md) · [File Reference](file-reference.md)
+[← Main README](../README.md) · [Getting Started](getting-started.md) · [Customization Guide](customization-guide.md) · [File Reference](file-reference.md) · [Slash Commands](slash-commands.md)
 
 </p>

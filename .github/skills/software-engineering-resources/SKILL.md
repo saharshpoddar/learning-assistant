@@ -99,6 +99,8 @@ description: >
 | **Wikipedia — OOP** | `https://en.wikipedia.org/wiki/Object-oriented_programming` | Conceptual overview, history |
 
 ### Data Structures & Algorithms (DSA)
+
+#### Online Resources
 | Resource | URL | Best For |
 |---|---|---|
 | **VisuAlgo** | `https://visualgo.net/` | Animated algorithm visualizations |
@@ -110,28 +112,321 @@ description: >
 | **Blind 75** | `https://neetcode.io/practice` | Core 75 problems covering all patterns |
 | **AlgoExpert** | `https://www.algoexpert.io/` | Video explanations + coding |
 | **CP-Algorithms** | `https://cp-algorithms.com/` | Competitive programming algorithms |
+| **MIT OpenCourseWare 6.006** | `https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2020/` | Academic algorithms course (free videos + notes) |
+| **Stanford Algorithms (Coursera)** | `https://www.coursera.org/specializations/algorithms` | Tim Roughgarden's algorithms specialization |
 
-#### DSA Patterns for Interviews
-```
-Two Pointers → Sliding Window → Binary Search → BFS/DFS →
-Backtracking → Dynamic Programming → Greedy → Trie →
-Union-Find → Topological Sort → Segment Tree → Monotonic Stack
-```
+#### Data Structures — Time & Space Complexity
 
-#### When to Use Which Data Structure
-| Need | Use | Why |
+##### Core Data Structures at a Glance
+| Data Structure | Access | Search | Insert | Delete | Space | Notes |
+|---|---|---|---|---|---|---|
+| **Array** | O(1) | O(n) | O(n) | O(n) | O(n) | Contiguous memory; O(1) append if not full |
+| **Dynamic Array** (ArrayList) | O(1) | O(n) | O(1)* | O(n) | O(n) | *Amortized O(1) append; O(n) on resize |
+| **Singly Linked List** | O(n) | O(n) | O(1)† | O(1)† | O(n) | †If at known position; O(n) to find |
+| **Doubly Linked List** | O(n) | O(n) | O(1)† | O(1)† | O(n) | Bidirectional traversal |
+| **Stack** | O(n) | O(n) | O(1) | O(1) | O(n) | LIFO — push/pop at top |
+| **Queue** | O(n) | O(n) | O(1) | O(1) | O(n) | FIFO — enqueue/dequeue |
+| **Deque** | O(n) | O(n) | O(1) | O(1) | O(n) | Insert/remove both ends |
+| **HashMap / HashSet** | — | O(1)* | O(1)* | O(1)* | O(n) | *Average; O(n) worst case (collisions) |
+| **TreeMap / TreeSet (BST)** | O(log n) | O(log n) | O(log n) | O(log n) | O(n) | Sorted order guaranteed |
+| **AVL Tree** | O(log n) | O(log n) | O(log n) | O(log n) | O(n) | Strictly balanced (height diff ≤ 1) |
+| **Red-Black Tree** | O(log n) | O(log n) | O(log n) | O(log n) | O(n) | Relaxed balance; used in Java TreeMap |
+| **B-Tree / B+ Tree** | O(log n) | O(log n) | O(log n) | O(log n) | O(n) | Disk-optimized; used in databases |
+| **Min/Max Heap** | O(1)‡ | O(n) | O(log n) | O(log n) | O(n) | ‡O(1) for min/max; O(log n) extract |
+| **Trie** | O(m) | O(m) | O(m) | O(m) | O(Σ·m) | m = key length; Σ = alphabet size |
+| **Segment Tree** | O(log n) | O(log n) | O(log n) | — | O(n) | Range queries + point updates |
+| **Fenwick Tree (BIT)** | O(log n) | O(log n) | O(log n) | — | O(n) | Prefix sums; less memory than seg tree |
+| **Union-Find (DSU)** | — | O(α(n))* | O(α(n))* | — | O(n) | *Near O(1) with path compression + rank |
+| **Bloom Filter** | — | O(k) | O(k) | — | O(m) | Probabilistic; false positives possible |
+| **Skip List** | O(log n) | O(log n) | O(log n) | O(log n) | O(n log n) | Probabilistic balanced list; used in Redis |
+
+##### Hash Collision Strategies
+| Strategy | How It Works | Avg Lookup | Worst Lookup | Used In |
+|---|---|---|---|---|
+| **Separate Chaining** | Each bucket is a linked list (or tree at threshold) | O(1) | O(n) | Java HashMap (list → tree at 8) |
+| **Open Addressing — Linear Probing** | Try next slot linearly | O(1) | O(n) | Python dict (variant), Go map |
+| **Open Addressing — Quadratic Probing** | Try i², skip quadratically | O(1) | O(n) | Some C++ implementations |
+| **Open Addressing — Double Hashing** | Use second hash for step size | O(1) | O(n) | Academic, some production systems |
+| **Robin Hood Hashing** | Steal from rich (low displacement) | O(1) | O(log n) | Rust HashMap |
+| **Cuckoo Hashing** | Two hash functions, displacing on collision | O(1) | O(1) amortized | Network hardware, MemC3 |
+
+**Industry note:** Java's `HashMap` switches from linked list to red-black tree per bucket when a bucket reaches 8 entries (treeify threshold), giving O(log n) worst-case per-bucket lookup instead of O(n).
+
+##### Trees — Deep Dive with Industry Use
+| Tree Type | Balance | Typical Use | Industry Examples |
+|---|---|---|---|
+| **BST** | None (can degrade to O(n)) | Teaching, simple ordered data | Rarely used raw in production |
+| **AVL Tree** | Strict (height ≤ 1 diff) | Read-heavy, in-memory lookups | C++ std::map (some impls) |
+| **Red-Black Tree** | Relaxed (2x height guarantee) | General-purpose balanced map | Java TreeMap/TreeSet, Linux CFS scheduler, C++ std::map |
+| **B-Tree** | M-way, minimizes disk I/O | Database indexes, file systems | PostgreSQL, MySQL InnoDB, NTFS, ext4 |
+| **B+ Tree** | Leaf-linked B-Tree variant | Range scans on disk | Almost all RDBMS indexes, SQLite |
+| **Trie** | N/A (prefix structure) | Autocomplete, spell check, IP routing | Google search suggestions, DNS lookups |
+| **Segment Tree** | Perfect binary tree | Range queries (min/max/sum) | Competitive programming, interval scheduling |
+| **Merkle Tree** | Hash tree | Data integrity verification | Git, blockchain, Cassandra anti-entropy |
+| **LSM Tree** | Log-Structured Merge | Write-heavy workloads | Cassandra, RocksDB, LevelDB, HBase |
+| **R-Tree** | Spatial indexing | Geospatial queries | PostGIS, MongoDB geospatial, Google Maps |
+
+##### Heaps — Applications & Patterns
+| Application | Data Structure | Complexity | Industry Use |
+|---|---|---|---|
+| **Top-K elements** | Min-heap of size K | O(n log K) | Twitter trending topics, search ranking |
+| **K-th largest/smallest** | Min/max heap or quickselect | O(n) avg with quickselect | Analytics dashboards |
+| **Running median** | Two heaps (max + min) | O(log n) per element | Real-time sensor data, streaming analytics |
+| **Priority scheduling** | Min-heap (by priority/deadline) | O(log n) insert/extract | OS process scheduler, K8s pod scheduling |
+| **Merge K sorted lists** | Min-heap of size K | O(N log K) | Database merge sort, multi-way external sort |
+| **Dijkstra's algorithm** | Min-heap (priority queue) | O((V+E) log V) | Google Maps, network routing protocols |
+| **Event-driven simulation** | Min-heap (by time) | O(log n) | Discrete event simulation, game loops |
+| **Huffman coding** | Min-heap (by frequency) | O(n log n) | ZIP compression, JPEG, HTTP/2 HPACK |
+
+#### Algorithms — Time & Space Complexity
+
+##### Sorting Algorithms
+| Algorithm | Best | Average | Worst | Space | Stable? | In-Place? | Industry Notes |
+|---|---|---|---|---|---|---|---|
+| **Bubble Sort** | O(n) | O(n²) | O(n²) | O(1) | ✅ | ✅ | Teaching only; never in production |
+| **Selection Sort** | O(n²) | O(n²) | O(n²) | O(1) | ❌ | ✅ | Minimizes swaps; embedded systems with limited writes |
+| **Insertion Sort** | O(n) | O(n²) | O(n²) | O(1) | ✅ | ✅ | Fast for small/nearly-sorted; used as base in Timsort |
+| **Merge Sort** | O(n log n) | O(n log n) | O(n log n) | O(n) | ✅ | ❌ | Java `Arrays.sort()` for objects; external sort for large files |
+| **Quick Sort** | O(n log n) | O(n log n) | O(n²) | O(log n) | ❌ | ✅ | C `qsort`, most general-purpose sorts; median-of-3 avoids worst case |
+| **Heap Sort** | O(n log n) | O(n log n) | O(n log n) | O(1) | ❌ | ✅ | Linux kernel sort; guaranteed O(n log n) in-place |
+| **Tim Sort** | O(n) | O(n log n) | O(n log n) | O(n) | ✅ | ❌ | Python `sorted()`, Java `Arrays.sort()`, Rust `sort()` — hybrid merge/insertion |
+| **Counting Sort** | O(n+k) | O(n+k) | O(n+k) | O(k) | ✅ | ❌ | k = range; useful for small range integers (e.g., sorting exam scores) |
+| **Radix Sort** | O(d·(n+k)) | O(d·(n+k)) | O(d·(n+k)) | O(n+k) | ✅ | ❌ | d = digits; sorting strings, IP addresses, fixed-length keys |
+| **Bucket Sort** | O(n+k) | O(n+k) | O(n²) | O(n) | ✅ | ❌ | Uniformly distributed floats; MapReduce partitioning |
+| **Intro Sort** | O(n log n) | O(n log n) | O(n log n) | O(log n) | ❌ | ✅ | C++ `std::sort` — hybrid quick/heap/insertion |
+
+**Interview tip:** Know that `Arrays.sort()` in Java uses dual-pivot Quicksort for primitives and TimSort for objects. Python uses TimSort. C++ `std::sort` uses IntroSort. Knowing **why** each language chose its default matters in interviews.
+
+##### Searching Algorithms
+| Algorithm | Best | Average | Worst | Space | Prerequisite | Industry Use |
+|---|---|---|---|---|---|---|
+| **Linear Search** | O(1) | O(n) | O(n) | O(1) | None | Small unsorted data, fallback |
+| **Binary Search** | O(1) | O(log n) | O(log n) | O(1) | Sorted data | Database index lookup, `Arrays.binarySearch()` |
+| **Interpolation Search** | O(1) | O(log log n) | O(n) | O(1) | Sorted, uniform distribution | Phone book lookup, in-memory sorted arrays |
+| **Exponential Search** | O(1) | O(log n) | O(log n) | O(1) | Sorted, unbounded | Infinite/streaming sorted data |
+| **Hash Lookup** | O(1) | O(1) | O(n) | O(n) | Hash table | `HashMap.get()`, DNS cache, symbol tables |
+| **Ternary Search** | O(1) | O(log n) | O(log n) | O(1) | Unimodal function | Function optimization, ML hyperparameter tuning |
+
+**Binary search variants used in industry:**
+- **Lower bound / Upper bound:** Database range queries, Java `Collections.binarySearch()`
+- **Search on answer space:** Rate limiter tuning, capacity planning, "minimum maximum" problems
+- **Rotated sorted array:** Time-series data wrap, circular buffer search
+
+##### Graph Algorithms
+| Algorithm | Time | Space | Graph Type | Industry Use |
+|---|---|---|---|---|
+| **BFS** | O(V+E) | O(V) | Unweighted | Social network "degrees of separation", web crawlers, shortest path |
+| **DFS** | O(V+E) | O(V) | Any | Cycle detection, topological sort, maze solving, garbage collection (mark phase) |
+| **Dijkstra** | O((V+E) log V) | O(V) | Non-negative weights | Google Maps, network routing (OSPF), GPS navigation |
+| **Bellman-Ford** | O(V·E) | O(V) | Any (neg. weights OK) | Arbitrage detection (negative cycles), distance-vector routing (RIP) |
+| **Floyd-Warshall** | O(V³) | O(V²) | All-pairs | Small networks, transitive closure, network distance matrices |
+| **A*** | O(E) | O(V) | Weighted + heuristic | Game pathfinding, robotics, GPS with traffic |
+| **Kruskal** | O(E log E) | O(V) | Undirected, weighted | Network design (min-cost wiring), cluster analysis |
+| **Prim** | O((V+E) log V) | O(V) | Undirected, weighted | Dense network MST, image segmentation |
+| **Topological Sort** | O(V+E) | O(V) | DAG only | Build systems (Make, Gradle), course prereqs, task scheduling |
+| **Tarjan (SCC)** | O(V+E) | O(V) | Directed | Compiler optimization, deadlock detection, social network analysis |
+| **Kahn's Algorithm** | O(V+E) | O(V) | DAG (BFS topo sort) | Package managers (npm), CI/CD pipeline ordering |
+| **Johnson's** | O(V²·log V + V·E) | O(V²) | Sparse, neg. weights | Sparse graph all-pairs shortest path |
+
+**Interview tip:** Always state the graph representation you're using. Adjacency list gives O(V+E) for BFS/DFS; adjacency matrix gives O(V²). Real systems almost always use adjacency lists (or edge lists for sparse graphs).
+
+##### Dynamic Programming Patterns
+| Pattern | Example Problems | Key Insight | Time | Space (optimized) |
+|---|---|---|---|---|
+| **1D DP** | Climbing Stairs, House Robber, Coin Change | Current state depends on previous 1-2 states | O(n) | O(1) with rolling variables |
+| **2D DP** | Longest Common Subsequence, Edit Distance, Grid Paths | Two dimensions of subproblems | O(m·n) | O(min(m,n)) with rolling array |
+| **0/1 Knapsack** | Knapsack, Target Sum, Partition Equal Subset | Include or exclude each item | O(n·W) | O(W) with 1D array |
+| **Unbounded Knapsack** | Coin Change, Rod Cutting | Items can be reused | O(n·W) | O(W) |
+| **Interval DP** | Matrix Chain, Burst Balloons, Palindrome Partitioning | Merge intervals, try all split points | O(n³) | O(n²) |
+| **DP on Trees** | Diameter, Max Path Sum, House Robber III | Post-order DFS, return state from children | O(n) | O(h) stack depth |
+| **Bitmask DP** | TSP, Assign Tasks, Subset covering | State = bitmask of visited/used elements | O(2ⁿ·n²) | O(2ⁿ·n) |
+| **DP on Strings** | Regex Matching, Wildcard, Distinct Subsequences | Character-by-character comparison | O(m·n) | O(n) with rolling |
+| **State Machine DP** | Buy/Sell Stock (with cooldown/fee/k txns) | States = holding, not holding, cooldown | O(n·k) | O(k) |
+| **Digit DP** | Count numbers with property in range [L, R] | Digit by digit with tight/loose bound | O(d·states) | O(d·states) |
+
+**Optimization techniques:**
+- **Memoization → Tabulation:** Memoization = top-down recursion + cache; tabulation = bottom-up iteration. Tabulation avoids stack overflow for large inputs.
+- **Rolling array:** If DP[i] depends only on DP[i-1], use 2 rows (or variables) instead of full table. Reduces O(m·n) space to O(n).
+- **State reduction:** Identify which states are actually needed. Example: Stock Buy/Sell — only 2-3 states instead of 2D table.
+
+#### Real-World Industry Applications
+
+##### Where Each Data Structure Lives in Production
+| Data Structure | Industry System | How It's Used |
 |---|---|---|
-| Fast lookup by key | HashMap / HashSet | O(1) average |
-| Sorted order | TreeMap / TreeSet | O(log n) ops, sorted iteration |
-| FIFO processing | Queue / Deque | Ordered processing |
-| LIFO / undo | Stack | Last-in-first-out |
-| Priority-based access | PriorityQueue (heap) | O(log n) min/max extraction |
-| Range queries | Segment Tree / BIT | O(log n) range operations |
-| Prefix matching | Trie | Character-by-character search |
-| Connected components | Union-Find | Near O(1) union/find with path compression |
-| Shortest path (unweighted) | BFS | Level-order traversal |
-| Shortest path (weighted) | Dijkstra / Bellman-Ford | Greedy / handles negative weights |
-| Detect cycles | DFS / Union-Find | Back edges / connectivity |
+| **Array / Buffer** | Kafka, network stack | Ring buffers for message partitions, TCP receive buffers |
+| **HashMap** | Redis, Memcached, every web server | Cache, session store, request routing table |
+| **B+ Tree** | PostgreSQL, MySQL, SQLite | All index lookups, range scans |
+| **LSM Tree** | Cassandra, RocksDB, LevelDB | Write-optimized storage (append → merge) |
+| **Skip List** | Redis sorted set, LevelDB memtable | Concurrent ordered data without complex tree rotations |
+| **Trie** | DNS resolution, autocomplete | IP routing tables, T9 keyboard, search suggest |
+| **Bloom Filter** | Cassandra, Chrome safe browsing, Spark | Quickly check "definitely not in set" before expensive lookup |
+| **Priority Queue (Heap)** | OS scheduler, Kubernetes, Netty | Thread scheduling, pod priority, event loop |
+| **Graph (adjacency list)** | Social networks, Google Maps, package managers | Friend recommendations, routing, dependency resolution |
+| **Merkle Tree** | Git, blockchain, Cassandra | Data integrity verification, efficient sync |
+| **HyperLogLog** | Redis, Google Analytics | Approximate distinct count (cardinality estimation) |
+| **Count-Min Sketch** | Network monitoring, ad-tech | Approximate frequency counting for streaming data |
+| **Segment Tree / BIT** | Analytics engines, game engines | Range aggregation queries, real-time leaderboards |
+| **Union-Find** | Network connectivity, image processing | Connected components, Kruskal's MST, percolation |
+| **Consistent Hashing** | DynamoDB, Cassandra, CDN routing | Distributed shard assignment with minimal remapping |
+
+##### Where Each Algorithm Lives in Production
+| Algorithm | Industry System | How It's Used |
+|---|---|---|
+| **Binary Search** | Database query optimizer, git bisect | Index lookup, finding bug-introducing commit |
+| **BFS** | LinkedIn, Facebook | "People you may know", shortest connection path |
+| **DFS** | Garbage collectors, web crawlers | Mark-and-sweep GC, site indexing |
+| **Dijkstra / A*** | Google Maps, Uber, game engines | Shortest path with real-time traffic, NPC pathfinding |
+| **Topological Sort** | Webpack, Gradle, Make, Airflow | Build dependency order, DAG task scheduling |
+| **Dynamic Programming** | Spell checkers, bioinformatics | Edit distance for "did you mean?", DNA sequence alignment |
+| **Merge Sort** | External sort in databases | Sorting data larger than memory (sort-merge join) |
+| **Quick Select** | Database Top-K queries | Finding k-th smallest without full sort |
+| **Consistent Hashing** | Load balancers, distributed caches | Sharding with minimal redistribution on node changes |
+| **PageRank (graph)** | Google Search, citation analysis | Web page importance ranking |
+| **MapReduce (graph + sort)** | Hadoop, Spark | Distributed data processing at scale |
+| **Huffman Coding (greedy)** | ZIP, GZIP, JPEG, HTTP/2 HPACK | Data compression |
+| **Rabin-Karp (rolling hash)** | Plagiarism detection, git diff | Efficient pattern matching in text |
+| **Aho-Corasick** | Intrusion detection, content filtering | Multi-pattern string matching |
+
+#### Optimization Techniques & Patterns
+
+##### Time Complexity Optimization Strategies
+| Strategy | Before | After | Example |
+|---|---|---|---|
+| **Sorting first** | O(n²) brute force pair search | O(n log n) sort + O(n) two pointers | Two Sum (sorted variant) |
+| **Hash table** | O(n²) nested loop | O(n) hash lookup | Two Sum, anagram grouping |
+| **Binary search** | O(n) linear scan | O(log n) on sorted/monotonic data | Search in sorted array, capacity planning |
+| **Prefix sum** | O(n) per query, O(q·n) total | O(1) per query after O(n) preprocess | Subarray sum queries |
+| **Sliding window** | O(n·k) recompute window | O(n) maintain running window | Max sum subarray of size k |
+| **Two pointers** | O(n²) all pairs | O(n) converging pointers | Container with most water, 3Sum |
+| **Monotonic stack** | O(n²) check all previous | O(n) amortized | Next greater element, largest rectangle |
+| **Bit manipulation** | O(n) extra space | O(1) space | Find single number (XOR), power of 2 |
+| **Divide & conquer** | O(n²) brute force | O(n log n) | Merge sort, closest pair of points |
+| **Memoization/DP** | O(2ⁿ) recursive | O(n·k) with memo table | Fibonacci, knapsack, edit distance |
+
+##### Space Complexity Optimization Strategies
+| Strategy | Before | After | Example |
+|---|---|---|---|
+| **In-place operations** | O(n) extra array | O(1) | Reverse array, Dutch national flag, rotate |
+| **Rolling array** | O(m·n) full DP table | O(n) two rows | LCS, edit distance, grid DP |
+| **Bit array / bitmask** | O(n) boolean array | O(n/8) or O(1) | Sieve of Eratosthenes, visited set |
+| **Two variables** | O(n) array for DP | O(1) two vars | Fibonacci, max subarray (Kadane) |
+| **Morris traversal** | O(h) stack for tree traversal | O(1) with thread pointers | Inorder tree traversal without recursion or stack |
+| **Floyd's cycle detection** | O(n) visited set | O(1) two pointers | Linked list cycle detection |
+| **Iterator / generator** | O(n) materialized list | O(1) per yield | Java Streams, Python generators for large datasets |
+
+##### Common Optimization Anti-Patterns (What NOT to Do)
+| Anti-Pattern | Problem | Fix |
+|---|---|---|
+| **Premature optimization** | Optimizing before profiling | Profile first, optimize bottlenecks |
+| **String concatenation in loop** | O(n²) due to immutable strings | Use StringBuilder (Java), join (Python) |
+| **Nested loops when hash works** | O(n²) when O(n) is possible | Use HashMap for lookups |
+| **Sorting when not needed** | O(n log n) when O(n) suffices | Use counting/bucket for limited range |
+| **Full sort for top-K** | O(n log n) to get K items | Use heap O(n log K) or quickselect O(n) avg |
+| **Computing same value repeatedly** | Exponential tree of calls | Memoize / DP |
+| **Using LinkedList for random access** | O(n) per access vs O(1) for ArrayList | Use ArrayList unless frequent insert/delete at middle |
+| **Autoboxing in hot loop** | Integer vs int — object creation overhead | Use primitives in performance-critical code |
+
+#### Interview Perspective — What Interviewers Look For
+
+##### How to Approach a DSA Problem (UMPIRE Framework)
+```
+U — Understand the problem
+    → Restate in your own words
+    → Clarify edge cases (empty, single element, duplicates, negative)
+    → Ask about constraints (input size, value range, sorted?)
+
+M — Match to known patterns
+    → What data structure fits? (hash, heap, tree, graph?)
+    → What pattern applies? (two pointers, sliding window, DP?)
+    → Have you seen a similar problem?
+
+P — Plan
+    → Describe your approach in plain English
+    → Walk through a small example
+    → State the time and space complexity BEFORE coding
+
+I — Implement
+    → Write clean, readable code (variable names matter!)
+    → Use helper functions to keep it modular
+    → Don't try to be clever — correct and readable first
+
+R — Review
+    → Trace through your code with the example
+    → Check edge cases
+    → Verify complexity matches your plan
+
+E — Evaluate
+    → Can you optimize? (time? space?)
+    → What are the trade-offs?
+    → Is there a different approach entirely?
+```
+
+##### What Each Level of DSA Mastery Looks Like
+| Level | What You Know | What You Can Solve | Interview Readiness |
+|---|---|---|---|
+| **Beginner** | Arrays, strings, basic sorting, linear/binary search | Easy problems with brute force | Not ready — build foundations first |
+| **Intermediate** | HashMap, stack/queue, BFS/DFS, basic DP (1D), two pointers, sliding window | Most Easy + some Medium problems | Ready for mid-level SDE roles |
+| **Advanced** | Segment tree, trie, advanced DP (interval, bitmask), union-find, graph algorithms | Most Medium + some Hard problems | Ready for FAANG/top-tier roles |
+| **Expert** | Persistent data structures, suffix arrays, advanced graph theory, math/number theory | Hard + competitive programming | Ready for L5+ / Principal / Research roles |
+
+##### Complexity Analysis — How to Think About It
+```
+O(1)       → Hash lookup, array access, stack push/pop
+O(log n)   → Binary search, balanced BST ops, heap insert/extract
+O(n)       → Single array pass, hash table build, BFS/DFS
+O(n log n) → Efficient sorting, building a balanced BST
+O(n²)      → Nested loops (brute force pair comparisons)
+O(n³)      → Triple nested loops, Floyd-Warshall, naive matrix multiply
+O(2ⁿ)      → All subsets, recursive without memoization
+O(n!)      → All permutations, brute force TSP
+
+Rule of thumb for interview constraint → expected complexity:
+  n ≤ 10       → O(n!) or O(2ⁿ) — brute force/backtracking OK
+  n ≤ 20       → O(2ⁿ) — bitmask DP
+  n ≤ 500      → O(n³) — DP, Floyd-Warshall
+  n ≤ 10,000   → O(n²) — DP, basic nested loops
+  n ≤ 1,000,000 → O(n log n) — sorting-based, binary search
+  n ≤ 10⁸      → O(n) — linear scan, two pointers, sliding window
+  n > 10⁸      → O(log n) or O(1) — binary search, math, hashing
+```
+
+##### DSA Patterns for Interviews (Expanded)
+| # | Pattern | Signal Words in Problem | Example Problems | Optimal Complexity |
+|---|---|---|---|---|
+| 1 | **Two Pointers** | "sorted array", "pair", "remove duplicates" | Two Sum II, 3Sum, Container With Most Water | O(n) |
+| 2 | **Sliding Window** | "contiguous subarray/substring", "window size k" | Max Sum Subarray, Longest Substring Without Repeating | O(n) |
+| 3 | **Fast & Slow Pointers** | "cycle", "middle of linked list" | Linked List Cycle, Happy Number, Palindrome LL | O(n) |
+| 4 | **Binary Search** | "sorted", "minimum/maximum that satisfies", "monotonic" | Search Rotated Array, Koko Eating Bananas | O(log n) |
+| 5 | **BFS** | "shortest path", "level by level", "minimum steps" | Word Ladder, Rotten Oranges, 01 Matrix | O(V+E) |
+| 6 | **DFS** | "all paths", "permutations", "islands", "tree traversal" | Number of Islands, Path Sum, Clone Graph | O(V+E) |
+| 7 | **Backtracking** | "all combinations", "generate all", "valid arrangements" | N-Queens, Sudoku Solver, Subsets, Permutations | Varies |
+| 8 | **DP** | "minimum/maximum", "count ways", "can you reach", "longest/shortest" | Longest Increasing Subsequence, Coin Change | Varies |
+| 9 | **Greedy** | "most/fewest intervals", "maximum profit", "huffman" | Activity Selection, Jump Game, Meeting Rooms | O(n log n) |
+| 10 | **Monotonic Stack** | "next greater/smaller", "largest rectangle", "stock span" | Daily Temperatures, Largest Rectangle in Histogram | O(n) |
+| 11 | **Heap / Top-K** | "k-th largest/smallest", "top K", "merge K sorted" | Kth Largest Element, Merge K Sorted Lists | O(n log K) |
+| 12 | **Topological Sort** | "ordering", "prerequisites", "dependencies", DAG | Course Schedule, Alien Dictionary | O(V+E) |
+| 13 | **Union-Find** | "connected", "groups", "redundant connection" | Number of Connected Components, Redundant Connection | O(V·α(V)) |
+| 14 | **Trie** | "prefix", "word dictionary", "autocomplete" | Implement Trie, Word Search II | O(m) per op |
+| 15 | **Interval** | "merge intervals", "overlapping", "insert interval" | Merge Intervals, Non-Overlapping Intervals | O(n log n) |
+| 16 | **Matrix** | "spiral", "rotate", "search in 2D" | Spiral Order, Rotate Image, Search 2D Matrix | Varies |
+| 17 | **Bit Manipulation** | "single number", "power of 2", "count bits" | Single Number, Counting Bits | O(n) or O(1) |
+
+#### When to Use Which Data Structure (Expanded)
+| Need | Use | Why | Alternative | Trade-off |
+|---|---|---|---|---|
+| Fast lookup by key | HashMap / HashSet | O(1) average | TreeMap O(log n) | Hash loses ordering |
+| Sorted order iteration | TreeMap / TreeSet | O(log n) ops, sorted | SortedList, Skip List | Slower than hash for lookup |
+| FIFO processing | Queue / ArrayDeque | O(1) enqueue/dequeue | LinkedList | ArrayDeque is cache-friendly |
+| LIFO / undo / parsing | Stack / ArrayDeque | O(1) push/pop | — | Consider monotonic stack for range problems |
+| Priority-based access | PriorityQueue (heap) | O(log n) insert/extract | Balanced BST O(log n) | BST supports arbitrary delete; heap doesn't |
+| Range queries | Segment Tree / BIT | O(log n) per query/update | Sqrt decomposition O(√n) | Segment tree is more flexible |
+| Prefix matching | Trie | O(m) per operation | HashMap with key iteration | Trie uses more memory but is faster for prefix ops |
+| Connected components | Union-Find (DSU) | Near O(1) with optimizations | BFS/DFS O(V+E) | Union-Find better for incremental connectivity |
+| Approximate counting | HyperLogLog | O(1) per add, fixed memory | Exact HashSet O(n) | Trades accuracy for massive memory savings |
+| Approximate membership | Bloom Filter | O(k) per query, fixed memory | HashSet O(n) | False positives possible, no false negatives |
+| Weighted shortest path | Dijkstra + min-heap | O((V+E) log V) | Bellman-Ford O(V·E) | Dijkstra requires non-negative weights |
+| All-pairs shortest | Floyd-Warshall | O(V³) | V × Dijkstra O(V(V+E) log V) | Floyd-Warshall simpler for dense graphs |
 
 ### System Design
 

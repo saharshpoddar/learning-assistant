@@ -92,7 +92,8 @@ Your `.github/` folder contains everything Copilot uses to customize its behavio
     ├── getting-started.md               ← This tutorial
     ├── customization-guide.md           ← Architecture deep-dive
     ├── file-reference.md                ← Who reads what (🤖 vs 👤)
-    └── navigation-index.md              ← Master index of all commands & files
+    ├── navigation-index.md              ← Master index of all commands & files
+    └── slash-commands.md                ← Developer slash command reference
 ```
 
 > 💡 **Important distinction:** Not all files in `.github/` are read by Copilot. Files like `README.md` and `docs/*.md` are for **you** (the developer). Files like `*.agent.md`, `*.prompt.md`, `*.instructions.md`, and `SKILL.md` are read by **Copilot** (the AI). See [File Reference](file-reference.md) for the complete breakdown.
@@ -503,6 +504,6 @@ Test it: Select **Explainer** from the agent dropdown → ask about any concept
 
 <p align="center">
 
-[← Back to main guide](../README.md) · [Customization Guide](customization-guide.md) · [File Reference](file-reference.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Instructions](../instructions/README.md)
+[← Back to main guide](../README.md) · [Customization Guide](customization-guide.md) · [File Reference](file-reference.md) · [Slash Commands](slash-commands.md) · [Agents](../agents/README.md) · [Prompts](../prompts/README.md) · [Skills](../skills/README.md) · [Instructions](../instructions/README.md)
 
 </p>
