@@ -1,5 +1,8 @@
 package server.learningresources.handler;
 
+import server.learningresources.model.ConceptArea;
+import server.learningresources.model.ContentFreshness;
+import server.learningresources.model.DifficultyLevel;
 import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceQuery;
@@ -85,13 +88,17 @@ public class ToolHandler {
         final var searchText = arguments.getOrDefault("query", "");
         final var categoryArg = arguments.get("category");
         final var typeArg = arguments.get("type");
+        final var conceptArg = arguments.get("concept");
         final var difficultyArg = arguments.get("difficulty");
+        final var maxDifficultyArg = arguments.get("max_difficulty");
+        final var freshnessArg = arguments.get("freshness");
+        final var officialArg = arguments.getOrDefault("official_only", "false");
         final var freeOnlyArg = arguments.getOrDefault("free_only", "false");
 
-        ResourceCategory category = null;
+        List<ResourceCategory> categories = List.of();
         if (categoryArg != null && !categoryArg.isBlank()) {
             try {
-                category = ResourceCategory.fromDisplayName(categoryArg);
+                categories = List.of(ResourceCategory.fromDisplayName(categoryArg));
             } catch (IllegalArgumentException ignored) {
                 return "Invalid category: '" + categoryArg + "'";
             }
@@ -106,8 +113,46 @@ public class ToolHandler {
             }
         }
 
+        ConceptArea concept = null;
+        if (conceptArg != null && !conceptArg.isBlank()) {
+            try {
+                concept = ConceptArea.fromString(conceptArg);
+            } catch (IllegalArgumentException ignored) {
+                return "Invalid concept: '" + conceptArg + "'";
+            }
+        }
+
+        DifficultyLevel minDifficulty = null;
+        if (difficultyArg != null && !difficultyArg.isBlank()) {
+            try {
+                minDifficulty = DifficultyLevel.fromString(difficultyArg);
+            } catch (IllegalArgumentException ignored) {
+                return "Invalid difficulty: '" + difficultyArg + "'";
+            }
+        }
+
+        DifficultyLevel maxDifficulty = null;
+        if (maxDifficultyArg != null && !maxDifficultyArg.isBlank()) {
+            try {
+                maxDifficulty = DifficultyLevel.fromString(maxDifficultyArg);
+            } catch (IllegalArgumentException ignored) {
+                return "Invalid max_difficulty: '" + maxDifficultyArg + "'";
+            }
+        }
+
+        ContentFreshness freshness = null;
+        if (freshnessArg != null && !freshnessArg.isBlank()) {
+            try {
+                freshness = ContentFreshness.fromString(freshnessArg);
+            } catch (IllegalArgumentException ignored) {
+                return "Invalid freshness: '" + freshnessArg + "'";
+            }
+        }
+
         final var query = new ResourceQuery(
-                searchText, type, category, difficultyArg,
+                searchText, type, categories, concept,
+                minDifficulty, maxDifficulty, freshness,
+                Boolean.parseBoolean(officialArg),
                 List.of(), Boolean.parseBoolean(freeOnlyArg), 25
         );
 
@@ -193,7 +238,8 @@ public class ToolHandler {
             final var type = ResourceType.fromDisplayName(arguments.get("type"));
             final var categoryArg = arguments.getOrDefault("category", "general");
             final var category = ResourceCategory.fromDisplayName(categoryArg);
-            final var difficulty = arguments.getOrDefault("difficulty", "intermediate");
+            final var difficultyArg = arguments.getOrDefault("difficulty", "intermediate");
+            final var difficulty = DifficultyLevel.fromString(difficultyArg);
             final var tagsArg = arguments.getOrDefault("tags", "");
             final var tags = tagsArg.isBlank() ? List.<String>of() : List.of(tagsArg.split(","));
 
@@ -204,9 +250,12 @@ public class ToolHandler {
                     arguments.get("description"),
                     type,
                     List.of(category),
+                    List.of(),
                     tags,
                     arguments.getOrDefault("author", ""),
                     difficulty,
+                    ContentFreshness.ACTIVELY_MAINTAINED,
+                    false,
                     true,
                     Instant.now()
             );

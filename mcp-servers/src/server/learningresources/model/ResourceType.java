@@ -29,6 +29,9 @@ public enum ResourceType {
     /** Interactive coding exercises or sandboxes. */
     INTERACTIVE("interactive"),
 
+    /** Structured courses with lessons, quizzes, and progression. */
+    COURSE("course"),
+
     /** API reference documentation with method signatures. */
     API_REFERENCE("api-reference"),
 
@@ -68,6 +71,6 @@ public enum ResourceType {
         }
         throw new IllegalArgumentException("Unknown resource type: '" + value
                 + "'. Valid values: documentation, tutorial, blog, article, video, book, "
-                + "interactive, api-reference, cheat-sheet, repository");
+                + "interactive, course, api-reference, cheat-sheet, repository");
     }
 }

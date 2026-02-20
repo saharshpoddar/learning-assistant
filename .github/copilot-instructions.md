@@ -73,3 +73,31 @@ learning-assistant/
 - ❌ Don't use `==` to compare Strings (use `.equals()`)
 - ❌ Don't hardcode values — extract to constants
 - ❌ Don't write methods longer than 30 lines
+
+## Commit Guidelines
+
+### Commit Messages
+- Write **meaningful, descriptive** commit messages that summarize WHAT changed and WHY
+- Use imperative mood: "Add smart discovery engine" not "Added smart discovery engine"
+- First line: concise summary (≤ 72 characters)
+- Optional body: explain context, motivation, or notable changes (wrap at 72 chars)
+- Always **append author attribution** at the end of the commit message:
+  - For AI-generated code: `— created by gpt`
+  - For AI-assisted code with human edits: `— assisted by gpt`
+  - For human-only code: no suffix needed
+
+### Commit Scope
+- Commit related changes together — one logical unit per commit
+- Don't mix unrelated changes (e.g., a bug fix + a new feature) in one commit
+- Stage and review before committing: `git diff --staged`
+
+### Examples
+```
+feat: Add ResourceDiscovery smart search with relevance scoring
+
+Implements three-mode discovery engine (specific, vague, exploratory)
+with keyword-to-concept inference, relevance scoring across 7 dimensions,
+and "did you mean?" suggestions for empty results.
+
+— created by gpt
+```

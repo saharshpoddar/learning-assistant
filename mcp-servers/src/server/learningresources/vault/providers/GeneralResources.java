@@ -1,5 +1,8 @@
 package server.learningresources.vault.providers;
 
+import server.learningresources.model.ConceptArea;
+import server.learningresources.model.ContentFreshness;
+import server.learningresources.model.DifficultyLevel;
 import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceType;
@@ -9,10 +12,8 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * General-purpose and cross-cutting learning resources.
- *
- * <p>Includes: roadmap.sh (developer roadmaps), Free Programming Books,
- * and the Testing Trophy (testing strategy).
+ * Cross-cutting, language-agnostic resources — roadmaps, testing, meta-learning,
+ * and curated collections.
  */
 public final class GeneralResources implements ResourceProvider {
 
@@ -25,45 +26,75 @@ public final class GeneralResources implements ResourceProvider {
                         "testing-trophy",
                         "The Testing Trophy — Kent C. Dodds",
                         "https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications",
-                        "Kent C. Dodds' influential testing strategy that prioritizes integration tests "
-                                + "over unit tests. Explains the Testing Trophy as an evolution of the "
-                                + "Test Pyramid, with practical guidance on test distribution.",
-                        ResourceType.ARTICLE,
-                        List.of(ResourceCategory.TESTING, ResourceCategory.JAVASCRIPT),
-                        List.of("testing", "integration-tests", "tdd", "react-testing-library"),
+                        "Influential article on modern testing strategy. Introduces the 'testing "
+                                + "trophy' model — static, unit, integration, and e2e tests — as an "
+                                + "alternative to the testing pyramid.",
+                        ResourceType.BLOG,
+                        List.of(ResourceCategory.SOFTWARE_ENGINEERING, ResourceCategory.TESTING),
+                        List.of(ConceptArea.TESTING, ConceptArea.CLEAN_CODE),
+                        List.of("testing", "testing-trophy", "integration-tests", "unit-tests",
+                                "e2e", "testing-strategy"),
                         "Kent C. Dodds",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.EVERGREEN,
+                        false, true, now
                 ),
 
                 new LearningResource(
                         "developer-roadmaps",
-                        "roadmap.sh — Developer Roadmaps",
+                        "Developer Roadmaps (roadmap.sh)",
                         "https://roadmap.sh/",
-                        "Community-driven roadmaps, guides, and educational content for developers. "
-                                + "Interactive roadmaps for frontend, backend, DevOps, full-stack, "
-                                + "Android, PostgreSQL, and many more tech career paths.",
+                        "Community-driven, interactive roadmaps for every developer role: "
+                                + "frontend, backend, DevOps, full-stack, Android, AI/ML, "
+                                + "and more. Great for orientation and goal setting.",
                         ResourceType.INTERACTIVE,
-                        List.of(ResourceCategory.GENERAL),
-                        List.of("roadmap", "career", "learning-path", "frontend", "backend", "devops"),
-                        "Kamran Ahmed & Community",
-                        "beginner",
-                        true, now
+                        List.of(ResourceCategory.SOFTWARE_ENGINEERING),
+                        List.of(ConceptArea.GETTING_STARTED, ConceptArea.CAREER_DEVELOPMENT),
+                        List.of("roadmap", "career", "learning-path", "frontend", "backend",
+                                "devops", "full-stack", "interactive"),
+                        "Kamran Ahmed / roadmap.sh",
+                        DifficultyLevel.BEGINNER,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        false, true, now
                 ),
 
                 new LearningResource(
                         "free-programming-books",
-                        "Free Programming Books — EbookFoundation",
-                        "https://ebookfoundation.github.io/free-programming-books/",
-                        "Massive curated list of free learning resources: books, courses, podcasts, "
-                                + "and interactive tutorials in virtually every programming language "
-                                + "and technology. Community-maintained on GitHub.",
-                        ResourceType.BOOK,
-                        List.of(ResourceCategory.GENERAL),
-                        List.of("books", "free", "open-source", "learning", "programming"),
-                        "EbookFoundation & Contributors",
-                        "beginner",
-                        true, now
+                        "Free Programming Books (GitHub)",
+                        "https://github.com/EbookFoundation/free-programming-books",
+                        "Huge curated list of free programming books, courses, podcasts, and "
+                                + "resources organized by language and topic. A meta-resource for "
+                                + "finding learning materials.",
+                        ResourceType.REPOSITORY,
+                        List.of(ResourceCategory.SOFTWARE_ENGINEERING),
+                        List.of(ConceptArea.GETTING_STARTED, ConceptArea.CAREER_DEVELOPMENT),
+                        List.of("free", "books", "courses", "curated-list", "meta-resource",
+                                "open-source"),
+                        "Ebook Foundation / Community",
+                        DifficultyLevel.BEGINNER,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        false, true, now
+                ),
+
+                new LearningResource(
+                        "teach-yourself-cs",
+                        "Teach Yourself Computer Science",
+                        "https://teachyourselfcs.com/",
+                        "Opinionated guide to self-studying CS — recommends the best book and "
+                                + "video lecture for each of 9 subjects: programming, architecture, "
+                                + "algorithms, math, OS, networking, databases, languages, and "
+                                + "distributed systems.",
+                        ResourceType.DOCUMENTATION,
+                        List.of(ResourceCategory.COMPUTER_SCIENCE, ResourceCategory.SOFTWARE_ENGINEERING),
+                        List.of(ConceptArea.GETTING_STARTED, ConceptArea.ALGORITHMS,
+                                ConceptArea.OPERATING_SYSTEMS, ConceptArea.NETWORKING,
+                                ConceptArea.DATABASES, ConceptArea.DISTRIBUTED_SYSTEMS),
+                        List.of("self-study", "cs-curriculum", "books", "video-lectures",
+                                "computer-science", "learning-path"),
+                        "Bradfield School of Computer Science",
+                        DifficultyLevel.BEGINNER,
+                        ContentFreshness.EVERGREEN,
+                        false, true, now
                 )
         );
     }
