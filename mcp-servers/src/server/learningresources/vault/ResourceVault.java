@@ -3,7 +3,6 @@ package server.learningresources.vault;
 import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceQuery;
-import server.learningresources.model.ResourceType;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,5 +1,7 @@
 package server.learningresources.content;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -160,7 +162,7 @@ public class ReadabilityScorer {
             return 0.0;
         }
 
-        final var uniqueWords = java.util.Set.of(words).size();
+        final var uniqueWords = new HashSet<>(Arrays.asList(words)).size();
         final var ratio = (double) uniqueWords / words.length;
 
         // Higher unique-word ratio → more complex vocabulary

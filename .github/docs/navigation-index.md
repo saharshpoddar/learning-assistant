@@ -48,6 +48,7 @@
 | `/tech-stack` | Frameworks, databases, compare tools | Learning-Mentor | `/tech-stack` → `compare Spring vs FastAPI` |
 | `/sdlc` | SDLC phases, methodologies, E2E lifecycle | Learning-Mentor | `/sdlc` → `testing` |
 | `/interview-prep` | Interview preparation | Learning-Mentor | `/interview-prep` → `DSA` → `sliding window` |
+| `/resources` | Search, browse & scrape learning resources | Learning-Mentor | `/resources` → `search` → `java concurrency` |
 
 ### Career
 | Command | Purpose | Agent | Quick Example |
@@ -150,6 +151,7 @@
 │   ├── sdlc.prompt.md               🤖 /sdlc — lifecycle & methods
 │   ├── interview-prep.prompt.md     🤖 /interview-prep — interviews
 │   ├── career-roles.prompt.md       🤖 /career-roles — job roles & pay
+│   ├── resources.prompt.md          🤖 /resources — learning resource vault
 │   │
 │   │── [Code Quality]
 │   ├── design-review.prompt.md      🤖 /design-review — SOLID review
@@ -207,6 +209,9 @@ mcp-servers/                             ← MCP Server Configuration Module
 | **Learn Docker / K8s / CI-CD** | `/devops` | Prompt |
 | **Learn Git commands & branching** | `/devops` → `Git` | Prompt |
 | **Learn Maven / Gradle build tools** | `/devops` → `build tools` | Prompt |
+| **Search curated learning resources** | `/resources` → `search` | Prompt |
+| **Browse resource library by category** | `/resources` → `browse` | Prompt |
+| **Scrape & analyze a tutorial URL** | `/resources` → `scrape` → URL | Prompt |
 | **Compare frameworks** | `/tech-stack` | Prompt |
 | **Understand SDLC phases** | `/sdlc` | Prompt |
 | **Learn industry patterns (rate limiter, circuit breaker)** | `/hub industry` or `/learn-concept` → topic | Prompt |

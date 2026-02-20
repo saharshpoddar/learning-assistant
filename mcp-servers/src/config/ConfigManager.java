@@ -6,11 +6,10 @@ import config.loader.ConfigParser;
 import config.loader.ConfigSource;
 import config.loader.EnvironmentConfigSource;
 import config.loader.PropertiesConfigSource;
-import config.model.McpConfiguration;
-import config.model.ServerDefinition;
-import config.model.UserPreferences;
-import config.model.LocationPreferences;
 import config.model.BrowserPreferences;
+import config.model.LocationPreferences;
+import config.model.McpConfiguration;
+import config.model.UserPreferences;
 import config.validation.ConfigValidator;
 import config.validation.ValidationResult;
 

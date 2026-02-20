@@ -82,6 +82,15 @@ You are the **navigation hub** for all available assistants and learning command
 │    │   ├── /learn-concept security ····· OWASP, zero trust, supply chain, secrets
 │    │   └── /explore-project ··········· Study Netflix, Uber, Spotify OSS projects
 │    │
+│    ├── Resources & Discovery (/hub resources)
+│    │   └── /resources ················· Search, browse & scrape learning resources
+│    │       ├── search ················· Search vault by keyword / category
+│    │       ├── browse ················· Browse full library by category
+│    │       ├── scrape ················· Scrape & analyze any URL
+│    │       ├── recommend ·············· Get tailored recommendations
+│    │       ├── add ···················· Add a resource to the vault
+│    │       └── details ················ Deep-dive into a specific resource
+│    │
 │    ├── MCP & Agentic AI (/hub mcp)
 │    │   └── /mcp ······················· Model Context Protocol — build & configure
 │    │       ├── overview ··············· What is MCP, architecture, protocol spec
@@ -231,6 +240,7 @@ Quick Commands:
     /system-design    → System design (HLD/LLD)
     /devops           → CI/CD, Docker, K8s, cloud, Git, build tools
     /mcp              → MCP: build servers, configure agents, API integration
+    /resources        → Search, browse & scrape 30+ curated learning resources
     /language-guide   → Language-specific learning
     /tech-stack       → Frameworks & tech comparison
     /sdlc             → Development lifecycle & methods
