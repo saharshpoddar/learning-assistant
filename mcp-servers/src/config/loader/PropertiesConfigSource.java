@@ -13,8 +13,13 @@ import java.util.Properties;
  * Loads configuration from a {@code .properties} file on disk.
  *
  * <p>Properties files use a flat, dot-separated key naming convention to represent
- * hierarchical configuration. See {@code user-config/mcp-config.example.properties} for
+ * hierarchical configuration. See {@code user-config/mcp-config.properties} for
  * the full key reference.
+ *
+ * <p>When {@code optional} is set to {@code true}, a missing file is silently ignored
+ * and an empty {@link Properties} is returned. This is used for the local overrides
+ * file ({@code mcp-config.local.properties}) which only exists when the developer
+ * has secrets or machine-specific settings to configure.
  *
  * <p>Example properties:
  * <pre>
@@ -27,15 +32,30 @@ import java.util.Properties;
 public class PropertiesConfigSource implements ConfigSource {
 
     private final Path propertiesFilePath;
+    private final boolean optional;
+
+    /**
+     * Creates a required source backed by the given properties file.
+     * Throws {@link ConfigLoadException} if the file does not exist.
+     *
+     * @param propertiesFilePath absolute or relative path to the {@code .properties} file
+     */
+    public PropertiesConfigSource(final Path propertiesFilePath) {
+        this(propertiesFilePath, false);
+    }
 
     /**
      * Creates a source backed by the given properties file.
      *
      * @param propertiesFilePath absolute or relative path to the {@code .properties} file
+     * @param optional           if {@code true}, returns empty properties when the file is
+     *                           missing instead of throwing. Useful for the local overrides
+     *                           file ({@code mcp-config.local.properties}) which may not exist.
      */
-    public PropertiesConfigSource(final Path propertiesFilePath) {
+    public PropertiesConfigSource(final Path propertiesFilePath, final boolean optional) {
         this.propertiesFilePath = Objects.requireNonNull(propertiesFilePath,
                 "Properties file path must not be null");
+        this.optional = optional;
     }
 
     /**
@@ -47,9 +67,12 @@ public class PropertiesConfigSource implements ConfigSource {
     @Override
     public Properties load() {
         if (!Files.exists(propertiesFilePath)) {
+            if (optional) {
+                return new Properties();
+            }
             throw new ConfigLoadException(
                     "Config file not found: " + propertiesFilePath.toAbsolutePath()
-                            + ". Copy mcp-config.example.properties to mcp-config.properties and fill in your values.");
+                            + ". This is the base config file — it should be committed to version control.");
         }
 
         final var properties = new Properties();

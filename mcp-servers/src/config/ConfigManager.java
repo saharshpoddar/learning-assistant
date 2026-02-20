@@ -49,6 +49,7 @@ public class ConfigManager {
     private static final Logger LOGGER = Logger.getLogger(ConfigManager.class.getName());
 
     private static final String DEFAULT_CONFIG_FILE = "user-config/mcp-config.properties";
+    private static final String LOCAL_CONFIG_FILE = "user-config/mcp-config.local.properties";
 
     private final List<ConfigSource> sources;
     private final ConfigParser parser;
@@ -80,14 +81,23 @@ public class ConfigManager {
     }
 
     /**
-     * Creates a {@link ConfigManager} targeting a specific properties file.
+     * Creates a {@link ConfigManager} targeting a specific base properties file.
      *
-     * @param configFilePath the path to the properties file
+     * <p>Configuration is loaded in layers (highest precedence wins):
+     * <ol>
+     *   <li>Base properties file — committed defaults (required)</li>
+     *   <li>Local properties file — developer secrets/overrides (optional, gitignored)</li>
+     *   <li>Environment variables — {@code MCP_*} prefix (highest precedence)</li>
+     * </ol>
+     *
+     * @param configFilePath the path to the base properties file
      * @return a configured manager
      */
     public static ConfigManager fromConfigFile(final Path configFilePath) {
+        final var localFilePath = configFilePath.resolveSibling("mcp-config.local.properties");
         final var sources = List.<ConfigSource>of(
                 new PropertiesConfigSource(configFilePath),
+                new PropertiesConfigSource(localFilePath, true),
                 new EnvironmentConfigSource()
         );
         return new ConfigManager(sources, new ConfigParser(), new ConfigValidator());

@@ -1,252 +1,160 @@
 # Developer Setup Guide — MCP Servers
 
-> **Time:** ~10 minutes  
-> **Goal:** Get the MCP config system running and know exactly which files you need to edit.  
+> **Time:** ~5 minutes  
+> **Goal:** Get the MCP config system running with minimal effort.  
 > **Prerequisite:** JDK 21+ ([Adoptium](https://adoptium.net/) or [Azul Zulu](https://www.azul.com/downloads/))
+
+---
+
+## Quick Start (Automated)
+
+The fastest path — run the setup wizard:
+
+```bash
+# Linux / macOS / Git Bash
+./scripts/setup.sh
+```
+
+```powershell
+# Windows PowerShell
+.\scripts\setup.ps1
+```
+
+The setup wizard will:
+1. Create `mcp-config.local.properties` from the template (if missing)
+2. Create the MCP browser data directory for auto-isolation
+3. Auto-detect your browser
+4. Check for API keys
+5. Print what's ready and what needs attention
+
+**After setup, you only need to do ONE thing:** set your API keys.
 
 ---
 
 ## Prerequisites
 
-This project requires **Java 21+** for records, `var`, `Map.ofEntries()`, and other modern features.
+**Java 21+** is required for records, `var`, `Map.ofEntries()`, etc.
 
 ```bash
-# Verify your Java version:
-java -version
-# Must show 21 or higher
+java -version   # Must show 21+
 
-# If you have multiple JDKs, set JAVA_HOME:
+# If multiple JDKs, set JAVA_HOME:
 export JAVA_HOME=/path/to/jdk-21        # Linux/Mac
 $env:JAVA_HOME = "C:\path\to\jdk-21"     # Windows PowerShell
 ```
 
-In VS Code, configure the JDK path in `.vscode/settings.json`:
-```jsonc
-"java.jdt.ls.java.home": "C:/Program Files/Eclipse Adoptium/jdk-21"
+---
+
+## Configuration System
+
+This project uses **layered configuration** — you only need to provide secrets:
+
+| File | Committed | Purpose |
+|------|:---------:|---------|
+| `user-config/mcp-config.properties` | **Yes** | Base config: safe defaults, empty secrets, full documentation |
+| `user-config/mcp-config.local.properties` | No (gitignored) | Your secrets and machine-specific overrides |
+| `user-config/mcp-config.local.example.properties` | **Yes** | Tiny template showing what to put in the local file |
+| Environment variables (`MCP_*`) | — | Highest priority — overrides both files |
+
+**Precedence (highest wins):**
+
+```
+  Environment vars (MCP_*)  →  local config  →  base config  →  defaults
 ```
 
 ---
 
-## What You'll Copy to Another Project
+## Setting API Keys
 
-When you want to use this config system in a different repo, copy these folders:
+Choose **one** of these methods:
 
-```
-FROM: mcp-servers/
-  .vscode/          ← IDE settings, launch configs, extension recommendations
-  user-config/      ← Your configuration files (example template + active config)
-  src/              ← Java source code for the config system
+### Option A: Local config file (recommended for persistence)
 
-TO: your-project/mcp-servers/   (or wherever makes sense)
-```
+Edit `user-config/mcp-config.local.properties`:
 
----
-
-## Files You MUST Manually Edit
-
-These are the **only files** that require manual configuration. Everything else works out of the box.
-
-### 1. `user-config/mcp-config.properties` (REQUIRED)
-
-This is your **active configuration file** — the one the application loads at startup.
-
-```
-+===========================================================================+
-|  ⚙️ ACTION REQUIRED                                                       |
-|                                                                           |
-|  1. Copy user-config/mcp-config.example.properties                        |
-|           → user-config/mcp-config.properties                             |
-|                                                                           |
-|  2. Search for "<<<" and replace ALL placeholders                         |
-|                                                                           |
-|  3. At minimum, set:                                                      |
-|     • apiKeys.github=ghp_your_real_token                                  |
-|     • server.github.env.GITHUB_TOKEN=ghp_your_real_token                  |
-+===========================================================================+
+```properties
+apiKeys.github=ghp_your_actual_token_here
+server.github.env.GITHUB_TOKEN=ghp_your_actual_token_here
 ```
 
-**What to configure:**
+### Option B: Environment variables (recommended for CI/secrets managers)
 
-| Section | Key(s) | Required? | What to Put |
-|---------|--------|-----------|-------------|
-| **API Keys** | `apiKeys.github` | Yes (if using GitHub server) | Your GitHub PAT: `ghp_xxxx...` |
-| **API Keys** | `apiKeys.openai` | Only if using OpenAI | Your OpenAI key: `sk-proj-xxxx...` |
-| **Location** | `location.timezone` | No | Defaults to UTC |
-| **Preferences** | `preferences.*` | No | Sensible defaults provided |
-| **Browser** | `browser.profile` | Recommended | Create `MCP-Isolated` browser profile |
-| **Servers** | `server.{name}.*` | Yes (at least 1) | Define your MCP server connections |
-| **Profiles** | `profile.{name}.*` | No | Optional environment-specific overrides |
+```bash
+# Linux/Mac
+export MCP_APIKEYS_GITHUB="ghp_your_actual_token_here"
 
-### 2. `.vscode/launch.json` (OPTIONAL)
+# Windows PowerShell
+$env:MCP_APIKEYS_GITHUB = "ghp_your_actual_token_here"
+```
 
-If you want to pass API keys as environment variables instead of putting them in the properties file:
+### Option C: VS Code launch config
 
 ```jsonc
 // In .vscode/launch.json → configurations[0].env:
 "env": {
-    "MCP_APIKEYS_GITHUB": "ghp_your_token_here",
-    "MCP_APIKEYS_OPENAI": "sk-proj-your_key_here"
+    "MCP_APIKEYS_GITHUB": "ghp_your_actual_token_here"
 }
 ```
 
-### 3. `.gitignore` (VERIFY)
-
-Make sure your project's `.gitignore` includes:
-
-```gitignore
-# MCP config with real secrets
-mcp-servers/user-config/mcp-config.properties
-!mcp-servers/user-config/mcp-config.example.properties
-```
+| Service | Key Format | Where to Generate |
+|---------|-----------|-------------------|
+| **GitHub** | `ghp_xxxxxxxxxxxx` | [github.com/settings/tokens](https://github.com/settings/tokens) |
+| **OpenAI** | `sk-proj-xxxxxxxxxxxx` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
 
 ---
 
-## Step-by-Step Setup
+## Browser Isolation
 
-### Step 1: Copy the Example Config
+Browser isolation is **automatic** — no manual profile creation needed.
 
-```bash
-cd mcp-servers
-cp user-config/mcp-config.example.properties user-config/mcp-config.properties
-```
+The launch scripts use `--user-data-dir` (Chromium) or `-profile` (Firefox) to create
+a completely separate browser instance. Your personal tabs, cookies, profiles, and
+accounts are **never touched**.
 
-### Step 2: Find All Placeholders
+| | Location |
+|---|---|
+| **Linux/Mac** | `~/.mcp/browser-data` |
+| **Windows** | `%LOCALAPPDATA%\mcp\browser-data` |
 
-```bash
-# Shows every line that needs your attention:
-grep -n "<<<" user-config/mcp-config.properties
-```
+Override via `browser.dataDir` in config or `MCP_BROWSER_DATADIR` env var.
 
-Expected output (before editing):
-```
-37:apiKeys.github=<<<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>>>
-40:apiKeys.openai=<<<YOUR_OPENAI_API_KEY>>>
-91:server.github.env.GITHUB_TOKEN=<<<YOUR_GITHUB_PERSONAL_ACCESS_TOKEN>>>
-96:server.filesystem.args=-y,@modelcontextprotocol/server-filesystem,<<<ABSOLUTE_PATH_TO_ALLOWED_DIRECTORY>>>
-```
+---
 
-### Step 3: Replace Placeholders
-
-Edit `user-config/mcp-config.properties` and replace each `<<<...>>>` with your actual value.
-
-**Or use environment variables** (recommended for secrets):
-
-```bash
-# Linux/Mac
-export MCP_APIKEYS_GITHUB="ghp_abc123def456ghi789jkl012mno345pqr678"
-
-# Windows PowerShell
-$env:MCP_APIKEYS_GITHUB = "ghp_abc123def456ghi789jkl012mno345pqr678"
-```
-
-### Step 4: (Recommended) Create an Isolated Browser Profile
-
-If any of your MCP servers launch a browser:
-
-1. **Chrome:** `chrome://settings/manageProfile` → Add Person → `MCP-Isolated`
-2. **Edge:** `edge://settings/profiles` → Add Profile → `MCP-Isolated`
-3. **Firefox:** `about:profiles` → Create a New Profile → `MCP-Isolated`
-
-Then set in your config:
-```properties
-browser.profile=MCP-Isolated
-```
-
-### Step 5: Build & Run
+## Build & Run
 
 ```bash
 cd mcp-servers
-
-# Compile
 javac -d out src/Main.java src/config/**/*.java
-
-# Run (from mcp-servers/ directory)
 java -cp out Main
 ```
 
-Or use the VS Code launch configuration: press `F5` and select **"Run MCP Config Loader"**.
-
-### Step 6: Verify Output
-
-You should see:
-```
-=== MCP Configuration Summary ===
-Active Profile : development
-Timezone       : UTC
-Locale         : en-US
-Log Level      : DEBUG
-Timeout        : 60s
-Browser        : (system default)
-Browser Profile: (default)
-Launch Mode    : new-window
-API Keys       : 2 configured
-Servers        : 2 defined
-  - filesystem [stdio] (enabled)
-  - github [stdio] (enabled)
-=================================
-```
+Or press `F5` in VS Code → select **"Run MCP Config Loader"**.
 
 ---
 
-## Adding a New MCP Server
+## Validate Configuration
 
-### For a Local (STDIO) Server
-
-Add to `user-config/mcp-config.properties`:
-
-```properties
-server.my-tool.name=My Tool MCP Server
-server.my-tool.enabled=true
-server.my-tool.transport=stdio
-server.my-tool.command=npx
-server.my-tool.args=-y,@my-org/my-mcp-server
-server.my-tool.env.API_KEY=<<<YOUR_MY_TOOL_API_KEY>>>
-```
-
-### For a Remote (SSE/HTTP) Server
-
-```properties
-server.my-api.name=My Remote Server
-server.my-api.enabled=true
-server.my-api.transport=sse
-server.my-api.url=<<<https://your-server.example.com/mcp/sse>>>
+```bash
+./scripts/common/utils/validate-config.sh --fix-suggestions
 ```
 
 ---
 
 ## Copying to Another Project
 
-When you want to reuse this config system elsewhere:
+Copy these folders to your target project:
 
 ```bash
-# From the source project root:
-cp -r mcp-servers/.vscode    /path/to/target/mcp-servers/.vscode
-cp -r mcp-servers/user-config /path/to/target/mcp-servers/user-config
-cp -r mcp-servers/src         /path/to/target/mcp-servers/src
-
-# Then in the target project:
-cd /path/to/target/mcp-servers
-cp user-config/mcp-config.example.properties user-config/mcp-config.properties
-# Edit mcp-config.properties → replace <<<PLACEHOLDER>>> values
+cp -r mcp-servers/.vscode     /path/to/target/mcp-servers/.vscode
+cp -r mcp-servers/user-config  /path/to/target/mcp-servers/user-config
+cp -r mcp-servers/scripts      /path/to/target/mcp-servers/scripts
+cp -r mcp-servers/src          /path/to/target/mcp-servers/src
 ```
 
+Then run `./scripts/setup.sh` in the target project. That's it.
+
 **Checklist after copying:**
-- [ ] `user-config/mcp-config.properties` exists and has real values (no `<<<`)
-- [ ] `.gitignore` excludes `mcp-servers/user-config/mcp-config.properties`
-- [ ] `.gitignore` includes `!mcp-servers/user-config/mcp-config.example.properties`
-- [ ] `.vscode/settings.json` — verify `java.project.sourcePaths` matches your structure
-- [ ] Browser isolation profile created (if applicable)
-
----
-
-## File Reference
-
-| File | Editable? | Purpose |
-|------|-----------|---------|
-| `user-config/mcp-config.properties` | **YES — you must edit this** | Active config with your real values |
-| `user-config/mcp-config.example.properties` | Reference only | Full template with docs (committed) |
-| `.vscode/settings.json` | Rarely | IDE settings — adjust source paths if needed |
-| `.vscode/launch.json` | Optional | Add env vars for secrets |
-| `.vscode/extensions.json` | No | Extension recommendations |
-| `src/Main.java` | No (unless extending) | Entry point |
-| `src/config/**/*.java` | No (unless extending) | Config system internals |
+- [ ] Run `./scripts/setup.sh` (creates local config, browser dir)
+- [ ] Set API keys in `mcp-config.local.properties` or env vars
+- [ ] Add to target `.gitignore`: `mcp-servers/user-config/mcp-config.local.properties`
+- [ ] Verify `.vscode/settings.json` → `java.project.sourcePaths` matches your structure
