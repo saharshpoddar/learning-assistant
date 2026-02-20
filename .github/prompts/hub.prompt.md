@@ -240,7 +240,7 @@ Quick Commands:
     /system-design    → System design (HLD/LLD)
     /devops           → CI/CD, Docker, K8s, cloud, Git, build tools
     /mcp              → MCP: build servers, configure agents, API integration
-    /resources        → Search, browse & scrape 30+ curated learning resources
+    /resources        → Search, discover & export 47+ curated learning resources
     /language-guide   → Language-specific learning
     /tech-stack       → Frameworks & tech comparison
     /sdlc             → Development lifecycle & methods

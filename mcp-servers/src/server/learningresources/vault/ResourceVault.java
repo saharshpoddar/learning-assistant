@@ -17,10 +17,11 @@ import java.util.logging.Logger;
  * In-memory library of curated learning resources.
  *
  * <p>The vault stores {@link LearningResource} entries indexed by ID, and provides
- * search and filter capabilities. It is pre-populated with built-in resources
- * via {@link BuiltInResources} and supports runtime additions.
+ * composite search and filter capabilities across all categorization dimensions
+ * (type, category, concept area, difficulty range, freshness, official status).
  *
- * <p>Thread-safe — uses a {@link ConcurrentHashMap} for storage.
+ * <p>Pre-populated with built-in resources via {@link BuiltInResources} and
+ * supports runtime additions. Thread-safe — uses a {@link ConcurrentHashMap}.
  */
 public class ResourceVault {
 
@@ -71,42 +72,75 @@ public class ResourceVault {
     }
 
     /**
-     * Searches the vault using the given query criteria.
+     * Searches the vault using composite query criteria across all dimensions.
+     *
+     * <p>Filters are combined with AND logic. Within multi-value fields
+     * (categories), OR logic is used — a resource matching ANY listed
+     * category qualifies.
      *
      * @param query the search and filter criteria
-     * @return matching resources (unmodifiable list)
+     * @return matching resources sorted by title (unmodifiable list)
      */
     public List<LearningResource> search(final ResourceQuery query) {
         Objects.requireNonNull(query, "Query must not be null");
 
         var stream = resources.values().stream();
 
+        // Free-text search across all searchable fields
         if (!query.searchText().isBlank()) {
             final var searchLower = query.searchText().toLowerCase();
-            stream = stream.filter(resource -> matchesSearchText(resource, searchLower));
+            stream = stream.filter(resource -> resource.searchableText().contains(searchLower));
         }
 
+        // Type filter
         if (query.type() != null) {
             stream = stream.filter(resource -> resource.type() == query.type());
         }
 
-        if (query.category() != null) {
-            stream = stream.filter(resource -> resource.hasCategory(query.category()));
+        // Category filter (OR logic: match ANY listed category)
+        if (!query.categories().isEmpty()) {
+            stream = stream.filter(resource ->
+                    query.categories().stream().anyMatch(resource::hasCategory));
         }
 
-        if (query.difficulty() != null) {
-            stream = stream.filter(resource -> resource.difficulty().equalsIgnoreCase(query.difficulty()));
+        // Concept area filter
+        if (query.conceptArea() != null) {
+            stream = stream.filter(resource -> resource.hasConcept(query.conceptArea()));
         }
 
+        // Difficulty range filter
+        if (query.minDifficulty() != null || query.maxDifficulty() != null) {
+            final var min = query.minDifficulty() != null
+                    ? query.minDifficulty()
+                    : server.learningresources.model.DifficultyLevel.BEGINNER;
+            final var max = query.maxDifficulty() != null
+                    ? query.maxDifficulty()
+                    : server.learningresources.model.DifficultyLevel.EXPERT;
+            stream = stream.filter(resource -> resource.isDifficultyInRange(min, max));
+        }
+
+        // Freshness filter
+        if (query.freshness() != null) {
+            stream = stream.filter(resource -> resource.freshness() == query.freshness());
+        }
+
+        // Official-only filter
+        if (query.officialOnly()) {
+            stream = stream.filter(LearningResource::isOfficial);
+        }
+
+        // Tag filter (AND logic: resource must have ALL tags)
         if (!query.tags().isEmpty()) {
             stream = stream.filter(resource -> query.tags().stream().allMatch(resource::hasTag));
         }
 
+        // Free-only filter
         if (query.freeOnly()) {
             stream = stream.filter(LearningResource::isFree);
         }
 
-        var resultStream = stream.sorted((first, second) -> first.title().compareToIgnoreCase(second.title()));
+        var resultStream = stream.sorted((first, second) ->
+                first.title().compareToIgnoreCase(second.title()));
 
         if (query.maxResults() > 0) {
             resultStream = resultStream.limit(query.maxResults());
@@ -158,19 +192,5 @@ public class ResourceVault {
      */
     public boolean remove(final String resourceId) {
         return resources.remove(resourceId) != null;
-    }
-
-    /**
-     * Checks whether the given text matches a resource's title, description, or tags.
-     *
-     * @param resource    the resource to check
-     * @param searchLower the lowercase search text
-     * @return {@code true} if any field matches
-     */
-    private boolean matchesSearchText(final LearningResource resource, final String searchLower) {
-        return resource.title().toLowerCase().contains(searchLower)
-                || resource.description().toLowerCase().contains(searchLower)
-                || resource.tags().stream().anyMatch(tag -> tag.toLowerCase().contains(searchLower))
-                || resource.author().toLowerCase().contains(searchLower);
     }
 }

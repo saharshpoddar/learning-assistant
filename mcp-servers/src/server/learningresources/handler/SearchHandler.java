@@ -1,5 +1,6 @@
 package server.learningresources.handler;
 
+import server.learningresources.model.ConceptArea;
 import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceQuery;
@@ -146,10 +147,11 @@ public class SearchHandler {
                 .append(" (").append(resources.size()).append(" results)\n\n");
 
         for (final var resource : resources) {
-            builder.append("  ").append(resource.isFree() ? "🆓" : "💰").append(" ")
+            final var badge = (resource.isOfficial() ? "✅" : "") + (resource.isFree() ? "🆓" : "💰");
+            builder.append("  ").append(badge).append(" ")
                     .append(resource.title())
                     .append("  [").append(resource.type().getDisplayName()).append("]")
-                    .append("  (").append(resource.difficulty()).append(")\n")
+                    .append("  (").append(resource.difficulty().getDisplayName()).append(")\n")
                     .append("     ").append(resource.url()).append("\n")
                     .append("     ").append(truncateDescription(resource.description())).append("\n")
                     .append("     ID: ").append(resource.id()).append("\n\n");
@@ -165,20 +167,26 @@ public class SearchHandler {
      * @return formatted detail string
      */
     private String formatResourceDetail(final LearningResource resource) {
-        return new StringBuilder()
-                .append("📖 ").append(resource.title()).append("\n")
+        final var builder = new StringBuilder()
+                .append("📖 ").append(resource.title())
+                .append(resource.isOfficial() ? "  ✅ Official" : "").append("\n")
                 .append("─".repeat(50)).append("\n")
-                .append("URL:        ").append(resource.url()).append("\n")
-                .append("Type:       ").append(resource.type().getDisplayName()).append("\n")
-                .append("Difficulty: ").append(resource.difficulty()).append("\n")
-                .append("Author:     ").append(resource.author().isEmpty() ? "(unknown)" : resource.author()).append("\n")
-                .append("Free:       ").append(resource.isFree() ? "Yes" : "No").append("\n")
-                .append("Categories: ").append(resource.categories().stream()
+                .append("URL:         ").append(resource.url()).append("\n")
+                .append("Type:        ").append(resource.type().getDisplayName()).append("\n")
+                .append("Difficulty:  ").append(resource.difficulty().getDisplayName()).append("\n")
+                .append("Freshness:   ").append(resource.freshness().getDisplayName()).append("\n")
+                .append("Language:    ").append(resource.languageApplicability().getDisplayName()).append("\n")
+                .append("Author:      ").append(resource.author().isEmpty() ? "(unknown)" : resource.author()).append("\n")
+                .append("Free:        ").append(resource.isFree() ? "Yes" : "No").append("\n")
+                .append("Categories:  ").append(resource.categories().stream()
                         .map(ResourceCategory::getDisplayName)
                         .collect(Collectors.joining(", "))).append("\n")
-                .append("Tags:       ").append(String.join(", ", resource.tags())).append("\n\n")
-                .append(resource.description()).append("\n")
-                .toString();
+                .append("Concepts:    ").append(resource.conceptAreas().stream()
+                        .map(ConceptArea::getDisplayName)
+                        .collect(Collectors.joining(", "))).append("\n")
+                .append("Tags:        ").append(String.join(", ", resource.tags())).append("\n\n")
+                .append(resource.description()).append("\n");
+        return builder.toString();
     }
 
     /**

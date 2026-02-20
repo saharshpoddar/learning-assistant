@@ -47,7 +47,7 @@ This module provides a **Java-based configuration system** and **MCP server impl
 
 | Server | Description | Docs |
 |--------|-------------|------|
-| **Learning Resources** | Web scraper + curated vault of 30+ learning resources. Scrape, summarize, search, and browse tutorials, docs, blogs, and more. | [README](src/server/learningresources/README.md) |
+| **Learning Resources** | Web scraper + curated vault of 47+ learning resources. Smart discovery, multi-format export, scrape, summarize, search, and browse tutorials, docs, blogs, and more. | [README](src/server/learningresources/README.md) |
 
 ---
 
@@ -151,12 +151,14 @@ mcp-servers/
 │           │
 │           ├── vault/                    ← Built-in resource library
 │           │   ├── ResourceVault.java    ← ConcurrentHashMap store with search
-│           │   └── BuiltInResources.java ← 30+ curated resources (Java, Web, DevOps, ...)
+│           │   └── BuiltInResources.java ← 47+ curated resources (Java, Web, DevOps, ...)
 │           │
-│           └── handler/                  ← MCP tool dispatch
-│               ├── ToolHandler.java      ← Routes 7 tools via switch expression
+│           └── handler/                  ← MCP tool dispatch (10 tools)
+│               ├── ToolHandler.java      ← Routes 10 tools via switch expression
 │               ├── SearchHandler.java    ← Vault search, browse, details
-│               └── ScrapeHandler.java    ← Scrape → summarize → format
+│               ├── ScrapeHandler.java    ← Scrape → summarize → format
+│               ├── ExportHandler.java    ← Markdown/PDF/Word export + OutputFormat
+│               └── UrlResourceHandler.java ← Smart add-from-URL
 │
 ├── scripts/                              ← 🔧 Automation scripts
 │   ├── setup.sh / setup.ps1             ← Setup wizard (run this first!)
@@ -391,12 +393,21 @@ McpConfiguration (root)                     ← Config System
 
 LearningResourcesServer                     ← Learning Resources Server
 ├── ResourceVault           ConcurrentHashMap store with search & filter
-│   └── BuiltInResources    30+ curated resources (Java, Web, DevOps, AI/ML, ...)
-├── ToolHandler             Routes 7 MCP tools via switch expression
+│   └── BuiltInResources    47+ curated resources (Java, Web, DevOps, AI/ML, ...)
+├── ToolHandler             Routes 10 MCP tools via switch expression
 │   ├── SearchHandler       Vault search, browse, details, categories
-│   └── ScrapeHandler       Web scrape → summarize → format pipeline
-├── Model records:
-│   ├── LearningResource    title, url, type, categories, tags, difficulty
+│   ├── ScrapeHandler       Web scrape → summarize → format pipeline
+│   ├── ExportHandler       Markdown/PDF/Word export (pandoc + fallback)
+│   └── UrlResourceHandler  Smart add-from-URL with metadata inference
+├── ResourceDiscovery       Smart 3-mode discovery engine
+│   ├── RelevanceScorer     12-dimension scoring (fuzzy, domain, language)
+│   └── KeywordIndex        ~130 keyword-to-enum mappings
+├── Model records &amp; enums:
+│   ├── LearningResource    15-field record (title, url, type, concepts, ...)
+│   ├── ConceptArea         33 CS/SE concepts grouped by ConceptDomain (8 domains)
+│   ├── SearchMode          specific | vague | exploratory
+│   ├── DifficultyLevel     beginner | intermediate | advanced | expert
+│   ├── LanguageApplicability  universal | multi-language | java-centric | ...
 │   ├── ContentSummary      scraped text, summary, word count, reading time
 │   ├── ResourceQuery       search criteria with static factory methods
 │   ├── ResourceType        DOCUMENTATION | TUTORIAL | BLOG | VIDEO | ...

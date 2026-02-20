@@ -1,5 +1,9 @@
 package server.learningresources.vault.providers;
 
+import server.learningresources.model.ConceptArea;
+import server.learningresources.model.ContentFreshness;
+import server.learningresources.model.LanguageApplicability;
+import server.learningresources.model.DifficultyLevel;
 import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceType;
@@ -9,11 +13,10 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Curated Java learning resources — official documentation, community tutorials,
- * recommended books, and open-source projects to study.
+ * Curated Java ecosystem learning resources — official docs, community, books, OSS.
  *
- * <p>Includes: Oracle Tutorials, JDK Javadoc, JLS, Inside.java, Baeldung, Jenkov,
- * Effective Java, Java Concurrency in Practice, Spring Boot Guides, Guava, JUnit 5.
+ * <p>Covers Oracle/dev.java documentation, JDK APIs, community tutorials (Baeldung,
+ * Jenkov), landmark books (Effective Java, JCIP), and key open-source projects.
  */
 public final class JavaResources implements ResourceProvider {
 
@@ -33,10 +36,15 @@ public final class JavaResources implements ResourceProvider {
                                 + "pattern matching, and more. The authoritative starting point for Java.",
                         ResourceType.TUTORIAL,
                         List.of(ResourceCategory.JAVA),
-                        List.of("official", "language-basics", "oop", "generics", "streams", "modules"),
+                        List.of(ConceptArea.LANGUAGE_BASICS, ConceptArea.OOP, ConceptArea.GENERICS,
+                                ConceptArea.FUNCTIONAL_PROGRAMMING, ConceptArea.LANGUAGE_FEATURES,
+                                ConceptArea.GETTING_STARTED),
+                        List.of("official", "language-basics", "oop", "generics", "streams", "modules",
+                                "records", "sealed-classes", "pattern-matching"),
                         "Oracle / dev.java",
-                        "beginner",
-                        true, now
+                        DifficultyLevel.BEGINNER,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
@@ -47,10 +55,13 @@ public final class JavaResources implements ResourceProvider {
                                 + "class, method, and package in the standard library.",
                         ResourceType.API_REFERENCE,
                         List.of(ResourceCategory.JAVA),
-                        List.of("official", "api", "javadoc", "reference"),
+                        List.of(ConceptArea.LANGUAGE_FEATURES, ConceptArea.CONCURRENCY,
+                                ConceptArea.DATA_STRUCTURES),
+                        List.of("official", "api", "javadoc", "reference", "jdk21"),
                         "Oracle",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
@@ -62,10 +73,13 @@ public final class JavaResources implements ResourceProvider {
                                 + "understanding edge cases and language guarantees.",
                         ResourceType.DOCUMENTATION,
                         List.of(ResourceCategory.JAVA),
-                        List.of("official", "specification", "jls", "formal"),
+                        List.of(ConceptArea.LANGUAGE_FEATURES, ConceptArea.OOP, ConceptArea.GENERICS,
+                                ConceptArea.CONCURRENCY, ConceptArea.MEMORY_MANAGEMENT),
+                        List.of("official", "specification", "jls", "formal", "type-system"),
                         "Oracle",
-                        "advanced",
-                        true, now
+                        DifficultyLevel.EXPERT,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
@@ -77,10 +91,48 @@ public final class JavaResources implements ResourceProvider {
                                 + "with JDK engineers.",
                         ResourceType.BLOG,
                         List.of(ResourceCategory.JAVA),
-                        List.of("official", "blog", "jep", "new-features", "performance"),
+                        List.of(ConceptArea.LANGUAGE_FEATURES, ConceptArea.CONCURRENCY,
+                                ConceptArea.MEMORY_MANAGEMENT),
+                        List.of("official", "blog", "jep", "new-features", "performance",
+                                "virtual-threads", "project-loom", "project-amber"),
                         "Oracle Java Team",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
+                ),
+
+                new LearningResource(
+                        "jvm-specification",
+                        "The JVM Specification (JVMS)",
+                        "https://docs.oracle.com/javase/specs/jvms/se21/html/index.html",
+                        "The formal specification of the Java Virtual Machine. Defines class file "
+                                + "format, bytecode instructions, linking, loading, and execution. "
+                                + "Essential for understanding JVM internals and performance tuning.",
+                        ResourceType.DOCUMENTATION,
+                        List.of(ResourceCategory.JAVA),
+                        List.of(ConceptArea.MEMORY_MANAGEMENT, ConceptArea.LANGUAGE_FEATURES),
+                        List.of("official", "jvm", "bytecode", "class-file", "specification"),
+                        "Oracle",
+                        DifficultyLevel.EXPERT,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
+                ),
+
+                new LearningResource(
+                        "openjdk",
+                        "OpenJDK — Source Code & JEP Process",
+                        "https://openjdk.org/",
+                        "The open-source JDK project. Browse source code, track JEP proposals, "
+                                + "follow Project Loom (virtual threads), Amber (language features), "
+                                + "Valhalla (value types), and Panama (native interop).",
+                        ResourceType.REPOSITORY,
+                        List.of(ResourceCategory.JAVA),
+                        List.of(ConceptArea.LANGUAGE_FEATURES, ConceptArea.CONCURRENCY),
+                        List.of("official", "open-source", "jep", "loom", "amber", "valhalla", "panama"),
+                        "OpenJDK Community",
+                        DifficultyLevel.ADVANCED,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 // ─── Community Resources ────────────────────────────────────
@@ -91,28 +143,35 @@ public final class JavaResources implements ResourceProvider {
                         "https://www.baeldung.com/",
                         "Comprehensive tutorial site covering Spring, Java core, testing, "
                                 + "persistence, security, and modern Java features. Practical, "
-                                + "example-driven articles with working code.",
+                                + "well-organized, and frequently updated.",
                         ResourceType.TUTORIAL,
-                        List.of(ResourceCategory.JAVA, ResourceCategory.WEB, ResourceCategory.TESTING),
-                        List.of("spring", "tutorials", "practical", "spring-boot", "testing"),
-                        "Baeldung",
-                        "intermediate",
-                        true, now
+                        List.of(ResourceCategory.JAVA),
+                        List.of(ConceptArea.LANGUAGE_FEATURES, ConceptArea.TESTING,
+                                ConceptArea.API_DESIGN, ConceptArea.CONCURRENCY),
+                        List.of("spring", "testing", "persistence", "security", "rest-api",
+                                "hibernate", "maven", "gradle"),
+                        "Baeldung / Eugen Paraschiv",
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        false, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
                         "jenkov-tutorials",
                         "Jenkov.com — Java & Web Tutorials",
-                        "https://jenkov.com/",
-                        "In-depth tutorials on Java concurrency, networking, NIO, JDBC, "
-                                + "design patterns, and web technologies. Known for exceptionally "
-                                + "clear explanations of complex topics.",
+                        "https://jenkov.com/tutorials/java/index.html",
+                        "Clear, standalone tutorials on Java concurrency, NIO, networking, "
+                                + "JDBC, and web technologies. Excellent for deep-diving into "
+                                + "specific Java APIs.",
                         ResourceType.TUTORIAL,
-                        List.of(ResourceCategory.JAVA, ResourceCategory.WEB),
-                        List.of("concurrency", "nio", "design-patterns", "networking"),
+                        List.of(ResourceCategory.JAVA),
+                        List.of(ConceptArea.CONCURRENCY, ConceptArea.NETWORKING,
+                                ConceptArea.DATABASES, ConceptArea.LANGUAGE_FEATURES),
+                        List.of("concurrency", "nio", "networking", "jdbc", "threads"),
                         "Jakob Jenkov",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.PERIODICALLY_UPDATED,
+                        false, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 // ─── Books ──────────────────────────────────────────────────
@@ -121,30 +180,38 @@ public final class JavaResources implements ResourceProvider {
                         "effective-java",
                         "Effective Java (3rd Edition) — Joshua Bloch",
                         "https://www.oreilly.com/library/view/effective-java/9780134686097/",
-                        "The definitive best-practices guide for Java. 90 items covering "
-                                + "object creation, equality, generics, enums, lambdas, streams, "
-                                + "concurrency, and serialization.",
+                        "The essential best-practices book for Java. 90 items covering object "
+                                + "creation, generics, enums, lambdas, streams, concurrency, and "
+                                + "serialization. Written by a JDK architect.",
                         ResourceType.BOOK,
                         List.of(ResourceCategory.JAVA, ResourceCategory.SOFTWARE_ENGINEERING),
-                        List.of("best-practices", "design", "patterns", "joshua-bloch"),
+                        List.of(ConceptArea.CLEAN_CODE, ConceptArea.DESIGN_PATTERNS,
+                                ConceptArea.CONCURRENCY, ConceptArea.GENERICS),
+                        List.of("best-practices", "design-patterns", "concurrency", "generics",
+                                "enums", "lambdas", "streams"),
                         "Joshua Bloch",
-                        "intermediate",
-                        false, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.EVERGREEN,
+                        false, false, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
                         "java-concurrency-in-practice",
-                        "Java Concurrency in Practice",
+                        "Java Concurrency in Practice (JCIP)",
                         "https://jcip.net/",
-                        "The gold standard reference for multithreaded Java programming. "
-                                + "Covers thread safety, synchronization, the Java Memory Model, "
-                                + "concurrent collections, and task execution frameworks.",
+                        "The definitive book on concurrent programming in Java. Covers thread "
+                                + "safety, locks, executors, concurrent collections, the Java Memory "
+                                + "Model, and composing concurrent objects.",
                         ResourceType.BOOK,
                         List.of(ResourceCategory.JAVA),
-                        List.of("concurrency", "threads", "memory-model", "synchronization"),
-                        "Brian Goetz",
-                        "advanced",
-                        false, now
+                        List.of(ConceptArea.CONCURRENCY, ConceptArea.MEMORY_MANAGEMENT,
+                                ConceptArea.DESIGN_PATTERNS),
+                        List.of("concurrency", "threads", "locks", "executors", "java-memory-model",
+                                "thread-safety", "concurrent-collections"),
+                        "Brian Goetz et al.",
+                        DifficultyLevel.ADVANCED,
+                        ContentFreshness.EVERGREEN,
+                        false, false, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 // ─── Open Source Projects ───────────────────────────────────
@@ -153,45 +220,52 @@ public final class JavaResources implements ResourceProvider {
                         "spring-boot-guides",
                         "Spring Boot — Getting Started Guides",
                         "https://spring.io/guides",
-                        "Official Spring Boot guides covering REST APIs, data access, security, "
-                                + "messaging, testing, and deployment. Each guide is a complete "
-                                + "working project.",
+                        "Official Spring Boot guides. Quick, hands-on tutorials for REST services, "
+                                + "data access, security, testing, messaging, and more.",
                         ResourceType.TUTORIAL,
                         List.of(ResourceCategory.JAVA, ResourceCategory.WEB),
-                        List.of("spring-boot", "rest-api", "microservices", "guides"),
-                        "VMware / Spring Team",
-                        "intermediate",
-                        true, now
+                        List.of(ConceptArea.API_DESIGN, ConceptArea.TESTING,
+                                ConceptArea.ARCHITECTURE, ConceptArea.GETTING_STARTED),
+                        List.of("spring", "spring-boot", "rest", "data", "security", "testing"),
+                        "VMware / Broadcom",
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
                         "guava-wiki",
                         "Google Guava — Wiki & User Guide",
                         "https://github.com/google/guava/wiki",
-                        "User guide for Google Guava — a widely-used utility library. "
-                                + "Learn immutable collections, caching, hashing, string utilities, "
-                                + "and functional idioms from world-class engineers.",
+                        "Guide to Google Guava: collections, caching, primitives, concurrency "
+                                + "utilities, strings, I/O, hashing, event bus, and math. "
+                                + "A masterclass in API design.",
                         ResourceType.DOCUMENTATION,
                         List.of(ResourceCategory.JAVA),
-                        List.of("guava", "collections", "caching", "utilities", "google"),
+                        List.of(ConceptArea.DATA_STRUCTURES, ConceptArea.CONCURRENCY,
+                                ConceptArea.CLEAN_CODE),
+                        List.of("guava", "collections", "caching", "concurrency", "utility"),
                         "Google",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 ),
 
                 new LearningResource(
                         "junit5-user-guide",
                         "JUnit 5 User Guide",
                         "https://junit.org/junit5/docs/current/user-guide/",
-                        "Official guide for JUnit 5 — the standard Java testing framework. "
-                                + "Covers assertions, parameterized tests, extensions, nested tests, "
-                                + "and migration from JUnit 4.",
+                        "Official guide to JUnit 5 — the current standard testing framework for Java. "
+                                + "Covers annotations, assertions, parameterized tests, extensions, "
+                                + "nested tests, and test lifecycle.",
                         ResourceType.DOCUMENTATION,
                         List.of(ResourceCategory.JAVA, ResourceCategory.TESTING),
-                        List.of("junit", "testing", "unit-tests", "tdd"),
+                        List.of(ConceptArea.TESTING, ConceptArea.CLEAN_CODE),
+                        List.of("junit", "testing", "tdd", "unit-tests", "parameterized", "extensions"),
                         "JUnit Team",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.JAVA_CENTRIC, now
                 )
         );
     }

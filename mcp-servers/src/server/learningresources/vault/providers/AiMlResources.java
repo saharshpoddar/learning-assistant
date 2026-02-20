@@ -1,5 +1,9 @@
 package server.learningresources.vault.providers;
 
+import server.learningresources.model.ConceptArea;
+import server.learningresources.model.ContentFreshness;
+import server.learningresources.model.LanguageApplicability;
+import server.learningresources.model.DifficultyLevel;
 import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceType;
@@ -9,9 +13,7 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Curated AI and machine-learning learning resources.
- *
- * <p>Includes: fast.ai (practical deep learning), Prompt Engineering Guide.
+ * Curated AI, machine learning, and LLM/prompt-engineering learning resources.
  */
 public final class AiMlResources implements ResourceProvider {
 
@@ -24,30 +26,54 @@ public final class AiMlResources implements ResourceProvider {
                         "fast-ai",
                         "fast.ai — Practical Deep Learning for Coders",
                         "https://www.fast.ai/",
-                        "Free courses teaching deep learning using a top-down, practical approach. "
-                                + "Starts with training models immediately, then progressively deepens "
-                                + "understanding. Built on PyTorch with the fastai library.",
+                        "Free courses teaching deep learning with a top-down, code-first "
+                                + "approach. Covers image classification, NLP, tabular data, "
+                                + "and collaborative filtering using PyTorch and the fastai library.",
                         ResourceType.COURSE,
-                        List.of(ResourceCategory.AI_ML, ResourceCategory.PYTHON),
-                        List.of("deep-learning", "pytorch", "machine-learning", "neural-networks", "fastai"),
+                        List.of(ResourceCategory.AI_ML),
+                        List.of(ConceptArea.MACHINE_LEARNING, ConceptArea.GETTING_STARTED),
+                        List.of("deep-learning", "pytorch", "nlp", "image-classification",
+                                "practical", "free-course"),
                         "Jeremy Howard & Rachel Thomas",
-                        "intermediate",
-                        true, now
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        false, true, LanguageApplicability.MULTI_LANGUAGE, now
                 ),
 
                 new LearningResource(
                         "prompt-engineering-guide",
                         "Prompt Engineering Guide",
                         "https://www.promptingguide.ai/",
-                        "Comprehensive guide to prompt engineering techniques for large language models. "
-                                + "Covers zero-shot, few-shot, chain-of-thought, ReAct, and advanced "
-                                + "prompting patterns with practical examples.",
-                        ResourceType.ARTICLE,
+                        "Comprehensive guide to prompt engineering techniques for LLMs. "
+                                + "Covers zero-shot, few-shot, chain-of-thought, self-consistency, "
+                                + "ReAct, and model-specific strategies.",
+                        ResourceType.TUTORIAL,
                         List.of(ResourceCategory.AI_ML),
-                        List.of("prompt-engineering", "llm", "gpt", "ai", "chatgpt"),
+                        List.of(ConceptArea.LLM_AND_PROMPTING),
+                        List.of("prompt-engineering", "llm", "gpt", "chain-of-thought",
+                                "few-shot", "zero-shot", "techniques"),
                         "DAIR.AI",
-                        "beginner",
-                        true, now
+                        DifficultyLevel.BEGINNER,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        false, true, LanguageApplicability.MULTI_LANGUAGE, now
+                ),
+
+                new LearningResource(
+                        "openai-api-docs",
+                        "OpenAI API Documentation",
+                        "https://platform.openai.com/docs/",
+                        "Official OpenAI API reference — models, chat completions, embeddings, "
+                                + "fine-tuning, function calling, assistants API, and best practices "
+                                + "for building LLM-powered applications.",
+                        ResourceType.API_REFERENCE,
+                        List.of(ResourceCategory.AI_ML),
+                        List.of(ConceptArea.LLM_AND_PROMPTING, ConceptArea.API_DESIGN),
+                        List.of("official", "openai", "gpt", "api", "function-calling",
+                                "embeddings", "fine-tuning", "assistants"),
+                        "OpenAI",
+                        DifficultyLevel.INTERMEDIATE,
+                        ContentFreshness.ACTIVELY_MAINTAINED,
+                        true, true, LanguageApplicability.MULTI_LANGUAGE, now
                 )
         );
     }

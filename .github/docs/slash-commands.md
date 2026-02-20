@@ -254,16 +254,24 @@ Output:   Repository overview → architecture map → key patterns → lessons
 
 #### `/resources` — Learning Resource Vault
 ```
-Inputs:   action (search/browse/scrape/recommend/add/details), topic/URL, filters (optional)
+Inputs:   action (search/browse/scrape/recommend/add/details/discover/export), topic/URL, filters (optional)
 Agent:    Learning-Mentor
 Tools:    codebase, fetch
 Example:  /resources → search → java concurrency
+          /resources → discover → learn testing → (auto: exploratory mode)
+          /resources → discover → mode=specific → "JUnit 5 docs"
+          /resources → discover → domain=core-cs
+          /resources → export → java → format=pdf
 Actions:  search (keyword/tag), browse (by category), scrape (any URL),
-          recommend (topic-based), add (new resource), details (deep-dive)
-Vault:    30+ curated resources across Java, Python, Web, AI/ML, DevOps,
+          recommend (topic-based), add (new resource), details (deep-dive),
+          discover (3 modes: specific/vague/exploratory), export (md/pdf/word)
+Vault:    47+ curated resources across Java, Python, Web, AI/ML, DevOps,
           algorithms, engineering, databases, security, and more
-MCP:      Backed by 7 MCP tools: search_resources, browse_vault, get_resource,
-          list_categories, scrape_url, read_url, add_resource
+MCP:      Backed by 10 MCP tools: search_resources, browse_vault, get_resource,
+          list_categories, discover_resources, scrape_url, read_url, add_resource,
+          add_resource_from_url, export_results
+Enums:    SearchMode (specific/vague/exploratory), ConceptDomain (8 domains),
+          ConceptArea (33 concepts), DifficultyLevel, LanguageApplicability
 ```
 
 ---

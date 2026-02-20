@@ -116,12 +116,12 @@ learning-assistant/
 │   └── src/
 │       ├── config/                      Java config system (records, loader, validator)
 │       └── server/
-│           └── learningresources/       Learning Resources MCP Server (30+ built-in resources)
+│           └── learningresources/       Learning Resources MCP Server (47+ built-in resources)
 │               ├── model/               Domain models (LearningResource, ContentSummary, ...)
 │               ├── scraper/             Web scraping via Java HttpClient
 │               ├── content/             Summarization, readability scoring, formatting
 │               ├── vault/               Curated resource library with search
-│               └── handler/             7 MCP tools (search, browse, scrape, read, add)
+│               └── handler/             10 MCP tools (search, browse, discover, scrape, export, ...)
 │
 └── .github/                         ← AI customization + knowledge base
     ├── copilot-instructions.md          Project-wide coding rules
@@ -192,7 +192,7 @@ The `mcp-servers/` directory contains a **Java-based configuration system** and 
 
 ### Learning Resources Server (NEW)
 
-The first built-in MCP server — a **web scraper + curated resource vault** with 30+ hand-picked learning resources:
+The first built-in MCP server — a **web scraper + curated resource vault** with 47+ hand-picked learning resources:
 
 | Tool | Description |
 |------|-------------|
@@ -200,9 +200,12 @@ The first built-in MCP server — a **web scraper + curated resource vault** wit
 | `browse_vault` | Browse all resources grouped by category or type |
 | `get_resource` | Get full details for a specific resource |
 | `list_categories` | List all available resource categories |
+| `discover_resources` | Smart 3-mode discovery (specific/vague/exploratory) |
 | `scrape_url` | Scrape any URL and get a content summary |
 | `read_url` | Scrape any URL and get full readable content |
 | `add_resource` | Add a new resource to the vault |
+| `add_resource_from_url` | Scrape URL → auto-extract metadata → add to vault |
+| `export_results` | Export results as Markdown, PDF, or Word |
 
 ```bash
 # Try it:
