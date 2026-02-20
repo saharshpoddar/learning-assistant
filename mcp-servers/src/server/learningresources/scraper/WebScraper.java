@@ -27,7 +27,7 @@ import java.util.logging.Logger;
  *   }
  * </pre>
  */
-public class WebScraper {
+public class WebScraper implements AutoCloseable {
 
     private static final Logger LOGGER = Logger.getLogger(WebScraper.class.getName());
 
@@ -105,5 +105,13 @@ public class WebScraper {
         } catch (IllegalArgumentException illegalArgumentException) {
             throw new ScraperException("Invalid URL: " + url, illegalArgumentException);
         }
+    }
+
+    /**
+     * Closes the underlying {@link HttpClient} and releases its resources.
+     */
+    @Override
+    public void close() {
+        httpClient.close();
     }
 }

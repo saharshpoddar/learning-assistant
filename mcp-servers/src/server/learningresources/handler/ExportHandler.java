@@ -175,8 +175,11 @@ public final class ExportHandler {
 
         try {
             final var tempDir = Files.createTempDirectory("learning-export-");
+            tempDir.toFile().deleteOnExit();
             final var mdFile = tempDir.resolve("discovery-results.md");
+            mdFile.toFile().deleteOnExit();
             final var outputFile = tempDir.resolve("discovery-results." + targetExtension);
+            outputFile.toFile().deleteOnExit();
 
             Files.writeString(mdFile, markdownContent);
 
@@ -186,7 +189,10 @@ public final class ExportHandler {
             ).redirectErrorStream(true).start();
 
             final var exitCode = process.waitFor();
-            final var processOutput = new String(process.getInputStream().readAllBytes());
+            final String processOutput;
+            try (var processStream = process.getInputStream()) {
+                processOutput = new String(processStream.readAllBytes());
+            }
 
             if (exitCode == 0 && Files.exists(outputFile)) {
                 final var fileSize = Files.size(outputFile);
@@ -195,12 +201,16 @@ public final class ExportHandler {
                         + "Markdown source also saved: " + mdFile;
             } else {
                 LOGGER.warning("Pandoc conversion failed (exit=" + exitCode + "): " + processOutput);
-                return buildFallbackResponse(plainText, markdownContent, mdFile, targetExtension);
+                return buildFallbackResponse(plainText, mdFile, targetExtension);
             }
 
-        } catch (IOException | InterruptedException conversionError) {
-            LOGGER.fine("Pandoc not available: " + conversionError.getMessage());
-            return buildNoPandocResponse(plainText, markdownContent, targetExtension);
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            LOGGER.fine("Export interrupted: " + interruptedException.getMessage());
+            return buildNoPandocResponse(plainText, targetExtension);
+        } catch (IOException ioException) {
+            LOGGER.fine("Pandoc not available: " + ioException.getMessage());
+            return buildNoPandocResponse(plainText, targetExtension);
         }
     }
 
@@ -256,8 +266,8 @@ public final class ExportHandler {
         return builder.toString();
     }
 
-    private String buildFallbackResponse(final String plainText, final String markdownContent,
-                                          final Path mdFile, final String targetExtension) {
+    private String buildFallbackResponse(final String plainText, final Path mdFile,
+                                          final String targetExtension) {
         return "Pandoc conversion to " + targetExtension.toUpperCase() + " failed.\n"
                 + "Markdown source saved at: " + mdFile + "\n\n"
                 + "To convert manually:\n"
@@ -265,8 +275,7 @@ public final class ExportHandler {
                 + "--- Plain Text Export ---\n\n" + plainText;
     }
 
-    private String buildNoPandocResponse(final String plainText, final String markdownContent,
-                                          final String targetExtension) {
+    private String buildNoPandocResponse(final String plainText, final String targetExtension) {
         return "Pandoc is not installed — returning formatted plain text.\n\n"
                 + "To enable " + targetExtension.toUpperCase() + " export:\n"
                 + "  1. Install pandoc: https://pandoc.org/installing.html\n"
@@ -334,7 +343,7 @@ public final class ExportHandler {
         builder.append("- **URL:** ").append(resource.url()).append("\n");
         builder.append("- **Type:** ").append(resource.type().getDisplayName()).append("\n");
         builder.append("- **Difficulty:** ").append(resource.difficulty().getDisplayName()).append("\n");
-        builder.append("- **Freshness:** ").append(resource.freshness()).append("\n");
+        builder.append("- **Freshness:** ").append(resource.freshness().getDisplayName()).append("\n");
         builder.append("- **Language Scope:** ").append(resource.languageApplicability().getDisplayName()).append("\n");
 
         if (!resource.author().isEmpty()) {

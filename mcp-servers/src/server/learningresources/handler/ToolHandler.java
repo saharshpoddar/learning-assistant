@@ -261,7 +261,8 @@ public class ToolHandler {
             final var langArg = arguments.getOrDefault("language_applicability", "universal");
             final var langApplicability = LanguageApplicability.fromString(langArg);
             final var tagsArg = arguments.getOrDefault("tags", "");
-            final var tags = tagsArg.isBlank() ? List.<String>of() : List.of(tagsArg.split(","));
+            final var tags = tagsArg.isBlank() ? List.<String>of()
+                    : java.util.Arrays.stream(tagsArg.split(",")).map(String::strip).toList();
 
             final var resource = new LearningResource(
                     arguments.get("id"),

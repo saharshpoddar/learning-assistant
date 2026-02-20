@@ -222,11 +222,11 @@ public final class UrlResourceHandler {
         if (args.containsKey("id")) {
             return args.get("id");
         }
-        // Generate slug from title
-        return title.toLowerCase()
+        // Generate slug from title, then truncate to the slug's own length
+        final var slug = title.toLowerCase()
                 .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("^-|-$", "")
-                .substring(0, Math.min(title.length(), 50));
+                .replaceAll("^-|-$", "");
+        return slug.substring(0, Math.min(slug.length(), 50));
     }
 
     private ResourceType resolveType(final Map<String, String> args, String url) {
@@ -298,7 +298,9 @@ public final class UrlResourceHandler {
 
     private List<String> resolveTags(final Map<String, String> args, String url) {
         if (args.containsKey("tags")) {
-            return List.of(args.get("tags").split(","));
+            return java.util.Arrays.stream(args.get("tags").split(","))
+                    .map(String::strip)
+                    .toList();
         }
         final var tags = new ArrayList<String>();
         tags.add("user-added");
@@ -396,7 +398,8 @@ public final class UrlResourceHandler {
         }
         try {
             final var base = java.net.URI.create(baseUrl);
-            return base.getScheme() + "://" + base.getHost() + href;
+            final var authority = base.getAuthority() != null ? base.getAuthority() : base.getHost();
+            return base.getScheme() + "://" + authority + href;
         } catch (IllegalArgumentException invalidUri) {
             return href;
         }

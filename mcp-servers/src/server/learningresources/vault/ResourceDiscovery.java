@@ -325,7 +325,7 @@ public final class ResourceDiscovery {
         );
 
         return new DiscoveryResult(SearchMode.EXPLORATORY, scored, suggestions,
-                "Here are recommended resources for " + targetDifficulty + " level learners");
+                "Here are recommended resources for " + targetDifficulty.getDisplayName() + " level learners");
     }
 
     private DiscoveryResult exploreDefault() {

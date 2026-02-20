@@ -151,7 +151,7 @@ public class SearchHandler {
             builder.append("  ").append(badge).append(" ")
                     .append(resource.title())
                     .append("  [").append(resource.type().getDisplayName()).append("]")
-                    .append("  (").append(resource.difficulty()).append(")\n")
+                    .append("  (").append(resource.difficulty().getDisplayName()).append(")\n")
                     .append("     ").append(resource.url()).append("\n")
                     .append("     ").append(truncateDescription(resource.description())).append("\n")
                     .append("     ID: ").append(resource.id()).append("\n\n");
@@ -173,8 +173,8 @@ public class SearchHandler {
                 .append("─".repeat(50)).append("\n")
                 .append("URL:         ").append(resource.url()).append("\n")
                 .append("Type:        ").append(resource.type().getDisplayName()).append("\n")
-                .append("Difficulty:  ").append(resource.difficulty()).append("\n")
-                .append("Freshness:   ").append(resource.freshness()).append("\n")
+                .append("Difficulty:  ").append(resource.difficulty().getDisplayName()).append("\n")
+                .append("Freshness:   ").append(resource.freshness().getDisplayName()).append("\n")
                 .append("Language:    ").append(resource.languageApplicability().getDisplayName()).append("\n")
                 .append("Author:      ").append(resource.author().isEmpty() ? "(unknown)" : resource.author()).append("\n")
                 .append("Free:        ").append(resource.isFree() ? "Yes" : "No").append("\n")
@@ -182,7 +182,7 @@ public class SearchHandler {
                         .map(ResourceCategory::getDisplayName)
                         .collect(Collectors.joining(", "))).append("\n")
                 .append("Concepts:    ").append(resource.conceptAreas().stream()
-                        .map(ConceptArea::name)
+                        .map(ConceptArea::getDisplayName)
                         .collect(Collectors.joining(", "))).append("\n")
                 .append("Tags:        ").append(String.join(", ", resource.tags())).append("\n\n")
                 .append(resource.description()).append("\n");

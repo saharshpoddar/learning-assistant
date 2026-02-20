@@ -36,9 +36,11 @@ public record DiscoveryResult(
      */
     public DiscoveryResult {
         Objects.requireNonNull(searchMode, "SearchMode must not be null");
+        Objects.requireNonNull(results, "Results list must not be null");
+        Objects.requireNonNull(suggestions, "Suggestions list must not be null");
+        Objects.requireNonNull(summary, "Summary must not be null");
         results = List.copyOf(results);
         suggestions = List.copyOf(suggestions);
-        Objects.requireNonNull(summary, "Summary must not be null");
     }
 
     /**
