@@ -1,8 +1,21 @@
 package config.loader;
 
-import config.model.*;
+import config.model.ApiKeyStore;
+import config.model.BrowserPreferences;
+import config.model.LocationPreferences;
+import config.model.McpConfiguration;
+import config.model.ProfileDefinition;
+import config.model.ServerDefinition;
+import config.model.TransportType;
+import config.model.UserPreferences;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /**

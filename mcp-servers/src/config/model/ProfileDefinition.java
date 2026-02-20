@@ -1,6 +1,5 @@
 package config.model;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
@@ -45,7 +44,7 @@ public record ProfileDefinition(
         Objects.requireNonNull(browserPreferences, "Browser preferences must not be null");
         Objects.requireNonNull(serverOverrides, "Server overrides must not be null (use empty map)");
 
-        serverOverrides = Collections.unmodifiableMap(Map.copyOf(serverOverrides));
+        serverOverrides = Map.copyOf(serverOverrides);
     }
 
     /**

@@ -34,7 +34,7 @@
 
 ## Overview
 
-This module provides a **Java-based configuration system** for managing MCP server connections. It handles:
+This module provides a **Java-based configuration system** and **MCP server implementations** for learning assistance. It handles:
 
 - Loading config from a **layered properties system** (base → local → env vars)
 - Storing API keys, location preferences, browser settings, and user preferences
@@ -42,6 +42,12 @@ This module provides a **Java-based configuration system** for managing MCP serv
 - Named profiles for switching between environments (development, production, testing)
 - Validation of all configuration values before use
 - **Automatic browser isolation** — user's personal browser is never touched
+
+### Included MCP Servers
+
+| Server | Description | Docs |
+|--------|-------------|------|
+| **Learning Resources** | Web scraper + curated vault of 30+ learning resources. Scrape, summarize, search, and browse tutorials, docs, blogs, and more. | [README](src/server/learningresources/README.md) |
 
 ---
 
@@ -63,8 +69,12 @@ $env:MCP_APIKEYS_GITHUB = "ghp_your_token_here"       # Windows
 
 # 3. Build and run:
 cd mcp-servers
-javac -d out src/Main.java src/config/**/*.java
+javac -d out src/Main.java src/config/**/*.java src/server/**/*.java
 java -cp out Main
+
+# 4. Try the Learning Resources server:
+java -cp out server.learningresources.LearningResourcesServer --demo
+java -cp out server.learningresources.LearningResourcesServer --list-tools
 ```
 
 ---
@@ -85,33 +95,68 @@ mcp-servers/
 │
 ├── src/
 │   ├── Main.java                         ← Entry point, loads & prints config
-│   └── config/
-│       ├── ConfigManager.java            ← Facade: load → merge → parse → validate → resolve
-│       │
-│       ├── model/                        ← Immutable config records (Java records)
-│       │   ├── McpConfiguration.java     ← Root config object
-│       │   ├── ApiKeyStore.java          ← Service name → API key map
-│       │   ├── LocationPreferences.java  ← Timezone, locale, region
-│       │   ├── UserPreferences.java      ← Theme, log level, retries, timeouts
-│       │   ├── BrowserPreferences.java   ← Browser executable, profile, launch mode
-│       │   ├── ServerDefinition.java     ← Per-server config (transport, command, URL)
-│       │   ├── ProfileDefinition.java    ← Named override sets (dev, prod, testing)
-│       │   ├── TransportType.java        ← Enum: STDIO, SSE, STREAMABLE_HTTP
-│       │   └── package-info.java         ← Package documentation
-│       │
-│       ├── loader/                       ← Config loading pipeline
-│       │   ├── ConfigSource.java         ← Interface for pluggable sources
-│       │   ├── PropertiesConfigSource.java  ← Loads from .properties files (supports optional)
-│       │   ├── EnvironmentConfigSource.java ← Loads MCP_* environment variables
-│       │   └── ConfigParser.java         ← Flat properties → model records
-│       │
-│       ├── validation/                   ← Config correctness checks
-│       │   ├── ConfigValidator.java      ← Validates servers, profiles, transports
-│       │   └── ValidationResult.java     ← Error list with reporting
-│       │
-│       └── exception/                    ← Config-specific exceptions
-│           ├── ConfigLoadException.java
-│           └── ConfigValidationException.java
+│   │
+│   ├── config/                           ← ⚙️ Configuration system
+│   │   ├── ConfigManager.java            ← Facade: load → merge → parse → validate → resolve
+│   │   │
+│   │   ├── model/                        ← Immutable config records (Java records)
+│   │   │   ├── McpConfiguration.java     ← Root config object
+│   │   │   ├── ApiKeyStore.java          ← Service name → API key map
+│   │   │   ├── LocationPreferences.java  ← Timezone, locale, region
+│   │   │   ├── UserPreferences.java      ← Theme, log level, retries, timeouts
+│   │   │   ├── BrowserPreferences.java   ← Browser executable, profile, launch mode
+│   │   │   ├── ServerDefinition.java     ← Per-server config (transport, command, URL)
+│   │   │   ├── ProfileDefinition.java    ← Named override sets (dev, prod, testing)
+│   │   │   ├── TransportType.java        ← Enum: STDIO, SSE, STREAMABLE_HTTP
+│   │   │   └── package-info.java         ← Package documentation
+│   │   │
+│   │   ├── loader/                       ← Config loading pipeline
+│   │   │   ├── ConfigSource.java         ← Interface for pluggable sources
+│   │   │   ├── PropertiesConfigSource.java  ← Loads from .properties files (supports optional)
+│   │   │   ├── EnvironmentConfigSource.java ← Loads MCP_* environment variables
+│   │   │   └── ConfigParser.java         ← Flat properties → model records
+│   │   │
+│   │   ├── validation/                   ← Config correctness checks
+│   │   │   ├── ConfigValidator.java      ← Validates servers, profiles, transports
+│   │   │   └── ValidationResult.java     ← Error list with reporting
+│   │   │
+│   │   └── exception/                    ← Config-specific exceptions
+│   │       ├── ConfigLoadException.java
+│   │       └── ConfigValidationException.java
+│   │
+│   └── server/                           ← 🌐 MCP Server implementations
+│       └── learningresources/            ← Learning Resources Server (first MCP server!)
+│           ├── LearningResourcesServer.java  ← STDIO entry point (--demo, --list-tools)
+│           ├── README.md                     ← Server documentation
+│           ├── package-info.java             ← Package overview
+│           │
+│           ├── model/                    ← Domain models (Java records)
+│           │   ├── LearningResource.java ← Core resource: title, url, type, categories
+│           │   ├── ContentSummary.java   ← Scraped content summary with difficulty
+│           │   ├── ResourceQuery.java    ← Search criteria with factory methods
+│           │   ├── ResourceType.java     ← Enum: DOCUMENTATION, TUTORIAL, BLOG, ...
+│           │   ├── ResourceCategory.java ← Enum: JAVA, PYTHON, WEB, DEVOPS, ...
+│           │   └── package-info.java
+│           │
+│           ├── scraper/                  ← Web scraping (Java HttpClient)
+│           │   ├── WebScraper.java       ← HTTP fetcher with timeouts & redirects
+│           │   ├── ContentExtractor.java ← Regex-based HTML → plain text
+│           │   ├── ScraperResult.java    ← Raw HTTP response record
+│           │   └── ScraperException.java ← Custom scrape failure exception
+│           │
+│           ├── content/                  ← Content analysis & formatting
+│           │   ├── ContentSummarizer.java   ← Scrape → extract → summarize pipeline
+│           │   ├── ContentReader.java       ← Full/summary/preview formatters
+│           │   └── ReadabilityScorer.java   ← Keyword + sentence + vocab scoring
+│           │
+│           ├── vault/                    ← Built-in resource library
+│           │   ├── ResourceVault.java    ← ConcurrentHashMap store with search
+│           │   └── BuiltInResources.java ← 30+ curated resources (Java, Web, DevOps, ...)
+│           │
+│           └── handler/                  ← MCP tool dispatch
+│               ├── ToolHandler.java      ← Routes 7 tools via switch expression
+│               ├── SearchHandler.java    ← Vault search, browse, details
+│               └── ScrapeHandler.java    ← Scrape → summarize → format
 │
 ├── scripts/                              ← 🔧 Automation scripts
 │   ├── setup.sh / setup.ps1             ← Setup wizard (run this first!)
@@ -333,7 +378,7 @@ The `scripts/` directory provides cross-platform automation for common MCP opera
 All models are **Java records** — immutable, compact, with defensive copies:
 
 ```
-McpConfiguration (root)
+McpConfiguration (root)                     ← Config System
 ├── ApiKeyStore             Map<String, String> of service → key
 ├── LocationPreferences     timezone, locale, region
 ├── UserPreferences         theme, logLevel, maxRetries, timeoutSeconds, autoConnect
@@ -343,6 +388,24 @@ McpConfiguration (root)
 │       └── TransportType   STDIO | SSE | STREAMABLE_HTTP
 └── Map<String, ProfileDefinition>
     └── ProfileDefinition   name, description, preferences, location, browser, serverOverrides
+
+LearningResourcesServer                     ← Learning Resources Server
+├── ResourceVault           ConcurrentHashMap store with search & filter
+│   └── BuiltInResources    30+ curated resources (Java, Web, DevOps, AI/ML, ...)
+├── ToolHandler             Routes 7 MCP tools via switch expression
+│   ├── SearchHandler       Vault search, browse, details, categories
+│   └── ScrapeHandler       Web scrape → summarize → format pipeline
+├── Model records:
+│   ├── LearningResource    title, url, type, categories, tags, difficulty
+│   ├── ContentSummary      scraped text, summary, word count, reading time
+│   ├── ResourceQuery       search criteria with static factory methods
+│   ├── ResourceType        DOCUMENTATION | TUTORIAL | BLOG | VIDEO | ...
+│   └── ResourceCategory    JAVA | PYTHON | WEB | DEVOPS | CLOUD | ...
+├── WebScraper              Java HttpClient with timeouts, redirects
+├── ContentExtractor        Regex-based HTML → plain text
+├── ContentSummarizer       Extract → summarize → score pipeline
+├── ContentReader           Full / summary / preview formatters
+└── ReadabilityScorer       Keyword + sentence + vocabulary scoring
 ```
 
 ### Loader Pipeline

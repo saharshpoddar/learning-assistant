@@ -107,13 +107,21 @@ learning-assistant/
 ├── src/                             ← Code sandbox
 │   └── Main.java                        Java entry point (expandable to any language)
 │
-├── mcp-servers/                     ← MCP Server configuration module
+├── mcp-servers/                     ← MCP Server configuration + implementations
 │   ├── README.md                        Module docs, setup guide, architecture
 │   ├── .vscode/                         IDE settings (portable — copy to other projects)
 │   ├── user-config/
 │   │   ├── mcp-config.example.properties    Full reference template (~280 lines)
 │   │   └── mcp-config.properties            Your active config (gitignored)
-│   └── src/                             Java config system (records, loader, validator)
+│   └── src/
+│       ├── config/                      Java config system (records, loader, validator)
+│       └── server/
+│           └── learningresources/       Learning Resources MCP Server (30+ built-in resources)
+│               ├── model/               Domain models (LearningResource, ContentSummary, ...)
+│               ├── scraper/             Web scraping via Java HttpClient
+│               ├── content/             Summarization, readability scoring, formatting
+│               ├── vault/               Curated resource library with search
+│               └── handler/             7 MCP tools (search, browse, scrape, read, add)
 │
 └── .github/                         ← AI customization + knowledge base
     ├── copilot-instructions.md          Project-wide coding rules
@@ -180,7 +188,33 @@ learning-assistant/
 
 ## MCP Servers Module
 
-The `mcp-servers/` directory contains a **Java-based configuration system** for Model Context Protocol (MCP) servers — the protocol that lets AI assistants connect to external tools and data sources.
+The `mcp-servers/` directory contains a **Java-based configuration system** and **MCP server implementations** for the Model Context Protocol — the protocol that lets AI assistants connect to external tools and data sources.
+
+### Learning Resources Server (NEW)
+
+The first built-in MCP server — a **web scraper + curated resource vault** with 30+ hand-picked learning resources:
+
+| Tool | Description |
+|------|-------------|
+| `search_resources` | Search the vault by text, category, type, or difficulty |
+| `browse_vault` | Browse all resources grouped by category or type |
+| `get_resource` | Get full details for a specific resource |
+| `list_categories` | List all available resource categories |
+| `scrape_url` | Scrape any URL and get a content summary |
+| `read_url` | Scrape any URL and get full readable content |
+| `add_resource` | Add a new resource to the vault |
+
+```bash
+# Try it:
+cd mcp-servers
+javac -d out src/**/*.java
+java -cp out server.learningresources.LearningResourcesServer --demo
+java -cp out server.learningresources.LearningResourcesServer --list-tools
+```
+
+See [Learning Resources Server README](mcp-servers/src/server/learningresources/README.md) for full documentation.
+
+### Configuration System
 
 **What it manages:**
 - API keys and secrets (GitHub, OpenAI, Slack, databases)

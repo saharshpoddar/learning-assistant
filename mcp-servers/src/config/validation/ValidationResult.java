@@ -1,6 +1,5 @@
 package config.validation;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,7 +23,7 @@ public record ValidationResult(List<String> errors) {
      */
     public ValidationResult {
         Objects.requireNonNull(errors, "Errors list must not be null");
-        errors = Collections.unmodifiableList(List.copyOf(errors));
+        errors = List.copyOf(errors);
     }
 
     /**

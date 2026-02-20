@@ -1,6 +1,5 @@
 package config.model;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,8 +47,8 @@ public record ServerDefinition(
         Objects.requireNonNull(url, "URL must not be null (use empty string if not applicable)");
         Objects.requireNonNull(environmentVariables, "Environment variables must not be null (use empty map)");
 
-        args = Collections.unmodifiableList(List.copyOf(args));
-        environmentVariables = Collections.unmodifiableMap(Map.copyOf(environmentVariables));
+        args = List.copyOf(args);
+        environmentVariables = Map.copyOf(environmentVariables);
     }
 
     /**
