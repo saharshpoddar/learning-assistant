@@ -271,7 +271,7 @@ MCP:      Backed by 10 MCP tools: search_resources, browse_vault, get_resource,
           list_categories, discover_resources, scrape_url, read_url, add_resource,
           add_resource_from_url, export_results
 Enums:    SearchMode (specific/vague/exploratory), ConceptDomain (8 domains),
-          ConceptArea (27 concepts), DifficultyLevel, LanguageApplicability
+          ConceptArea (33 concepts), DifficultyLevel, LanguageApplicability
 ```
 
 ---

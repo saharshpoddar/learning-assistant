@@ -1,10 +1,8 @@
-package config.model;
-
 /**
  * Package containing immutable configuration model records for the MCP system.
  *
  * <p>All models are Java records (immutable, with defensive copies of collections)
- * and follow a hierarchical structure rooted at {@link McpConfiguration}:
+ * and follow a hierarchical structure rooted at {@link config.model.McpConfiguration}:
  *
  * <pre>
  *   McpConfiguration (root)
@@ -17,3 +15,4 @@ package config.model;
  *   └── ProfileDefinition   — named override sets (dev, prod)
  * </pre>
  */
+package config.model;

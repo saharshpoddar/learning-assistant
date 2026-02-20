@@ -130,7 +130,7 @@ Broad technology domains for grouping resources.
 | `GENERAL` | general | Cross-cutting or general topics |
 
 ### ConceptArea
-Fine-grained CS/SE concept areas for precise resource matching (27 values). Each concept belongs to a {@link ConceptDomain}.
+Fine-grained CS/SE concept areas for precise resource matching (33 values). Each concept belongs to a {@link ConceptDomain}.
 
 | Value | Display Name | Domain | Example Topics |
 |-------|-------------|--------|----------------|
@@ -239,6 +239,19 @@ Content format classification.
 | `CHEAT_SHEET` | cheat-sheet | Quick references |
 | `REPOSITORY` | repository | GitHub repos, examples |
 
+### OutputFormat
+Export format for discovery/search results (nested in `ExportHandler`).
+
+| Value | Extension | Description |
+|-------|-----------|-------------|
+| `MARKDOWN` | `.md` | GitHub-flavored Markdown — full-featured, ready for docs rendering |
+| `PDF` | `.pdf` | PDF document via pandoc (plain-text fallback if pandoc unavailable) |
+| `WORD` | `.docx` | Word document via pandoc (plain-text fallback if pandoc unavailable) |
+
+**Parsing:** `OutputFormat.fromString()` accepts: `md`, `markdown`, `pdf`, `docx`, `word`, `doc`.
+
+**Pandoc dependency:** PDF and Word export attempt pandoc conversion first. If pandoc is not on the system PATH, the export falls back to formatted plain text with manual conversion instructions.
+
 ---
 
 ## Smart Discovery Engine
@@ -294,7 +307,7 @@ server/learningresources/
 │   ├── LearningResource.java       ← Core 15-field resource record
 │   ├── ResourceType.java           ← Enum: documentation, tutorial, blog, ...
 │   ├── ResourceCategory.java       ← Enum: java, python, web, devops, ...
-│   ├── ConceptArea.java            ← Enum: 27 CS/SE concept areas (grouped by domain)
+│   ├── ConceptArea.java            ← Enum: 33 CS/SE concept areas (grouped by domain)
 │   ├── ConceptDomain.java          ← Enum: 8 high-level knowledge domains
 │   ├── SearchMode.java             ← Enum: specific / vague / exploratory intent
 │   ├── DifficultyLevel.java        ← Enum: beginner → expert with ordinal ranges
