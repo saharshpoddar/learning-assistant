@@ -1009,6 +1009,57 @@ When `topic` is **real-world-examples**:
 | **Custom: Internal API wrapper** | Your company's REST API as MCP tools | AI works with your systems |
 | **Custom: CI/CD dashboard** | Pipeline status, deploy triggers | AI monitors and manages deploys |
 
+### Multi-MCP Project Structure
+
+When `topic` is **build-server** or `goal` is **build-my-own-mcp**, and the user asks about organizing multiple MCPs:
+
+Recommend the `mcp-servers/` directory pattern — each MCP as an independent subdirectory:
+
+```
+project-root/
+├── .vscode/
+│   └── mcp.json          ← ONE file registers ALL MCP servers
+├── mcp-servers/
+│   ├── weather-mcp/      ← TypeScript MCP (own package.json)
+│   ├── db-mcp/           ← Python MCP (own pyproject.toml)
+│   ├── github-tools-mcp/ ← TypeScript MCP (own package.json)
+│   └── inventory-mcp/    ← Java MCP (own pom.xml)
+└── src/                  ← Main application code
+```
+
+Key rules:
+- **One server per folder** — independent deps, builds, and entry points
+- **Mixed languages OK** — TS, Python, Java, Go can coexist
+- **One `mcp.json`** — single config file wires them all to Copilot
+- **gitignore** build artifacts: `mcp-servers/*/node_modules/`, `mcp-servers/*/dist/`, `mcp-servers/*/.venv/`
+
+### `.vscode/mcp.json` Schema Quick Reference
+
+```jsonc
+{
+  "servers": {
+    "<unique-name>": {
+      "type": "stdio" | "http" | "sse",  // Transport type
+      
+      // stdio fields:
+      "command": "node|python|npx|java|docker",
+      "args": ["path/to/entry-point"],
+      "cwd": "optional-working-dir",
+      "env": { "KEY": "${input:keyName}" },
+      
+      // http/sse fields:
+      "url": "http://host:port/mcp",
+      "headers": { "Authorization": "Bearer ${input:token}" }
+    }
+  },
+  "inputs": [
+    { "id": "keyName", "type": "promptString", "description": "...", "password": true }
+  ]
+}
+```
+
+**Variables available:** `${workspaceFolder}`, `${input:name}`, `${env:VAR}`, `${userHome}`
+
 ### Composition with Other Commands
 
 - Use `/deep-dive MCP` for a progressive concept exploration

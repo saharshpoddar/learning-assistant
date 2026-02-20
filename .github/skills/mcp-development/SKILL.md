@@ -1495,6 +1495,381 @@ uv build && uv publish  # Users run: uvx your-package-name
 
 ---
 
+## Multi-MCP Project Structure
+
+When building multiple MCP servers in a single project, keep each server as an **independent, self-contained** subdirectory under a shared `mcp-servers/` folder.
+
+### Recommended Directory Layout
+
+```
+your-project/
+├── .github/                     ← Copilot customization (unchanged)
+├── .vscode/
+│   └── mcp.json                 ← Register ALL your MCPs here (one file)
+├── src/                          ← Your main application code
+│
+├── mcp-servers/                  ← All MCP servers live here
+│   │
+│   ├── weather-mcp/              ← MCP #1 (TypeScript)
+│   │   ├── package.json          ← Own dependencies
+│   │   ├── tsconfig.json
+│   │   ├── src/
+│   │   │   └── index.ts
+│   │   ├── dist/                 ← Build output (gitignored)
+│   │   │   └── index.js
+│   │   └── README.md             ← What this MCP does, how to build/test
+│   │
+│   ├── db-mcp/                   ← MCP #2 (Python)
+│   │   ├── pyproject.toml        ← Own dependencies
+│   │   ├── server.py
+│   │   └── README.md
+│   │
+│   ├── github-tools-mcp/         ← MCP #3 (TypeScript)
+│   │   ├── package.json
+│   │   ├── src/
+│   │   │   └── index.ts
+│   │   └── README.md
+│   │
+│   └── inventory-mcp/            ← MCP #4 (Java — Spring Boot)
+│       ├── pom.xml
+│       ├── src/main/java/...
+│       └── README.md
+│
+└── README.md
+```
+
+### Why This Structure
+
+| Concern | Solution |
+|---|---|
+| **Independence** | Each MCP has its own `package.json` / `pyproject.toml` / `pom.xml` — no dependency conflicts |
+| **Mixed languages** | TypeScript, Python, Java, Go MCPs all coexist in the same repo |
+| **Single config** | One `.vscode/mcp.json` registers all MCPs — Copilot sees them all |
+| **Easy to add/remove** | Add a new folder under `mcp-servers/`, no restructuring |
+| **Clean builds** | Each MCP builds independently, `dist/` and `node_modules/` are gitignored |
+
+### When to Split vs. Combine
+
+| Situation | One MCP or Many? |
+|---|---|
+| Tools share the same data source (e.g., same DB) | **One MCP** with multiple tools |
+| Tools are in completely different domains (weather vs Git) | **Separate MCPs** |
+| You want to reuse an MCP across projects | **Separate MCP** (publish to npm/PyPI) |
+| Tools need different auth/secrets | **Separate MCPs** (cleaner secret isolation) |
+| Building a learning example per topic | **Separate MCPs** (easier to understand) |
+
+### .gitignore Additions for MCP Servers
+
+```gitignore
+# MCP server build artifacts
+mcp-servers/*/node_modules/
+mcp-servers/*/dist/
+mcp-servers/*/.venv/
+mcp-servers/*/target/
+mcp-servers/*/__pycache__/
+mcp-servers/*/*.egg-info/
+```
+
+---
+
+## `.vscode/mcp.json` — Complete Schema Reference
+
+The `mcp.json` file is the **single configuration file** that registers all MCP servers for VS Code / Copilot. Place it at `.vscode/mcp.json` (workspace-level) so it's shared with the project.
+
+### Full JSON Schema
+
+```jsonc
+{
+  // Top-level: "servers" object — each key is a unique server name
+  "servers": {
+    
+    // ─── SERVER NAME (unique identifier) ──────────────────────
+    "<server-name>": {
+      
+      // REQUIRED: Transport type
+      // "stdio"  → local process (stdin/stdout)
+      // "http"   → remote HTTP endpoint (Streamable HTTP)
+      // "sse"    → remote Server-Sent Events (legacy)
+      "type": "stdio" | "http" | "sse",
+      
+      // ─── For stdio transport ──────────────────────────────
+      "command": "<executable>",    // REQUIRED: "node", "python", "npx", "java", "docker", etc.
+      "args": ["<arg1>", "<arg2>"],  // OPTIONAL: command-line arguments
+      "cwd": "<working-directory>",  // OPTIONAL: working directory for the process
+      "env": {                       // OPTIONAL: environment variables
+        "KEY": "value",
+        "SECRET": "${input:secretName}"  // Prompts user for value (secure)
+      },
+      
+      // ─── For http / sse transport ────────────────────────
+      "url": "<endpoint-url>",       // REQUIRED: "http://localhost:3001/mcp" or "https://..."
+      "headers": {                   // OPTIONAL: HTTP headers
+        "Authorization": "Bearer ${input:token}"
+      }
+    }
+  },
+  
+  // OPTIONAL: Input variable definitions (prompted from user)
+  "inputs": [
+    {
+      "id": "secretName",          // Referenced as ${input:secretName}
+      "type": "promptString",
+      "description": "Enter your API key",
+      "password": true              // Masks input in the prompt
+    }
+  ]
+}
+```
+
+### Variable Substitution in mcp.json
+
+| Variable | Resolves To | Example |
+|---|---|---|
+| `${workspaceFolder}` | Absolute path to workspace root | `E:\projects\my-app` |
+| `${input:variableName}` | User-prompted value (secure) | API keys, tokens, passwords |
+| `${env:VARIABLE_NAME}` | System environment variable | `${env:HOME}`, `${env:PATH}` |
+| `${userHome}` | User's home directory | `C:\Users\saharsh` |
+
+### Complete Multi-MCP mcp.json Example
+
+```jsonc
+{
+  "servers": {
+    // ─── TypeScript MCP (local, stdio) ─────────────────────
+    "weather": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/mcp-servers/weather-mcp/dist/index.js"],
+      "env": {
+        "WEATHER_API_KEY": "${input:weatherApiKey}"
+      }
+    },
+    
+    // ─── Python MCP (local, stdio) ─────────────────────────
+    "database": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${workspaceFolder}/mcp-servers/db-mcp/server.py"],
+      "env": {
+        "DATABASE_URL": "${input:databaseUrl}"
+      }
+    },
+    
+    // ─── npx-based MCP (no local install needed) ───────────
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${input:githubToken}"
+      }
+    },
+    
+    // ─── Docker-based MCP ──────────────────────────────────
+    "containerized-api": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "API_KEY=${input:apiKey}",
+        "-v", "${workspaceFolder}:/workspace:ro",
+        "my-mcp-server:latest"
+      ]
+    },
+    
+    // ─── Remote HTTP MCP ───────────────────────────────────
+    "remote-service": {
+      "type": "http",
+      "url": "https://mcp.mycompany.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${input:remoteToken}"
+      }
+    },
+    
+    // ─── Java MCP (local, stdio) ───────────────────────────
+    "inventory": {
+      "type": "stdio",
+      "command": "java",
+      "args": ["-jar", "${workspaceFolder}/mcp-servers/inventory-mcp/target/inventory-mcp.jar"]
+    },
+    
+    // ─── uvx-based Python MCP (no local install) ───────────
+    "search": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["mcp-server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${input:braveKey}"
+      }
+    }
+  },
+  
+  "inputs": [
+    {
+      "id": "weatherApiKey",
+      "type": "promptString",
+      "description": "OpenWeatherMap API key",
+      "password": true
+    },
+    {
+      "id": "databaseUrl",
+      "type": "promptString",
+      "description": "Database connection URL (e.g., postgresql://user:pass@host:5432/db)",
+      "password": true
+    },
+    {
+      "id": "githubToken",
+      "type": "promptString",
+      "description": "GitHub Personal Access Token",
+      "password": true
+    }
+  ]
+}
+```
+
+### User-Level mcp.json (Global, All Workspaces)
+
+For MCPs you want available everywhere, add to VS Code `settings.json`:
+
+```jsonc
+// settings.json (Ctrl+Shift+P → "Preferences: Open User Settings (JSON)")
+{
+  "mcp": {
+    "servers": {
+      "filesystem": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "C:\\Users\\saharsh\\projects"]
+      },
+      "memory": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-memory"]
+      }
+    }
+  }
+}
+```
+
+### Claude Desktop Configuration
+
+**Location (Windows):** `%APPDATA%\Claude\claude_desktop_config.json`
+**Location (macOS):** `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+```jsonc
+{
+  "mcpServers": {
+    "weather": {
+      "command": "node",
+      "args": ["C:\\path\\to\\mcp-servers\\weather-mcp\\dist\\index.js"],
+      "env": {
+        "WEATHER_API_KEY": "your-key-here"
+      }
+    },
+    "database": {
+      "command": "python",
+      "args": ["C:\\path\\to\\mcp-servers\\db-mcp\\server.py"],
+      "env": {
+        "DATABASE_URL": "postgresql://user:pass@localhost:5432/mydb"
+      }
+    }
+  }
+}
+```
+
+> **Note:** Claude Desktop uses `"mcpServers"` (camelCase), VS Code uses `"servers"` inside `mcp.json`. The server config shape is slightly different — Claude doesn't have `"type"` field, it assumes stdio.
+
+---
+
+## Workflow: Creating a New MCP Server (Step-by-Step)
+
+### TypeScript MCP — From Zero to Working
+
+```bash
+# 1. Create directory
+cd mcp-servers
+mkdir weather-mcp && cd weather-mcp
+
+# 2. Initialize project
+npm init -y
+npm install @modelcontextprotocol/sdk zod
+npm install -D typescript @types/node
+
+# 3. Configure TypeScript
+npx tsc --init --target es2022 --module nodenext --moduleResolution nodenext --outDir dist --rootDir src
+
+# 4. Add to package.json
+# "type": "module"
+# "scripts": { "build": "tsc", "start": "node dist/index.js", "inspect": "npx @modelcontextprotocol/inspector node dist/index.js" }
+# "bin": { "weather-mcp": "dist/index.js" }
+
+# 5. Create src/index.ts (see templates in this guide)
+mkdir src
+# ... write your server code ...
+
+# 6. Build
+npm run build
+
+# 7. Test with Inspector (opens web UI)
+npm run inspect
+# OR: npx @modelcontextprotocol/inspector node dist/index.js
+
+# 8. Register in .vscode/mcp.json (add to "servers" object)
+# 9. Restart VS Code / reload MCP servers
+# 10. Use in Copilot agent mode — your tools appear automatically
+```
+
+### Python MCP — From Zero to Working
+
+```bash
+# 1. Create directory
+cd mcp-servers
+mkdir db-mcp && cd db-mcp
+
+# 2. Initialize project (using uv — recommended)
+uv init
+uv add "mcp[cli]"
+
+# OR using pip:
+pip install "mcp[cli]"
+
+# 3. Create server.py (see templates in this guide)
+# ... write your server code ...
+
+# 4. Test with Inspector
+mcp dev server.py
+# OR: npx @modelcontextprotocol/inspector python server.py
+
+# 5. Register in .vscode/mcp.json
+# 6. Use in Copilot agent mode
+```
+
+### Java MCP — From Zero to Working
+
+```bash
+# 1. Create Spring Boot project
+cd mcp-servers
+mkdir inventory-mcp && cd inventory-mcp
+
+# 2. Use Spring Initializr or create pom.xml with:
+#    - io.modelcontextprotocol:mcp-spring-webflux
+#    - org.springframework.ai:spring-ai-mcp-server-spring-boot-starter
+
+# 3. Implement your @Tool methods (see templates in this guide)
+
+# 4. Build
+mvn clean package -DskipTests
+
+# 5. Test
+java -jar target/inventory-mcp.jar
+# Use MCP Inspector: npx @modelcontextprotocol/inspector java -jar target/inventory-mcp.jar
+
+# 6. Register in .vscode/mcp.json with:
+#    "command": "java", "args": ["-jar", "${workspaceFolder}/mcp-servers/inventory-mcp/target/inventory-mcp.jar"]
+```
+
+---
+
 ## Ecosystem & Community
 
 ### MCP Server Registries

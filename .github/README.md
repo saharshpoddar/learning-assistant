@@ -30,7 +30,7 @@
 | Action | How |
 |---|---|
 | **Switch persona** | Chat dropdown → select **Designer**, **Debugger**, **Impact-Analyzer**, **Learning-Mentor**, **Daily-Assistant**, or **Thinking-Beast-Mode** |
-| **Run a workflow** | Type `/hub`, `/dsa`, `/system-design`, `/devops`, `/language-guide`, `/tech-stack`, `/sdlc`, `/career-roles`, `/daily-assist`, `/multi-session`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, `/interview-prep`, `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
+| **Run a workflow** | Type `/hub`, `/dsa`, `/system-design`, `/devops`, `/mcp`, `/language-guide`, `/tech-stack`, `/sdlc`, `/career-roles`, `/daily-assist`, `/multi-session`, `/learn-concept`, `/learn-from-docs`, `/explore-project`, `/deep-dive`, `/reading-plan`, `/interview-prep`, `/design-review`, `/debug`, `/impact`, `/teach`, `/refactor`, `/explain`, `/composite`, `/context`, or `/scope` in Chat |
 | **Coding standards** | Automatic — open any `.java` file, instructions load via glob match |
 | **Extra knowledge** | Automatic — ask about building, patterns, or debugging and the matching skill loads |
 | **See everything** | [Navigation Index](docs/navigation-index.md) · [Slash Commands](docs/slash-commands.md) · [Documentation Map](#-documentation-map) · [File Reference](docs/file-reference.md) · [Getting Started Tutorial](docs/getting-started.md) |
@@ -126,7 +126,8 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
 │   ├── deep-dive.prompt.md                 /deep-dive (concept mastery)
 │   ├── reading-plan.prompt.md              /reading-plan (study plan)
 │   ├── learn-concept.prompt.md             /learn-concept (any CS/SE concept)
-│   └── interview-prep.prompt.md            /interview-prep (DSA/system design)
+│   ├── interview-prep.prompt.md            /interview-prep (DSA/system design)
+│   └── mcp.prompt.md                       /mcp (MCP servers, agents, API integration)
 │
 ├── skills/                              ← Agent skills (auto by task match)
 │   ├── 🛠️ README.md                         Guide: how skills work
@@ -136,7 +137,8 @@ GitHub Copilot in VS Code supports exactly **5 customization primitives**. Every
 │   ├── java-learning-resources/SKILL.md    Curated Java learning resource index
 │   ├── software-engineering-resources/SKILL.md  Comprehensive SE/CS resource index
 │   ├── daily-assistant-resources/SKILL.md  Daily assistant resources (finance, productivity, news)
-│   └── career-resources/SKILL.md           Career data (roles, skills, pay, roadmaps)
+│   ├── career-resources/SKILL.md           Career data (roles, skills, pay, roadmaps)
+│   └── mcp-development/SKILL.md            MCP: build servers, configure agents, project structure
 │
 └── docs/                                ← Documentation & tutorials
     ├── getting-started.md                  Step-by-step tutorial

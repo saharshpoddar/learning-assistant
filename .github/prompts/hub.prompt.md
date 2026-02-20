@@ -91,7 +91,8 @@ You are the **navigation hub** for all available assistants and learning command
 │    │       ├── api-integration ········ Wrap REST/GraphQL/gRPC APIs as MCP tools
 │    │       ├── agent-patterns ········· Single agent, multi-agent, tool chaining
 │    │       ├── real-world-examples ···· GitHub, filesystem, Postgres, Puppeteer, etc.
-│    │       └── troubleshoot ··········· Debug MCP servers, Inspector, common issues
+│    │       ├── troubleshoot ··········· Debug MCP servers, Inspector, common issues
+│    │       └── project-structure ······ Multi-MCP layout, mcp.json schema, scaffolding
 │    │
 │    ├── Tech Trends & Emerging Tech (/hub trends)
 │    │   ├── /learn-concept ai-coding ···· Copilot, Cursor, agentic AI, vibe coding
@@ -173,10 +174,12 @@ You are the **navigation hub** for all available assistants and learning command
 │    ├── /context ··················· Continue prior conversation or start fresh
 │    ├── /scope ····················· Generic learning vs code-specific
 │    └── /multi-session ············· Manage state across chat sessions
-│        ├── save-state ············· Save progress to session file
-│        ├── resume ················· Resume from checkpoint
+│        ├── save-state ············· Save progress + MCP state to session file
+│        ├── resume ················· Resume from checkpoint, verify MCP servers
 │        ├── handoff ················ Transfer context to new session
-│        └── status ················· Check session health & token usage
+│        ├── status ················· Check session health & token usage
+│        ├── mcp-state ·············· Snapshot MCP servers, tools & call history
+│        └── mcp-handoff ············ MCP-focused handoff with tool call log
 │
 └─── AGENTS (select from dropdown instead of typing)
      ├── Learning-Mentor ············ Teaching with theory, analogies, code
@@ -214,7 +217,7 @@ Quick Commands:
     /composite        → Combine multiple modes in one session
     /context          → Continue prior conversation or start fresh
     /scope            → Generic learning vs code-specific
-    /multi-session    → Save/resume state across chat sessions
+    /multi-session    → Save/resume state across chat sessions (incl. MCP state)
 
   Learning & Concepts:
     /learn-concept    → Learn any CS/SE concept
