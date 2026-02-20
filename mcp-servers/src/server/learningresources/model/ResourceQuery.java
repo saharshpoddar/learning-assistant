@@ -114,28 +114,6 @@ public record ResourceQuery(
     }
 
     /**
-     * Creates a query filtering by difficulty range.
-     *
-     * @param min minimum difficulty (inclusive)
-     * @param max maximum difficulty (inclusive)
-     * @return a query filtered by difficulty range
-     */
-    public static ResourceQuery byDifficultyRange(final DifficultyLevel min, final DifficultyLevel max) {
-        return new ResourceQuery("", null, List.of(), null, min, max,
-                null, false, List.of(), false, DEFAULT_MAX_RESULTS);
-    }
-
-    /**
-     * Creates a query for official resources only.
-     *
-     * @return a query returning only official/authoritative resources
-     */
-    public static ResourceQuery officialResourcesOnly() {
-        return new ResourceQuery("", null, List.of(), null, null, null,
-                null, true, List.of(), false, DEFAULT_MAX_RESULTS);
-    }
-
-    /**
      * Checks whether this query has any active filters.
      *
      * @return {@code true} if at least one filter is set
