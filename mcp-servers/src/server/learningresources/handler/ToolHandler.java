@@ -1,6 +1,7 @@
 package server.learningresources.handler;
 
 import server.learningresources.model.ConceptArea;
+import server.learningresources.model.ConceptDomain;
 import server.learningresources.model.ContentFreshness;
 import server.learningresources.model.DifficultyLevel;
 import server.learningresources.model.LanguageApplicability;
@@ -8,6 +9,7 @@ import server.learningresources.model.LearningResource;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceQuery;
 import server.learningresources.model.ResourceType;
+import server.learningresources.model.SearchMode;
 import server.learningresources.vault.DiscoveryResult;
 import server.learningresources.vault.ResourceDiscovery;
 import server.learningresources.vault.ResourceVault;
@@ -35,7 +37,7 @@ import java.util.logging.Logger;
  *   <li>{@code read_url} — scrape and return full content of a URL</li>
  *   <li>{@code add_resource} — add a custom resource to the vault</li>
  *   <li>{@code add_resource_from_url} — smart add via URL scraping and metadata inference</li>
- *   <li>{@code export_results} — export discovery/search results as Markdown</li>
+ *   <li>{@code export_results} — export discovery/search results as Markdown, PDF, or Word</li>
  * </ul>
  */
 public class ToolHandler {
@@ -291,16 +293,35 @@ public class ToolHandler {
      * Handles the {@code discover_resources} tool call.
      *
      * <p>Uses the smart discovery engine to classify intent and find resources.
+     * Supports optional forced search mode and domain-level discovery.
      *
-     * @param arguments must contain "query"; optionally "concept", "min_difficulty", "max_difficulty"
+     * @param arguments must contain "query"; optionally "concept", "domain",
+     *                  "mode", "min_difficulty", "max_difficulty"
      * @return formatted discovery results with suggestions
      */
     private String handleDiscover(final Map<String, String> arguments) {
         final var query = arguments.getOrDefault("query", "");
         final var conceptArg = arguments.get("concept");
+        final var domainArg = arguments.get("domain");
+        final var modeArg = arguments.get("mode");
 
         DiscoveryResult result;
-        if (conceptArg != null && !conceptArg.isBlank()) {
+
+        // Domain-level discovery
+        if (domainArg != null && !domainArg.isBlank()) {
+            try {
+                final var domain = ConceptDomain.fromString(domainArg);
+                final var minArg = arguments.get("min_difficulty");
+                final var maxArg = arguments.get("max_difficulty");
+                final var minDiff = minArg != null ? DifficultyLevel.fromString(minArg) : null;
+                final var maxDiff = maxArg != null ? DifficultyLevel.fromString(maxArg) : null;
+                result = discovery.discoverByDomain(domain, minDiff, maxDiff);
+            } catch (IllegalArgumentException invalidArg) {
+                return "Invalid domain: " + invalidArg.getMessage();
+            }
+        }
+        // Concept-level discovery
+        else if (conceptArg != null && !conceptArg.isBlank()) {
             try {
                 final var concept = ConceptArea.fromString(conceptArg);
                 final var minArg = arguments.get("min_difficulty");
@@ -310,6 +331,16 @@ public class ToolHandler {
                 result = discovery.discoverByConcept(concept, minDiff, maxDiff);
             } catch (IllegalArgumentException invalidArg) {
                 return "Invalid argument: " + invalidArg.getMessage();
+            }
+        }
+        // Free-form discovery, optionally with forced mode
+        else if (modeArg != null && !modeArg.isBlank()) {
+            try {
+                final var searchMode = SearchMode.fromString(modeArg);
+                result = discovery.discover(query, searchMode);
+            } catch (IllegalArgumentException invalidMode) {
+                return "Invalid mode: " + invalidMode.getMessage()
+                        + ". Valid: specific, vague, exploratory";
             }
         } else {
             result = discovery.discover(query);
@@ -342,7 +373,7 @@ public class ToolHandler {
      */
     private String formatDiscoveryResult(final DiscoveryResult result) {
         final var builder = new StringBuilder();
-        builder.append("🔍 Discovery (").append(result.queryType()).append(")\n");
+        builder.append("🔍 Discovery (").append(result.searchMode().getDisplayName()).append(")\n");
         builder.append(result.summary()).append("\n\n");
 
         if (!result.isEmpty()) {

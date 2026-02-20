@@ -1,13 +1,15 @@
 package server.learningresources.vault;
 
 import server.learningresources.model.ConceptArea;
+import server.learningresources.model.ConceptDomain;
 import server.learningresources.model.DifficultyLevel;
 import server.learningresources.model.ResourceCategory;
 import server.learningresources.model.ResourceQuery;
-import server.learningresources.vault.DiscoveryResult.QueryType;
+import server.learningresources.model.SearchMode;
 import server.learningresources.vault.RelevanceScorer.ScoredResource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -17,7 +19,7 @@ import java.util.stream.Collectors;
 /**
  * Smart discovery engine that interprets user intent and finds relevant resources.
  *
- * <p>Handles three query modes:
+ * <p>Handles three search modes:
  * <ul>
  *   <li><strong>Specific</strong> — user knows exactly what they want ("JUnit 5 docs")</li>
  *   <li><strong>Vague</strong> — user knows the topic area ("something about testing")</li>
@@ -27,10 +29,11 @@ import java.util.stream.Collectors;
  * <p>Delegates to:
  * <ul>
  *   <li>{@link KeywordIndex} — keyword-to-enum intent inference</li>
- *   <li>{@link RelevanceScorer} — multi-dimensional relevance scoring</li>
+ *   <li>{@link RelevanceScorer} — multi-dimensional relevance scoring with fuzzy matching</li>
  *   <li>{@link DiscoveryResult} — structured result with suggestions</li>
  * </ul>
  *
+ * @see SearchMode
  * @see KeywordIndex
  * @see RelevanceScorer
  * @see DiscoveryResult
@@ -41,6 +44,20 @@ public final class ResourceDiscovery {
 
     /** Maximum results to return from a discovery query. */
     private static final int MAX_RESULTS = 15;
+
+    /** Keywords that signal exploratory intent. */
+    private static final List<String> EXPLORATORY_KEYWORDS = List.of(
+            "learn", "start", "beginner", "getting started", "new to",
+            "don't know", "where to begin", "recommend", "suggest",
+            "what should", "help me", "explore", "overview", "introduction",
+            "guide me", "teach me", "tutorial", "how to start", "first steps"
+    );
+
+    /** Keywords that signal specific intent. */
+    private static final List<String> SPECIFIC_KEYWORDS = List.of(
+            "docs for", "reference for", "official", "documentation",
+            "api reference", "specification", "spec for", "javadoc"
+    );
 
     private final ResourceVault vault;
 
@@ -70,11 +87,37 @@ public final class ResourceDiscovery {
         }
 
         final var normalizedInput = userInput.strip().toLowerCase();
-        final var queryType = classifyQuery(normalizedInput);
+        final var searchMode = classifyQuery(normalizedInput);
 
-        LOGGER.fine("Query classified as: " + queryType + " for input: '" + normalizedInput + "'");
+        LOGGER.fine("Query classified as: " + searchMode + " for input: '" + normalizedInput + "'");
 
-        return switch (queryType) {
+        return switch (searchMode) {
+            case SPECIFIC -> handleSpecificQuery(normalizedInput);
+            case VAGUE -> handleVagueQuery(normalizedInput);
+            case EXPLORATORY -> handleExploratoryQuery(normalizedInput);
+        };
+    }
+
+    /**
+     * Discovers resources matching a free-form query with a forced search mode.
+     *
+     * <p>Skips automatic classification and uses the provided mode directly.
+     *
+     * @param userInput  the raw user query string
+     * @param searchMode the search mode to apply
+     * @return a {@link DiscoveryResult} with scored, sorted results and suggestions
+     */
+    public DiscoveryResult discover(final String userInput, final SearchMode searchMode) {
+        Objects.requireNonNull(searchMode, "SearchMode must not be null");
+        if (userInput == null || userInput.isBlank()) {
+            return exploreDefault();
+        }
+
+        final var normalizedInput = userInput.strip().toLowerCase();
+
+        LOGGER.fine("Forced mode: " + searchMode + " for input: '" + normalizedInput + "'");
+
+        return switch (searchMode) {
             case SPECIFIC -> handleSpecificQuery(normalizedInput);
             case VAGUE -> handleVagueQuery(normalizedInput);
             case EXPLORATORY -> handleExploratoryQuery(normalizedInput);
@@ -101,8 +144,52 @@ public final class ResourceDiscovery {
                 .limit(MAX_RESULTS)
                 .toList();
 
-        return new DiscoveryResult(QueryType.SPECIFIC, scored, List.of(),
-                "Resources for concept: " + concept.name());
+        return new DiscoveryResult(SearchMode.SPECIFIC, scored, List.of(),
+                "Resources for concept: " + concept.name()
+                        + " (domain: " + concept.getDomain().getDisplayName() + ")");
+    }
+
+    /**
+     * Discovers resources by concept domain, returning all concept areas in that domain.
+     *
+     * @param domain        the concept domain to explore
+     * @param minDifficulty minimum difficulty (may be null)
+     * @param maxDifficulty maximum difficulty (may be null)
+     * @return a {@link DiscoveryResult} with resources across the domain
+     */
+    public DiscoveryResult discoverByDomain(final ConceptDomain domain,
+                                            final DifficultyLevel minDifficulty,
+                                            final DifficultyLevel maxDifficulty) {
+        Objects.requireNonNull(domain, "Domain must not be null");
+
+        final var domainConcepts = Arrays.stream(ConceptArea.values())
+                .filter(area -> area.getDomain() == domain)
+                .toList();
+
+        final var scored = vault.search(ResourceQuery.ALL).stream()
+                .filter(r -> r.conceptAreas().stream().anyMatch(domainConcepts::contains))
+                .map(r -> {
+                    var bestScore = 0;
+                    for (final var concept : domainConcepts) {
+                        final var candidate = RelevanceScorer.scoreForConcept(
+                                r, concept, minDifficulty, maxDifficulty);
+                        if (candidate.score() > bestScore) {
+                            bestScore = candidate.score();
+                        }
+                    }
+                    return new ScoredResource(r, bestScore);
+                })
+                .sorted(Comparator.comparingInt(ScoredResource::score).reversed())
+                .limit(MAX_RESULTS)
+                .toList();
+
+        final var conceptNames = domainConcepts.stream()
+                .map(ConceptArea::getDisplayName)
+                .collect(Collectors.joining(", "));
+
+        return new DiscoveryResult(SearchMode.VAGUE, scored, List.of(),
+                "Resources in domain: " + domain.getDisplayName()
+                        + " (concepts: " + conceptNames + ")");
     }
 
     /**
@@ -121,7 +208,7 @@ public final class ResourceDiscovery {
                 .limit(MAX_RESULTS)
                 .toList();
 
-        return new DiscoveryResult(QueryType.EXPLORATORY, scored,
+        return new DiscoveryResult(SearchMode.EXPLORATORY, scored,
                 suggestRelatedCategories(category),
                 "Explore " + category.getDisplayName() + " — starting with beginner-friendly resources");
     }
@@ -129,31 +216,44 @@ public final class ResourceDiscovery {
     // ─── Query Classification ───────────────────────────────────────
 
     /**
-     * Classifies a normalised query string into one of three query types.
+     * Classifies a normalised query string into one of three search modes.
+     *
+     * <p>Uses multiple signals: quoted terms, URL patterns, keyword lists,
+     * query length, and keyword-index matches.
+     *
+     * @param input the normalised query
+     * @return the classified {@link SearchMode}
      */
-    private QueryType classifyQuery(final String input) {
-        if (input.contains("\"") || input.contains("http") || input.contains("docs for")
-                || input.contains("reference for") || input.contains("official")) {
-            return QueryType.SPECIFIC;
+    SearchMode classifyQuery(final String input) {
+        // Quoted text, URLs, or known specific triggers → SPECIFIC
+        if (input.contains("\"") || input.contains("http")) {
+            return SearchMode.SPECIFIC;
+        }
+        if (SPECIFIC_KEYWORDS.stream().anyMatch(input::contains)) {
+            return SearchMode.SPECIFIC;
         }
 
-        final var exploratoryKeywords = List.of(
-                "learn", "start", "beginner", "getting started", "new to",
-                "don't know", "where to begin", "recommend", "suggest",
-                "what should", "help me", "explore", "overview", "introduction"
-        );
-        final var isShort = input.split("\\s+").length <= 5;
-        final var hasExploratoryKeyword = exploratoryKeywords.stream().anyMatch(input::contains);
+        final var wordCount = input.split("\\s+").length;
+        final var hasExploratoryKeyword = EXPLORATORY_KEYWORDS.stream().anyMatch(input::contains);
 
-        if (isShort && hasExploratoryKeyword) {
-            return QueryType.EXPLORATORY;
+        // Short query with exploratory language → EXPLORATORY
+        if (wordCount <= 5 && hasExploratoryKeyword) {
+            return SearchMode.EXPLORATORY;
         }
-        if (input.split("\\s+").length <= 2
+
+        // Very short query with no keyword-index hit → EXPLORATORY
+        if (wordCount <= 2
                 && KeywordIndex.conceptMap().get(input) == null
                 && KeywordIndex.categoryMap().get(input) == null) {
-            return QueryType.EXPLORATORY;
+            return SearchMode.EXPLORATORY;
         }
-        return QueryType.VAGUE;
+
+        // Single word that is a difficulty keyword → EXPLORATORY
+        if (wordCount == 1 && KeywordIndex.difficultyMap().containsKey(input)) {
+            return SearchMode.EXPLORATORY;
+        }
+
+        return SearchMode.VAGUE;
     }
 
     // ─── Query Handlers ─────────────────────────────────────────────
@@ -166,7 +266,7 @@ public final class ResourceDiscovery {
                 .limit(MAX_RESULTS)
                 .toList();
 
-        return new DiscoveryResult(QueryType.SPECIFIC, scored,
+        return new DiscoveryResult(SearchMode.SPECIFIC, scored,
                 scored.isEmpty() ? generateDidYouMean(input) : List.of(),
                 scored.isEmpty()
                         ? "No exact matches found for: '" + input + "'"
@@ -184,7 +284,7 @@ public final class ResourceDiscovery {
                 .limit(MAX_RESULTS)
                 .toList();
 
-        return new DiscoveryResult(QueryType.VAGUE, scored,
+        return new DiscoveryResult(SearchMode.VAGUE, scored,
                 scored.isEmpty() ? generateDidYouMean(input) : List.of(),
                 buildVagueSummary(input, inferredConcepts, inferredCategories, scored.size()));
     }
@@ -224,7 +324,7 @@ public final class ResourceDiscovery {
                 "Try 'testing' for testing resources"
         );
 
-        return new DiscoveryResult(QueryType.EXPLORATORY, scored, suggestions,
+        return new DiscoveryResult(SearchMode.EXPLORATORY, scored, suggestions,
                 "Here are recommended resources for " + targetDifficulty + " level learners");
     }
 
@@ -235,7 +335,7 @@ public final class ResourceDiscovery {
                 .limit(MAX_RESULTS)
                 .toList();
 
-        return new DiscoveryResult(QueryType.EXPLORATORY, scored,
+        return new DiscoveryResult(SearchMode.EXPLORATORY, scored,
                 List.of("Try searching for a specific topic, category, or concept"),
                 "Showing top recommended resources across all categories");
     }
@@ -247,17 +347,37 @@ public final class ResourceDiscovery {
      */
     private List<ConceptArea> inferConcepts(final String input) {
         final var result = new ArrayList<ConceptArea>();
+
+        // Single-word matches
         for (final var word : input.split("\\s+")) {
             final var concept = KeywordIndex.conceptMap().get(word);
             if (concept != null && !result.contains(concept)) {
                 result.add(concept);
             }
         }
+
+        // Multi-word phrase matches (e.g., "design patterns", "virtual threads")
         for (final var entry : KeywordIndex.conceptMap().entrySet()) {
-            if (input.contains(entry.getKey()) && !result.contains(entry.getValue())) {
+            if (entry.getKey().contains(" ") && input.contains(entry.getKey())
+                    && !result.contains(entry.getValue())) {
                 result.add(entry.getValue());
             }
         }
+
+        // Fallback: single-word substring matches on remaining words
+        if (result.isEmpty()) {
+            for (final var word : input.split("\\s+")) {
+                if (word.length() < 3) {
+                    continue;
+                }
+                for (final var entry : KeywordIndex.conceptMap().entrySet()) {
+                    if (entry.getKey().startsWith(word) && !result.contains(entry.getValue())) {
+                        result.add(entry.getValue());
+                    }
+                }
+            }
+        }
+
         return result;
     }
 
@@ -295,13 +415,15 @@ public final class ResourceDiscovery {
         for (final var concept : ConceptArea.values()) {
             final var conceptName = concept.name().toLowerCase().replace('_', ' ');
             if (conceptName.contains(input) || input.contains(conceptName)) {
-                suggestions.add("Search concept: " + concept.name());
+                suggestions.add("Search concept: " + concept.name()
+                        + " (" + concept.getDomain().getDisplayName() + ")");
             }
         }
 
         if (suggestions.isEmpty()) {
             suggestions.add("Try broader terms (e.g., 'java', 'testing', 'design patterns')");
             suggestions.add("Use 'list_categories' to see all available categories");
+            suggestions.add("Use search mode: specific, vague, or exploratory");
         }
         return suggestions;
     }
@@ -337,7 +459,8 @@ public final class ResourceDiscovery {
 
         if (!concepts.isEmpty()) {
             builder.append("\nInferred concepts: ").append(concepts.stream()
-                    .map(ConceptArea::name).collect(Collectors.joining(", ")));
+                    .map(c -> c.name() + " (" + c.getDomain().getDisplayName() + ")")
+                    .collect(Collectors.joining(", ")));
         }
         if (!categories.isEmpty()) {
             builder.append("\nInferred categories: ").append(categories.stream()

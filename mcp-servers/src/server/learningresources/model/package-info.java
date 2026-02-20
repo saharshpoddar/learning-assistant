@@ -5,9 +5,9 @@ package server.learningresources.model;
  *
  * <p>This package contains:
  * <ul>
- *   <li>{@link LearningResource} — core resource with metadata (title, URL, type, category, tags)</li>
- *   <li>{@link ResourceType} — classification of content format (documentation, tutorial, blog, etc.)</li>
- *   <li>{@link ResourceCategory} — topic categories (Java, web, DevOps, etc.)</li>
+ *   <li>{@link server.learningresources.model.LearningResource} — core resource with metadata (title, URL, type, category, tags)</li>
+ *   <li>{@link server.learningresources.model.ResourceType} — classification of content format (documentation, tutorial, blog, etc.)</li>
+ *   <li>{@link server.learningresources.model.ResourceCategory} — topic categories (Java, web, DevOps, etc.)</li>
  *   <li>{@link server.learningresources.model.ContentSummary} — scraped and summarized content from a URL</li>
  *   <li>{@link server.learningresources.model.ResourceQuery} — search and filter criteria for vault queries</li>
  * </ul>

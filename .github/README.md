@@ -213,7 +213,7 @@ This learning project includes working samples of each primitive, organized into
 | `/daily-assist` | [`daily-assist.prompt.md`](prompts/daily-assist.prompt.md) | Finance, productivity, news, daily life tasks |
 | `/career-roles` | [`career-roles.prompt.md`](prompts/career-roles.prompt.md) | Job roles, skills, pay ranges, career roadmaps |
 | `/multi-session` | [`multi-session.prompt.md`](prompts/multi-session.prompt.md) | Manage state across multiple chat sessions |
-| `/resources` | [`resources.prompt.md`](prompts/resources.prompt.md) | Search, browse & scrape 30+ curated learning resources |
+| `/resources` | [`resources.prompt.md`](prompts/resources.prompt.md) | Search, browse, discover & export 47+ curated learning resources |
 
 > 📖 **Deep dive:** [Prompts Guide →](prompts/README.md)
 

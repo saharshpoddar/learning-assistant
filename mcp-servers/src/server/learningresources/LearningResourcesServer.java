@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  *   <li>Read full content from URLs with metadata (word count, reading time)</li>
  *   <li>Estimate content difficulty (beginner / intermediate / advanced)</li>
  *   <li>Add custom resources to the vault — manually or via smart URL scraping</li>
- *   <li>Export results as Markdown (PDF/Word planned)</li>
+ *   <li>Export results as Markdown, PDF, or Word (via pandoc or plain-text fallback)</li>
  * </ul>
  *
  * <p><strong>Transport:</strong> STDIO (reads JSON-RPC from stdin, writes to stdout).
@@ -109,12 +109,12 @@ public class LearningResourcesServer {
                 Map.entry("browse_vault", "Browse the resource vault by category or type"),
                 Map.entry("get_resource", "Get detailed information about a specific resource by ID"),
                 Map.entry("list_categories", "List all available resource categories with counts"),
-                Map.entry("discover_resources", "Smart discovery — classifies intent and finds relevant resources with scoring"),
+                Map.entry("discover_resources", "Smart discovery — classifies intent (specific/vague/exploratory), supports forced mode and domain-level browsing"),
                 Map.entry("scrape_url", "Scrape a URL and return a summary with metadata (word count, reading time, difficulty)"),
                 Map.entry("read_url", "Scrape a URL and return the full extracted text content"),
                 Map.entry("add_resource", "Add a custom learning resource to the vault"),
                 Map.entry("add_resource_from_url", "Scrape a URL, auto-extract metadata, and add as a resource"),
-                Map.entry("export_results", "Export discovery/search results as Markdown (PDF/Word planned)")
+                Map.entry("export_results", "Export discovery/search results as Markdown, PDF, or Word")
         );
     }
 

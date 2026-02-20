@@ -1,6 +1,6 @@
 # Learning Resources MCP Server
 
-> **A curated vault of 47+ learning resources with smart discovery, web scraping, and export.**
+> **A curated vault of 47+ learning resources with smart discovery, web scraping, and multi-format export.**
 
 ---
 
@@ -15,7 +15,7 @@ and can scrape, extract, and summarize content from any URL on the internet.
 - **Vault** — 47+ pre-loaded resources: official docs, tutorials, blogs, books, and interactive
   tools from Oracle, Mozilla, Baeldung, Spring, OWASP, Docker, and more
 - **Smart Discovery** — three-mode engine (specific / vague / exploratory) with keyword-to-concept
-  inference, multi-dimensional relevance scoring, and "did you mean?" suggestions
+  inference, fuzzy matching, domain affinity, language-fit scoring, and "did you mean?" suggestions
 - **Search** — full-text search with filters by category, type, difficulty, concept, freshness,
   language applicability, and official-only mode
 - **Scrape** — fetches any URL, strips HTML, extracts meaningful text content
@@ -23,7 +23,7 @@ and can scrape, extract, and summarize content from any URL on the internet.
 - **Read** — presents full extracted content in a clean, readable format
 - **Smart Add** — scrape a URL, auto-extract metadata (title, description, author, type),
   infer categories and concepts, discover sub-pages, and add to the vault
-- **Export** — format discovery/search results as Markdown (PDF/Word planned)
+- **Export** — format discovery/search results as Markdown, PDF, or Word (via pandoc with plain-text fallback)
 - **Extend** — add custom resources manually or via URL scraping
 
 ---
@@ -56,12 +56,12 @@ java -cp out server.learningresources.LearningResourcesServer
 | `browse_vault` | Browse resources by category or type | `category` or `type` |
 | `get_resource` | Get detailed info about a specific resource | `id` |
 | `list_categories` | List all categories with resource counts | _(none)_ |
-| `discover_resources` | Smart discovery with intent classification & scoring | `query` |
+| `discover_resources` | Smart discovery with intent classification, forced mode, and domain browsing | `query` |
 | `scrape_url` | Scrape a URL and return a summary | `url` |
 | `read_url` | Scrape a URL and return full text content | `url` |
 | `add_resource` | Add a custom resource to the vault | `id`, `title`, `url`, `description`, `type` |
 | `add_resource_from_url` | Scrape URL → auto-extract metadata → add to vault | `url` |
-| `export_results` | Export discovery results as Markdown | `query` |
+| `export_results` | Export discovery results as Markdown, PDF, or Word | `query` |
 
 ### Tool Arguments
 
@@ -78,7 +78,9 @@ java -cp out server.learningresources.LearningResourcesServer
 **discover_resources:**
 - `query` — free-form user query (e.g., "learn java concurrency", "beginner stuff", "official docs")
 - `concept` — filter by concept area for concept-based discovery
-- `min_difficulty` / `max_difficulty` — difficulty range for concept discovery
+- `domain` — filter by concept domain for domain-level browsing (see ConceptDomain enum below)
+- `mode` — force a search mode: `specific`, `vague`, or `exploratory` (see SearchMode enum below)
+- `min_difficulty` / `max_difficulty` — difficulty range for concept/domain discovery
 
 **add_resource_from_url:**
 - `url` — the URL to scrape (required)
@@ -86,7 +88,7 @@ java -cp out server.learningresources.LearningResourcesServer
 
 **export_results:**
 - `query` — the discovery query to export
-- `format` — output format: `md` (default), `pdf` (planned), `word` (planned)
+- `format` — output format: `md` (default), `pdf`, `word` (PDF/Word requires pandoc; falls back to plain text)
 
 **add_resource:**
 - `id` — unique slug (e.g., "my-tutorial")
@@ -128,37 +130,66 @@ Broad technology domains for grouping resources.
 | `GENERAL` | general | Cross-cutting or general topics |
 
 ### ConceptArea
-Fine-grained CS/SE concept areas for precise resource matching (27 values).
+Fine-grained CS/SE concept areas for precise resource matching (27 values). Each concept belongs to a {@link ConceptDomain}.
 
-| Value | Display Name | Example Topics |
-|-------|-------------|----------------|
-| `LANGUAGE_BASICS` | Language Basics | Variables, types, control flow, syntax |
-| `OOP` | Object-Oriented Programming | Classes, inheritance, polymorphism, encapsulation |
-| `FUNCTIONAL_PROGRAMMING` | Functional Programming | Lambdas, streams, higher-order functions |
-| `CONCURRENCY` | Concurrency | Threads, locks, CompletableFuture, virtual threads |
-| `DESIGN_PATTERNS` | Design Patterns | GoF patterns, factory, observer, strategy |
-| `DATA_STRUCTURES` | Data Structures | Lists, maps, trees, graphs, hash tables |
-| `ALGORITHMS` | Algorithms | Sorting, searching, graph algorithms, DP |
-| `TESTING` | Testing | JUnit, Mockito, TDD, BDD, integration testing |
-| `WEB_DEVELOPMENT` | Web Development | HTTP, REST, GraphQL, frontend frameworks |
-| `API_DESIGN` | API Design | RESTful, versioning, documentation, HATEOAS |
-| `DATABASE_DESIGN` | Database Design | Normalization, indexing, query optimization |
-| `SYSTEM_DESIGN` | System Design | Distributed systems, scalability, load balancing |
-| `CLEAN_CODE` | Clean Code | Naming, refactoring, SOLID, code smells |
-| `BUILD_TOOLS` | Build Tools | Maven, Gradle, make, npm |
-| `VERSION_CONTROL` | Version Control | Git, branching, merge strategies |
-| `DEVOPS` | DevOps | Docker, Kubernetes, CI/CD, monitoring |
-| `WEB_SECURITY` | Web Security | OWASP, XSS, CSRF, authentication |
-| `PERFORMANCE` | Performance | Profiling, optimization, GC tuning |
-| `MACHINE_LEARNING` | Machine Learning | Neural networks, training, inference |
-| `GENERICS` | Generics | Type parameters, wildcards, type erasure |
-| `LANGUAGE_FEATURES` | Language Features | Records, sealed classes, pattern matching |
-| `NETWORKING` | Networking | Sockets, HTTP clients, DNS |
-| `CONTAINERS` | Containers | Docker, Kubernetes, container orchestration |
-| `CLOUD_SERVICES` | Cloud Services | AWS, Azure, GCP, serverless |
-| `GETTING_STARTED` | Getting Started | Hello world, setup guides, first projects |
-| `CAREER` | Career | Interviews, resumes, job search |
-| `OPEN_SOURCE` | Open Source | Contributing, maintaining, community |
+| Value | Display Name | Domain | Example Topics |
+|-------|-------------|--------|----------------|
+| `LANGUAGE_BASICS` | language-basics | Programming Fundamentals | Variables, types, control flow, syntax |
+| `OOP` | oop | Programming Fundamentals | Classes, inheritance, polymorphism, encapsulation |
+| `FUNCTIONAL_PROGRAMMING` | functional-programming | Programming Fundamentals | Lambdas, streams, higher-order functions |
+| `LANGUAGE_FEATURES` | language-features | Programming Fundamentals | Records, sealed classes, pattern matching |
+| `GENERICS` | generics | Programming Fundamentals | Type parameters, wildcards, type erasure |
+| `CONCURRENCY` | concurrency | Core CS | Threads, locks, CompletableFuture, virtual threads |
+| `DATA_STRUCTURES` | data-structures | Core CS | Lists, maps, trees, graphs, hash tables |
+| `ALGORITHMS` | algorithms | Core CS | Sorting, searching, graph algorithms, DP |
+| `COMPLEXITY_ANALYSIS` | complexity-analysis | Core CS | Big-O analysis, benchmarking, optimization |
+| `MEMORY_MANAGEMENT` | memory-management | Core CS | GC, allocation strategies, profiling |
+| `DESIGN_PATTERNS` | design-patterns | Software Engineering | GoF patterns, factory, observer, strategy |
+| `CLEAN_CODE` | clean-code | Software Engineering | SOLID, GRASP, refactoring, code smells |
+| `TESTING` | testing | Software Engineering | JUnit, Mockito, TDD, BDD, integration testing |
+| `API_DESIGN` | api-design | Software Engineering | REST, GraphQL, versioning, OpenAPI |
+| `ARCHITECTURE` | architecture | Software Engineering | Hexagonal, microservices, layers, monolith |
+| `SYSTEM_DESIGN` | system-design | System Design & Infrastructure | Scalability, load balancing, caching, sharding |
+| `DATABASES` | databases | System Design & Infrastructure | SQL, NoSQL, indexing, replication, schemas |
+| `DISTRIBUTED_SYSTEMS` | distributed-systems | System Design & Infrastructure | Consensus, CAP, eventual consistency |
+| `NETWORKING` | networking | System Design & Infrastructure | TCP/IP, HTTP, DNS, TLS, sockets |
+| `OPERATING_SYSTEMS` | operating-systems | System Design & Infrastructure | Processes, scheduling, file systems, kernels |
+| `CI_CD` | ci-cd | DevOps & Tooling | CI/CD pipelines, Jenkins, GitHub Actions |
+| `CONTAINERS` | containers | DevOps & Tooling | Docker, Kubernetes, orchestration |
+| `VERSION_CONTROL` | version-control | DevOps & Tooling | Git, branching, merge strategies |
+| `BUILD_TOOLS` | build-tools | DevOps & Tooling | Maven, Gradle, Bazel, npm |
+| `INFRASTRUCTURE` | infrastructure | DevOps & Tooling | Terraform, Ansible, CloudFormation |
+| `OBSERVABILITY` | observability | DevOps & Tooling | Monitoring, logging, tracing, alerting |
+| `WEB_SECURITY` | web-security | Security | OWASP, XSS, CSRF, authentication |
+| `CRYPTOGRAPHY` | cryptography | Security | Encryption, hashing, digital signatures |
+| `MACHINE_LEARNING` | machine-learning | AI & Data | Neural networks, training, inference |
+| `LLM_AND_PROMPTING` | llm-and-prompting | AI & Data | LLMs, prompt engineering, RAG, AI agents |
+| `INTERVIEW_PREP` | interview-prep | Career & Meta | Coding challenges, system design interviews |
+| `CAREER_DEVELOPMENT` | career-development | Career & Meta | Learning paths, roadmaps, skill mapping |
+| `GETTING_STARTED` | getting-started | Career & Meta | Environment setup, first project, hello world |
+
+### ConceptDomain _(new)_
+High-level knowledge domains that group related ConceptArea values (8 domains).
+
+| Value | Display Name | Concepts |
+|-------|-------------|----------|
+| `PROGRAMMING_FUNDAMENTALS` | Programming Fundamentals | LANGUAGE_BASICS, OOP, FUNCTIONAL_PROGRAMMING, LANGUAGE_FEATURES, GENERICS |
+| `CORE_CS` | Core CS | CONCURRENCY, DATA_STRUCTURES, ALGORITHMS, COMPLEXITY_ANALYSIS, MEMORY_MANAGEMENT |
+| `SOFTWARE_ENGINEERING` | Software Engineering | DESIGN_PATTERNS, CLEAN_CODE, TESTING, API_DESIGN, ARCHITECTURE |
+| `SYSTEM_DESIGN` | System Design & Infrastructure | SYSTEM_DESIGN, DATABASES, DISTRIBUTED_SYSTEMS, NETWORKING, OPERATING_SYSTEMS |
+| `DEVOPS_TOOLING` | DevOps & Tooling | CI_CD, CONTAINERS, VERSION_CONTROL, BUILD_TOOLS, INFRASTRUCTURE, OBSERVABILITY |
+| `SECURITY` | Security | WEB_SECURITY, CRYPTOGRAPHY |
+| `AI_DATA` | AI & Data | MACHINE_LEARNING, LLM_AND_PROMPTING |
+| `CAREER_META` | Career & Meta | INTERVIEW_PREP, CAREER_DEVELOPMENT, GETTING_STARTED |
+
+### SearchMode _(new)_
+User intent classification for the discovery engine (3 modes).
+
+| Value | Display Name | Description | Triggers |
+|-------|-------------|-------------|----------|
+| `SPECIFIC` | specific | Exact match — user knows exactly what they want | Quoted text, URLs, "docs for …", "official" |
+| `VAGUE` | vague | Topic match — user knows the area but not the resource | Topic keywords ("java testing", "concurrency") |
+| `EXPLORATORY` | exploratory | Explore — user wants guidance and suggestions | "learn", "beginner", "recommend", "getting started" |
 
 ### DifficultyLevel
 Type-safe difficulty with ordinal for range queries.
@@ -220,9 +251,13 @@ The discovery engine (`ResourceDiscovery`) classifies user intent into three mod
 | **Vague** | Topic keywords ("java testing", "concurrency") | Keyword-to-concept inference, multi-dimensional scoring |
 | **Exploratory** | "learn", "beginner", "getting started", "recommend" | Beginner-friendly, official-first, with suggestions |
 
+**Forced mode:** Pass `mode=specific|vague|exploratory` to override automatic classification.
+
+**Domain browsing:** Pass `domain=core-cs` (or any ConceptDomain) to discover all resources in a knowledge domain.
+
 ### Relevance Scoring
 
-The `RelevanceScorer` applies weighted scoring across 9 dimensions:
+The `RelevanceScorer` applies weighted scoring across 12 dimensions:
 
 | Dimension | Weight | Description |
 |-----------|--------|-------------|
@@ -235,6 +270,9 @@ The `RelevanceScorer` applies weighted scoring across 9 dimensions:
 | Official boost | 15 | Official/authoritative source |
 | Freshness boost | 10 | Actively maintained content |
 | Difficulty fit | 10 | Matches target difficulty |
+| Domain affinity | 10 | Resource in same concept domain |
+| Language fit | 12 | Matches language applicability (UNIVERSAL=12, JAVA_CENTRIC=8, etc.) |
+| Fuzzy match | 8 | Prefix-based typo tolerance (3+ char prefix) |
 
 ### Keyword Index
 
@@ -256,7 +294,9 @@ server/learningresources/
 │   ├── LearningResource.java       ← Core 15-field resource record
 │   ├── ResourceType.java           ← Enum: documentation, tutorial, blog, ...
 │   ├── ResourceCategory.java       ← Enum: java, python, web, devops, ...
-│   ├── ConceptArea.java            ← Enum: 27 CS/SE concept areas
+│   ├── ConceptArea.java            ← Enum: 27 CS/SE concept areas (grouped by domain)
+│   ├── ConceptDomain.java          ← Enum: 8 high-level knowledge domains
+│   ├── SearchMode.java             ← Enum: specific / vague / exploratory intent
 │   ├── DifficultyLevel.java        ← Enum: beginner → expert with ordinal ranges
 │   ├── ContentFreshness.java       ← Enum: evergreen, actively-maintained, ...
 │   ├── LanguageApplicability.java  ← Enum: universal → language-specific
@@ -268,10 +308,10 @@ server/learningresources/
 │   ├── ResourceVault.java          ← In-memory store with composite search
 │   ├── BuiltInResources.java       ← Loads all providers into vault
 │   ├── ResourceProvider.java       ← Provider interface
-│   ├── ResourceDiscovery.java      ← Smart 3-mode discovery engine (~300 lines)
-│   ├── RelevanceScorer.java        ← Multi-dimensional relevance scoring
+│   ├── ResourceDiscovery.java      ← Smart 3-mode discovery engine (~400 lines)
+│   ├── RelevanceScorer.java        ← Multi-dimensional relevance scoring (12 dimensions)
 │   ├── KeywordIndex.java           ← Keyword-to-enum intent inference maps
-│   ├── DiscoveryResult.java        ← Discovery result record + QueryType enum
+│   ├── DiscoveryResult.java        ← Discovery result record (SearchMode + scored results)
 │   └── providers/                  ← Modular resource providers (9 files)
 │       ├── JavaResources.java      ← 13 Java ecosystem resources
 │       ├── WebResources.java       ← 5 web/JS/TS resources
@@ -299,7 +339,7 @@ server/learningresources/
     ├── ToolHandler.java            ← Routes 10 tools to handlers
     ├── SearchHandler.java          ← Vault search, browse, details
     ├── ScrapeHandler.java          ← URL scrape & summarize
-    ├── ExportHandler.java          ← Markdown export + OutputFormat enum
+    ├── ExportHandler.java          ← Markdown/PDF/Word export + OutputFormat enum
     └── UrlResourceHandler.java     ← Smart add-from-URL with metadata inference
 ```
 
@@ -316,7 +356,7 @@ User → MCP Client → STDIO → LearningResourcesServer
                               │   │                  → ContentExtractor
                               │   │                  → ContentSummarizer
                               │   ├── UrlResourceHandler → WebScraper → ResourceVault
-                              │   └── ExportHandler → Markdown output
+                              │   └── ExportHandler → Markdown/PDF/Word output
                               └── Response → STDIO → MCP Client → User
 ```
 
@@ -365,7 +405,8 @@ server.learning-resources.args=-cp,out,server.learningresources.LearningResource
 - [ ] Full JSON-RPC MCP protocol compliance
 - [ ] Jsoup integration for better HTML parsing
 - [ ] LLM-powered abstractive summarization (via OpenAI API key)
-- [ ] PDF and Word export via Pandoc or Apache POI
+- [x] ~~PDF and Word export via Pandoc~~ — implemented with plain-text fallback
+- [ ] Apache POI integration for richer Word/PDF output without external tools
 - [ ] Bookmark/favorite resources
 - [ ] Learning progress tracking
 - [ ] RSS/Atom feed monitoring for new content

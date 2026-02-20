@@ -6,6 +6,9 @@ import server.learningresources.model.ResourceCategory;
 import server.learningresources.vault.DiscoveryResult;
 import server.learningresources.vault.RelevanceScorer.ScoredResource;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -17,12 +20,18 @@ import java.util.stream.Collectors;
 /**
  * Formats discovery and search results into exportable document formats.
  *
- * <p>Currently supports:
+ * <p>Supports three output formats:
  * <ul>
  *   <li><strong>Markdown</strong> — full-featured, ready for GitHub/docs rendering</li>
+ *   <li><strong>PDF</strong> — plain-text formatted for readability, saved as .pdf-ready text
+ *       (or actual PDF if pandoc is available)</li>
+ *   <li><strong>Word</strong> — plain-text formatted for readability, saved as .docx-ready text
+ *       (or actual DOCX if pandoc is available)</li>
  * </ul>
  *
- * <p>Future enhancements will add PDF and Word output via external libraries.
+ * <p>PDF and Word exports first generate Markdown, then attempt conversion via
+ * {@code pandoc} if available on the system PATH. If pandoc is unavailable,
+ * the formatted content is returned as plain text with instructions.
  *
  * @see DiscoveryResult
  */
@@ -38,9 +47,9 @@ public final class ExportHandler {
     public enum OutputFormat {
         /** GitHub-flavored Markdown. */
         MARKDOWN("md"),
-        /** PDF document (planned — not yet implemented). */
+        /** PDF document. */
         PDF("pdf"),
-        /** Word document (planned — not yet implemented). */
+        /** Word document (.docx). */
         WORD("docx");
 
         private final String extension;
@@ -75,13 +84,16 @@ public final class ExportHandler {
                 case "pdf" -> PDF;
                 case "docx", "word", "doc" -> WORD;
                 default -> throw new IllegalArgumentException(
-                        "Unsupported format: '" + value + "'. Supported: md, pdf (planned), word (planned)");
+                        "Unsupported format: '" + value + "'. Supported: md, pdf, word");
             };
         }
     }
 
     /**
      * Exports a {@link DiscoveryResult} in the requested format.
+     *
+     * <p>For PDF and Word, generates Markdown first, then attempts pandoc conversion.
+     * If pandoc is unavailable, returns formatted plain text with a conversion hint.
      *
      * @param result the discovery result to export
      * @param format the desired output format
@@ -93,10 +105,8 @@ public final class ExportHandler {
 
         return switch (format) {
             case MARKDOWN -> exportAsMarkdown(result);
-            case PDF -> "PDF export is planned for a future release. " +
-                    "Use 'md' format and convert with pandoc: `pandoc output.md -o output.pdf`";
-            case WORD -> "Word export is planned for a future release. " +
-                    "Use 'md' format and convert with pandoc: `pandoc output.md -o output.docx`";
+            case PDF -> exportWithPandoc(result, "pdf");
+            case WORD -> exportWithPandoc(result, "docx");
         };
     }
 
@@ -126,7 +136,7 @@ public final class ExportHandler {
         final var builder = new StringBuilder();
 
         builder.append("# Discovery Results\n\n");
-        builder.append("> **Query type:** ").append(result.queryType()).append("  \n");
+        builder.append("> **Search mode:** ").append(result.searchMode().getDisplayName()).append("  \n");
         builder.append("> **Results:** ").append(result.count()).append("  \n");
         builder.append("> **Generated:** ").append(DATE_FORMAT.format(Instant.now())).append("\n\n");
 
@@ -150,6 +160,122 @@ public final class ExportHandler {
 
         return builder.toString();
     }
+
+    // ─── PDF / Word Export via Pandoc ────────────────────────────────
+
+    /**
+     * Generates Markdown, writes to a temp file, attempts pandoc conversion.
+     *
+     * <p>If pandoc succeeds, returns a success message with the output file path.
+     * If pandoc is unavailable, returns formatted plain text instead.
+     */
+    private String exportWithPandoc(final DiscoveryResult result, final String targetExtension) {
+        final var markdownContent = exportAsMarkdown(result);
+        final var plainText = convertMarkdownToPlainText(result);
+
+        try {
+            final var tempDir = Files.createTempDirectory("learning-export-");
+            final var mdFile = tempDir.resolve("discovery-results.md");
+            final var outputFile = tempDir.resolve("discovery-results." + targetExtension);
+
+            Files.writeString(mdFile, markdownContent);
+
+            final var process = new ProcessBuilder(
+                    "pandoc", mdFile.toString(), "-o", outputFile.toString(),
+                    "--from=markdown", "--standalone"
+            ).redirectErrorStream(true).start();
+
+            final var exitCode = process.waitFor();
+            final var processOutput = new String(process.getInputStream().readAllBytes());
+
+            if (exitCode == 0 && Files.exists(outputFile)) {
+                final var fileSize = Files.size(outputFile);
+                return "Exported to " + targetExtension.toUpperCase() + ": " + outputFile
+                        + " (" + fileSize + " bytes)\n\n"
+                        + "Markdown source also saved: " + mdFile;
+            } else {
+                LOGGER.warning("Pandoc conversion failed (exit=" + exitCode + "): " + processOutput);
+                return buildFallbackResponse(plainText, markdownContent, mdFile, targetExtension);
+            }
+
+        } catch (IOException | InterruptedException conversionError) {
+            LOGGER.fine("Pandoc not available: " + conversionError.getMessage());
+            return buildNoPandocResponse(plainText, markdownContent, targetExtension);
+        }
+    }
+
+    /**
+     * Converts a discovery result to a clean plain-text format (no Markdown syntax).
+     */
+    private String convertMarkdownToPlainText(final DiscoveryResult result) {
+        final var builder = new StringBuilder();
+        final var separator = "=".repeat(60) + "\n";
+
+        builder.append(separator);
+        builder.append("  DISCOVERY RESULTS\n");
+        builder.append(separator);
+        builder.append("  Search mode : ").append(result.searchMode().getDisplayName()).append("\n");
+        builder.append("  Results     : ").append(result.count()).append("\n");
+        builder.append("  Generated   : ").append(DATE_FORMAT.format(Instant.now())).append("\n");
+        builder.append(separator).append("\n");
+
+        if (!result.summary().isBlank()) {
+            builder.append("SUMMARY\n");
+            builder.append("-".repeat(40)).append("\n");
+            builder.append(result.summary()).append("\n\n");
+        }
+
+        if (!result.isEmpty()) {
+            builder.append("RESULTS\n");
+            builder.append("-".repeat(40)).append("\n\n");
+
+            var rank = 1;
+            for (final var entry : result.results()) {
+                final var resource = entry.resource();
+                builder.append(rank++).append(". ").append(resource.title());
+                if (resource.isOfficial()) {
+                    builder.append(" [OFFICIAL]");
+                }
+                builder.append("\n");
+                builder.append("   Type       : ").append(resource.type().getDisplayName()).append("\n");
+                builder.append("   Difficulty : ").append(resource.difficulty().getDisplayName()).append("\n");
+                builder.append("   Score      : ").append(entry.score()).append("\n");
+                builder.append("   URL        : ").append(resource.url()).append("\n");
+                builder.append("   ").append(resource.description()).append("\n\n");
+            }
+        }
+
+        if (!result.suggestions().isEmpty()) {
+            builder.append("SUGGESTIONS\n");
+            builder.append("-".repeat(40)).append("\n");
+            for (final var suggestion : result.suggestions()) {
+                builder.append("  * ").append(suggestion).append("\n");
+            }
+        }
+
+        return builder.toString();
+    }
+
+    private String buildFallbackResponse(final String plainText, final String markdownContent,
+                                          final Path mdFile, final String targetExtension) {
+        return "Pandoc conversion to " + targetExtension.toUpperCase() + " failed.\n"
+                + "Markdown source saved at: " + mdFile + "\n\n"
+                + "To convert manually:\n"
+                + "  pandoc " + mdFile + " -o output." + targetExtension + "\n\n"
+                + "--- Plain Text Export ---\n\n" + plainText;
+    }
+
+    private String buildNoPandocResponse(final String plainText, final String markdownContent,
+                                          final String targetExtension) {
+        return "Pandoc is not installed — returning formatted plain text.\n\n"
+                + "To enable " + targetExtension.toUpperCase() + " export:\n"
+                + "  1. Install pandoc: https://pandoc.org/installing.html\n"
+                + "  2. Ensure 'pandoc' is on your system PATH\n"
+                + "  3. Re-run the export command\n\n"
+                + "--- Plain Text Export ---\n\n" + plainText;
+    }
+
+    // ─── Table Renderers ────────────────────────────────────────────
 
     private void appendScoredTable(final StringBuilder builder, final List<ScoredResource> scored) {
         builder.append("| # | Resource | Type | Difficulty | Score | Official |\n");
