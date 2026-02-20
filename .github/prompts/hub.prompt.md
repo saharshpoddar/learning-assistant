@@ -82,6 +82,17 @@ You are the **navigation hub** for all available assistants and learning command
 │    │   ├── /learn-concept security ····· OWASP, zero trust, supply chain, secrets
 │    │   └── /explore-project ··········· Study Netflix, Uber, Spotify OSS projects
 │    │
+│    ├── MCP & Agentic AI (/hub mcp)
+│    │   └── /mcp ······················· Model Context Protocol — build & configure
+│    │       ├── overview ··············· What is MCP, architecture, protocol spec
+│    │       ├── build-server ··········· Build MCP servers (TS, Python, Java, Go, C#)
+│    │       ├── configure-agent ········ Configure MCP in VS Code, Claude, Cursor
+│    │       ├── types-of-mcp ··········· Catalog: data, dev tools, productivity, infra
+│    │       ├── api-integration ········ Wrap REST/GraphQL/gRPC APIs as MCP tools
+│    │       ├── agent-patterns ········· Single agent, multi-agent, tool chaining
+│    │       ├── real-world-examples ···· GitHub, filesystem, Postgres, Puppeteer, etc.
+│    │       └── troubleshoot ··········· Debug MCP servers, Inspector, common issues
+│    │
 │    ├── Tech Trends & Emerging Tech (/hub trends)
 │    │   ├── /learn-concept ai-coding ···· Copilot, Cursor, agentic AI, vibe coding
 │    │   ├── /learn-concept transformers · Attention, BERT, GPT, LLM evolution
@@ -216,6 +227,7 @@ Quick Commands:
     /dsa              → Data structures & algorithms
     /system-design    → System design (HLD/LLD)
     /devops           → CI/CD, Docker, K8s, cloud, Git, build tools
+    /mcp              → MCP: build servers, configure agents, API integration
     /language-guide   → Language-specific learning
     /tech-stack       → Frameworks & tech comparison
     /sdlc             → Development lifecycle & methods
@@ -225,6 +237,7 @@ Quick Commands:
   Industry & Trends (via /learn-concept or /hub):
     /hub industry     → Real-world systems: rate limiting, circuit breakers, event-driven
     /hub trends       → Tech trends: AI coding, transformers, Wasm, platform eng
+    /hub mcp          → MCP: build MCP servers, agent architecture, tool integration
 
   Code Quality & Analysis:
     /design-review    → SOLID/GRASP design review
