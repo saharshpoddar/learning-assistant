@@ -67,10 +67,10 @@ This module provides a **Java-based configuration system** and **MCP server impl
 export MCP_APIKEYS_GITHUB="ghp_your_token_here"       # Linux/Mac
 $env:MCP_APIKEYS_GITHUB = "ghp_your_token_here"       # Windows
 
-# 3. Build and run:
+# 3. Build:
 cd mcp-servers
-javac -d out src/Main.java src/config/**/*.java src/server/**/*.java
-java -cp out Main
+.\build.ps1                     # Windows PowerShell (auto-detects javac)
+./build.sh                      # Linux/macOS/Git Bash
 
 # 4. Try the Learning Resources server:
 java -cp out server.learningresources.LearningResourcesServer --demo

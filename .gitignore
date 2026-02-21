@@ -45,8 +45,9 @@ bin/
 # =============================================================================
 # IDE — VS Code
 # =============================================================================
-# Root .vscode is ignored (personal settings)
-.vscode/
+# Root .vscode is ignored (personal settings) except tasks.json (project utility)
+.vscode/*
+!.vscode/tasks.json
 # But mcp-servers/.vscode IS committed (portable config for copying to other projects)
 !mcp-servers/.vscode/
 
@@ -97,6 +98,22 @@ mcp-servers/scripts/.browser-pid
 #   12-Factor App: config from environment, not committed files
 #
 mcp-servers/user-config/mcp-config.local.properties
+# Server-specific local config files (credentials, instance URLs)
+# Pattern covers all servers under user-config/servers/**/
+mcp-servers/user-config/servers/**/*.local.properties
+
+# Local build environment file (machine-specific JDK path, never commit)
+mcp-servers/build.env.local
+
+# =============================================================================
+# Brain workspace (brain/ directory) -- personal knowledge management
+# =============================================================================
+# brain/inbox/   -- session-scoped throwaway (never committed)
+# brain/notes/   -- local persistent between sessions (never committed)
+# brain/archive/ -- curated, committed to the repo (NOT listed here)
+
+brain/inbox/
+brain/notes/
 
 # =============================================================================
 # OS Generated Files
