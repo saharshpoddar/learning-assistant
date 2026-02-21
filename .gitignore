@@ -97,6 +97,21 @@ mcp-servers/scripts/.browser-pid
 #   12-Factor App: config from environment, not committed files
 #
 mcp-servers/user-config/mcp-config.local.properties
+# Server-specific local config files (credentials, instance URLs)
+# Pattern covers all servers under user-config/servers/**/
+mcp-servers/user-config/servers/**/*.local.properties
+
+# Local build environment file (machine-specific JDK path, never commit)
+mcp-servers/build.env.local
+
+# =============================================================================
+# Notes Directory -- Local AI Session Outputs (never committed)
+# =============================================================================
+# notes/ is a local-only directory for AI-generated session files, concept
+# notes, Q&As, session changelogs, and decisions. It is entirely gitignored.
+# All content here is for local reference only.
+
+notes/
 
 # =============================================================================
 # OS Generated Files
