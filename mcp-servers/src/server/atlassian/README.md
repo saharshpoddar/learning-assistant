@@ -45,7 +45,7 @@ java -cp out server.atlassian.AtlassianServer
 
 ## Available Tools
 
-### Jira Tools
+### Jira Tools (11)
 
 | Tool | Description | Required Args |
 | ------ | ------------- | --------------- |
@@ -53,29 +53,44 @@ java -cp out server.atlassian.AtlassianServer
 | `jira_get_issue` | Get full details of a specific issue | `issueKey` |
 | `jira_create_issue` | Create a new issue | `projectKey`, `summary`, `issueType` |
 | `jira_update_issue` | Update fields on an existing issue | `issueKey` |
-| `jira_transition_issue` | Move issue to a new status | `issueKey`, `transition` |
+| `jira_transition_issue` | Move issue to a new status | `issueKey`, `transitionId` |
 | `jira_list_projects` | List accessible Jira projects | _(none)_ |
 | `jira_get_sprint` | Get active sprint details for a board | `boardId` |
+| `jira_add_comment` | Add a comment to an issue | `issueKey`, `comment` |
+| `jira_get_comments` | List comments on an issue | `issueKey` |
+| `jira_assign_issue` | Assign an issue to a user (omit accountId to unassign) | `issueKey` |
+| `jira_get_sprint_issues` | Get all issues in a sprint | `boardId` |
 
-### Confluence Tools
+### Confluence Tools (7)
 
 | Tool | Description | Required Args |
 | ------ | ------------- | --------------- |
 | `confluence_search` | Search pages using CQL or free text | `query` |
 | `confluence_get_page` | Get full content of a page | `pageId` |
-| `confluence_create_page` | Create a new page in a space | `spaceKey`, `title`, `body` |
-| `confluence_update_page` | Update an existing page | `pageId`, `title`, `body` |
+| `confluence_create_page` | Create a new page in a space | `spaceKey`, `title`, `content` |
+| `confluence_update_page` | Update an existing page | `pageId`, `title`, `content`, `version` |
 | `confluence_list_spaces` | List accessible Confluence spaces | _(none)_ |
+| `confluence_get_page_children` | List child pages of a page | `pageId` |
+| `confluence_delete_page` | Delete a page permanently | `pageId` |
 
-### Bitbucket Tools
+### Bitbucket Tools (8)
 
 | Tool | Description | Required Args |
 | ------ | ------------- | --------------- |
 | `bitbucket_list_repos` | List repositories in a workspace | `workspace` |
 | `bitbucket_get_repo` | Get repository details | `workspace`, `repoSlug` |
 | `bitbucket_list_pull_requests` | List PRs for a repository | `workspace`, `repoSlug` |
-| `bitbucket_get_pull_request` | Get full PR details with diff | `workspace`, `repoSlug`, `prId` |
+| `bitbucket_get_pull_request` | Get full PR details with diff | `workspace`, `repoSlug`, `pullRequestId` |
 | `bitbucket_search_code` | Search code across repositories | `workspace`, `query` |
+| `bitbucket_create_pull_request` | Open a new pull request | `workspace`, `repoSlug`, `title`, `sourceBranch`, `targetBranch` |
+| `bitbucket_list_branches` | List branches in a repository | `workspace`, `repoSlug` |
+| `bitbucket_get_commits` | Get recent commits (optional branch filter) | `workspace`, `repoSlug` |
+
+### Cross-product Tools (1)
+
+| Tool | Description | Required Args |
+| ------ | ------------- | --------------- |
+| `atlassian_unified_search` | Search Jira + Confluence + Bitbucket in one call | `query` |
 
 ---
 
@@ -83,26 +98,29 @@ java -cp out server.atlassian.AtlassianServer
 
 ```text
 server.atlassian
-├── AtlassianServer.java              — STDIO server entry point
+├── AtlassianServer.java              — STDIO server; JSON-RPC 2.0 dispatcher
 ├── model/                             — Shared enums & records
 │   ├── AtlassianProduct.java          — Product enum (JIRA, CONFLUENCE, BITBUCKET)
 │   ├── AtlassianCredentials.java      — Auth credentials record
 │   ├── ConnectionConfig.java          — Base URL, auth, timeout settings
 │   └── ToolResponse.java             — Standardized tool response wrapper
 ├── client/                            — REST API clients
-│   ├── AtlassianRestClient.java       — Shared HTTP client with auth
-│   ├── JiraClient.java                — Jira REST API v3 client
-│   ├── ConfluenceClient.java          — Confluence REST API v2 client
-│   └── BitbucketClient.java           — Bitbucket REST API 2.0 client
-├── handler/                           — MCP tool dispatch
-│   ├── ToolHandler.java               — Central tool router
-│   ├── JiraHandler.java               — Jira tool implementations
-│   ├── ConfluenceHandler.java         — Confluence tool implementations
-│   └── BitbucketHandler.java          — Bitbucket tool implementations
-└── formatter/                         — Response formatting
-    ├── IssueFormatter.java            — Jira issue → readable text
-    ├── PageFormatter.java             — Confluence page → readable text
-    └── PullRequestFormatter.java      — Bitbucket PR → readable text
+│   ├── AtlassianRestClient.java       — Shared HTTP client (GET/POST/PUT/DELETE)
+│   ├── JiraClient.java                — Jira REST API v3 client (11 methods)
+│   ├── ConfluenceClient.java          — Confluence REST API v2 client (8 methods)
+│   └── BitbucketClient.java           — Bitbucket REST API 2.0 client (9 methods)
+├── handler/                           — MCP tool dispatch & response formatting
+│   ├── ToolHandler.java               — Central router for all 27 tools
+│   ├── JiraHandler.java               — Jira tool implementations + markdown formatters
+│   ├── ConfluenceHandler.java         — Confluence tool implementations + markdown formatters
+│   ├── BitbucketHandler.java          — Bitbucket tool implementations + markdown formatters
+│   └── UnifiedSearchHandler.java      — Cross-product unified search
+├── util/                              — Shared utilities
+│   └── JsonExtractor.java             — Lightweight JSON parser (no external deps)
+└── formatter/                         — Legacy formatter stubs (superseded by handler formatters)
+    ├── IssueFormatter.java
+    ├── PageFormatter.java
+    └── PullRequestFormatter.java
 ```
 
 ---
@@ -168,12 +186,12 @@ server.atlassian.enabled=true
 This server is being built iteratively:
 
 - [x] **Phase 1** — Project scaffolding, model enums, package structure
-- [ ] **Phase 2** — Jira client + handler (search, get, create, update, transition)
-- [ ] **Phase 3** — Confluence client + handler (search, get, create, update)
-- [ ] **Phase 4** — Bitbucket client + handler (repos, PRs, code search)
-- [ ] **Phase 5** — Cross-product linking and unified search
-- [ ] **Phase 6** — Response formatting and export
-- [ ] **Phase 7** — Integration tests and error handling hardening
+- [x] **Phase 2** — Jira client + handler (search, get, create, update, transition)
+- [x] **Phase 3** — Confluence client + handler (search, get, create, update)
+- [x] **Phase 4** — Bitbucket client + handler (repos, PRs, code search)
+- [x] **Phase 5** — Cross-product linking and unified search
+- [x] **Phase 6** — Response formatting and export (JsonExtractor + markdown formatters in handlers)
+- [x] **Phase 7** — Extended tools: add/get comments, assign, sprint issues, page children, delete page, create PR, list branches, commits
 
 ---
 

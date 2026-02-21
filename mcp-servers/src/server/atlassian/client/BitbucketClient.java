@@ -144,4 +144,100 @@ public class BitbucketClient {
         LOGGER.info("Searching code in " + workspace + ": " + searchQuery);
         return restClient.get(path);
     }
+
+    /**
+     * Creates a new pull request.
+     *
+     * @param workspace   the workspace slug
+     * @param repoSlug    the repository slug
+     * @param requestBody the JSON body with title, source, destination branch info
+     * @return the raw JSON response with the created PR
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String createPullRequest(final String workspace,
+                                    final String repoSlug,
+                                    final String requestBody)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(workspace, "Workspace must not be null");
+        Objects.requireNonNull(repoSlug, "Repository slug must not be null");
+        Objects.requireNonNull(requestBody, "Request body must not be null");
+        final var path = API_BASE + "/repositories/" + workspace + "/" + repoSlug
+                + "/pullrequests";
+        LOGGER.info("Creating PR in " + workspace + "/" + repoSlug);
+        return restClient.post(path, requestBody);
+    }
+
+    /**
+     * Lists branches in a repository.
+     *
+     * @param workspace  the workspace slug
+     * @param repoSlug   the repository slug
+     * @param maxResults maximum number of results
+     * @return the raw JSON response with branch list
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String listBranches(final String workspace,
+                                final String repoSlug,
+                                final int maxResults)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(workspace, "Workspace must not be null");
+        Objects.requireNonNull(repoSlug, "Repository slug must not be null");
+        final var path = API_BASE + "/repositories/" + workspace + "/" + repoSlug
+                + "/refs/branches?pagelen=" + maxResults;
+        LOGGER.info("Listing branches for " + workspace + "/" + repoSlug);
+        return restClient.get(path);
+    }
+
+    /**
+     * Gets commits for a repository, optionally filtered by branch.
+     *
+     * @param workspace  the workspace slug
+     * @param repoSlug   the repository slug
+     * @param branch     the branch to filter by (null for default branch)
+     * @param maxResults maximum number of commits to return
+     * @return the raw JSON response with commits
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String getCommits(final String workspace,
+                              final String repoSlug,
+                              final String branch,
+                              final int maxResults)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(workspace, "Workspace must not be null");
+        Objects.requireNonNull(repoSlug, "Repository slug must not be null");
+        var path = API_BASE + "/repositories/" + workspace + "/" + repoSlug
+                + "/commits?pagelen=" + maxResults;
+        if (branch != null && !branch.isBlank()) {
+            path += "&include=" + java.net.URLEncoder.encode(
+                    branch, java.nio.charset.StandardCharsets.UTF_8);
+        }
+        LOGGER.info("Getting commits for " + workspace + "/" + repoSlug
+                + (branch != null ? " branch:" + branch : ""));
+        return restClient.get(path);
+    }
+
+    /**
+     * Gets the diff for a pull request.
+     *
+     * @param workspace the workspace slug
+     * @param repoSlug  the repository slug
+     * @param prId      the pull request ID
+     * @return the raw diff content as a string
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String getPullRequestDiff(final String workspace,
+                                     final String repoSlug,
+                                     final int prId)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(workspace, "Workspace must not be null");
+        Objects.requireNonNull(repoSlug, "Repository slug must not be null");
+        final var path = API_BASE + "/repositories/" + workspace + "/" + repoSlug
+                + "/pullrequests/" + prId + "/diff";
+        LOGGER.info("Getting diff for PR #" + prId + " in " + workspace + "/" + repoSlug);
+        return restClient.get(path);
+    }
 }
