@@ -4,12 +4,13 @@ import server.atlassian.config.AtlassianConfigLoader;
 import server.atlassian.config.AtlassianServerConfig;
 import server.atlassian.handler.ToolHandler;
 import server.atlassian.model.ToolResponse;
+import server.atlassian.util.JsonExtractor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,14 +23,16 @@ import java.util.logging.Logger;
  * Protocol, enabling AI assistants to manage issues, documentation, and
  * code collaboration.
  *
- * <p><strong>Capabilities (17 tools):</strong>
+ * <p><strong>Capabilities (27 tools):</strong>
  * <ul>
- *   <li><strong>Jira (7):</strong> search issues (JQL/text), get issue, create,
- *       update, transition, list projects, get active sprint</li>
- *   <li><strong>Confluence (5):</strong> search pages (CQL/text), get page,
- *       create page, update page, list spaces</li>
- *   <li><strong>Bitbucket (5):</strong> list repos, get repo, list PRs,
- *       get PR details, search code</li>
+ *   <li><strong>Jira (11):</strong> search issues (JQL/text), get issue, create,
+ *       update, transition, list projects, get active sprint, add comment, get comments,
+ *       assign issue, get sprint issues</li>
+ *   <li><strong>Confluence (7):</strong> search pages (CQL/text), get page,
+ *       create page, update page, list spaces, get page children, delete page</li>
+ *   <li><strong>Bitbucket (8):</strong> list repos, get repo, list PRs,
+ *       get PR details, search code, create PR, list branches, get commits</li>
+ *   <li><strong>Cross-product (1):</strong> unified search across Jira + Confluence + Bitbucket</li>
  * </ul>
  *
  * <p><strong>Transport:</strong> STDIO (reads JSON-RPC from stdin, writes to stdout).
@@ -111,93 +114,221 @@ public class AtlassianServer {
      * @return a map of tool name to description
      */
     public Map<String, String> getToolDefinitions() {
-        return Map.ofEntries(
-                // Jira tools
-                Map.entry("jira_search_issues",
-                        "Search Jira issues using JQL or free text"),
-                Map.entry("jira_get_issue",
-                        "Get full details of a specific Jira issue by key"),
-                Map.entry("jira_create_issue",
-                        "Create a new Jira issue (requires projectKey, summary, issueType)"),
-                Map.entry("jira_update_issue",
-                        "Update fields on an existing Jira issue"),
-                Map.entry("jira_transition_issue",
-                        "Move a Jira issue to a new status/transition"),
-                Map.entry("jira_list_projects",
-                        "List all accessible Jira projects"),
-                Map.entry("jira_get_sprint",
-                        "Get the active sprint for a Jira board"),
+        // Use LinkedHashMap to preserve insertion order for stable tools/list output.
+        final var tools = new LinkedHashMap<String, String>();
 
-                // Confluence tools
-                Map.entry("confluence_search",
-                        "Search Confluence pages using CQL or free text"),
-                Map.entry("confluence_get_page",
-                        "Get full content of a Confluence page by ID"),
-                Map.entry("confluence_create_page",
-                        "Create a new Confluence page in a space"),
-                Map.entry("confluence_update_page",
-                        "Update an existing Confluence page"),
-                Map.entry("confluence_list_spaces",
-                        "List all accessible Confluence spaces"),
+        // Jira (11)
+        tools.put("jira_search_issues",
+                "Search Jira issues using JQL or free text. Args: query, maxResults (opt), projectKey (opt)");
+        tools.put("jira_get_issue",
+                "Get full details of a specific Jira issue by key. Args: issueKey");
+        tools.put("jira_create_issue",
+                "Create a new Jira issue. Args: projectKey, summary, issueType, description (opt)");
+        tools.put("jira_update_issue",
+                "Update fields on an existing Jira issue. Args: issueKey, summary (opt), description (opt)");
+        tools.put("jira_transition_issue",
+                "Move a Jira issue to a new status. Args: issueKey, transitionId");
+        tools.put("jira_list_projects",
+                "List all accessible Jira projects. No required args.");
+        tools.put("jira_get_sprint",
+                "Get the active sprint for a Jira board. Args: boardId");
+        tools.put("jira_add_comment",
+                "Add a comment to a Jira issue. Args: issueKey, comment");
+        tools.put("jira_get_comments",
+                "Get comments on a Jira issue. Args: issueKey, maxResults (opt)");
+        tools.put("jira_assign_issue",
+                "Assign a Jira issue to a user. Args: issueKey, accountId (omit to unassign)");
+        tools.put("jira_get_sprint_issues",
+                "Get all issues in a sprint. Args: boardId, maxResults (opt)");
 
-                // Bitbucket tools
-                Map.entry("bitbucket_list_repos",
-                        "List repositories in a Bitbucket workspace"),
-                Map.entry("bitbucket_get_repo",
-                        "Get details of a specific Bitbucket repository"),
-                Map.entry("bitbucket_list_pull_requests",
-                        "List pull requests for a Bitbucket repository"),
-                Map.entry("bitbucket_get_pull_request",
-                        "Get full details of a Bitbucket pull request"),
-                Map.entry("bitbucket_search_code",
-                        "Search code across Bitbucket repositories")
-        );
+        // Confluence (7)
+        tools.put("confluence_search",
+                "Search Confluence pages using CQL or free text. Args: query, maxResults (opt)");
+        tools.put("confluence_get_page",
+                "Get full content of a Confluence page. Args: pageId");
+        tools.put("confluence_create_page",
+                "Create a new Confluence page. Args: spaceKey, title, content");
+        tools.put("confluence_update_page",
+                "Update an existing Confluence page. Args: pageId, title, content, version");
+        tools.put("confluence_list_spaces",
+                "List all accessible Confluence spaces. No required args.");
+        tools.put("confluence_get_page_children",
+                "Get child pages of a Confluence page. Args: pageId, maxResults (opt)");
+        tools.put("confluence_delete_page",
+                "Delete a Confluence page. Args: pageId");
+
+        // Bitbucket (8)
+        tools.put("bitbucket_list_repos",
+                "List repositories in a Bitbucket workspace. Args: workspace");
+        tools.put("bitbucket_get_repo",
+                "Get details of a specific Bitbucket repository. Args: workspace, repoSlug");
+        tools.put("bitbucket_list_pull_requests",
+                "List pull requests for a repository. Args: workspace, repoSlug, state (opt)");
+        tools.put("bitbucket_get_pull_request",
+                "Get full details of a Bitbucket pull request. Args: workspace, repoSlug, pullRequestId");
+        tools.put("bitbucket_search_code",
+                "Search code across Bitbucket repositories. Args: workspace, query");
+        tools.put("bitbucket_create_pull_request",
+                "Create a pull request. Args: workspace, repoSlug, title, sourceBranch, targetBranch, description (opt)");
+        tools.put("bitbucket_list_branches",
+                "List branches in a repository. Args: workspace, repoSlug, maxResults (opt)");
+        tools.put("bitbucket_get_commits",
+                "Get recent commits in a repository. Args: workspace, repoSlug, branch (opt), maxResults (opt)");
+
+        // Cross-product (1)
+        tools.put("atlassian_unified_search",
+                "Search across Jira, Confluence, and Bitbucket in one call. Args: query, products (opt: jira,confluence,bitbucket), maxResults (opt), workspace (opt for Bitbucket)");
+
+        return tools;
     }
 
     /**
-     * Processes a single incoming message line.
+     * Processes a single incoming JSON-RPC 2.0 message.
      *
-     * <p>Simplified message handler — a production implementation would
-     * parse JSON-RPC messages with full protocol compliance.
+     * <p>Handles three MCP lifecycle methods:
+     * <ul>
+     *   <li>{@code initialize} — responds with server capabilities</li>
+     *   <li>{@code tools/list} — emits the full tool catalogue</li>
+     *   <li>{@code tools/call} — dispatches to {@link ToolHandler}</li>
+     * </ul>
      *
-     * @param message the raw message line
+     * @param message the raw JSON-RPC message line
      */
     private void processMessage(final String message) {
         LOGGER.fine("Received: " + message);
 
-        // Simplified tool invocation: "tool_name arg1=val1 arg2=val2"
-        final var parts = message.split("\\s+", 2);
-        final var toolName = parts[0];
-        final var arguments = parseSimpleArguments(parts.length > 1 ? parts[1] : "");
+        final var method = JsonExtractor.stringOrDefault(message, "method", "");
+        final var id     = JsonExtractor.rawValue(message, "id");
 
-        final var result = toolHandler.handleToolCall(toolName, arguments);
-        System.out.println(result.text());
+        final String response = switch (method) {
+            case "initialize"   -> handleInitialize(id);
+            case "tools/list"   -> handleToolsList(id);
+            case "tools/call"   -> handleToolsCall(id, message);
+            default             -> handleUnknownMethod(id, method);
+        };
+
+        System.out.println(response);
         System.out.flush();
     }
 
     /**
-     * Parses simple key=value arguments from a string.
+     * Handles the MCP {@code initialize} handshake.
      *
-     * @param argumentString space-separated key=value pairs
-     * @return parsed argument map
+     * @param id the JSON-RPC request id
+     * @return a JSON-RPC success response advertising server capabilities
      */
-    private Map<String, String> parseSimpleArguments(final String argumentString) {
-        final var arguments = new HashMap<String, String>();
+    private static String handleInitialize(final String id) {
+        return String.format(
+                "{\"jsonrpc\":\"2.0\",\"id\":%s,\"result\":{" +
+                "\"protocolVersion\":\"2024-11-05\"," +
+                "\"capabilities\":{\"tools\":{}}," +
+                "\"serverInfo\":{\"name\":\"atlassian\",\"version\":\"%s\"}}}",
+                id, SERVER_VERSION);
+    }
 
-        if (argumentString.isBlank()) {
-            return arguments;
+    /**
+     * Handles the MCP {@code tools/list} request by returning all 27 tool schemas.
+     *
+     * @param id the JSON-RPC request id
+     * @return a JSON-RPC response containing the tools array
+     */
+    private String handleToolsList(final String id) {
+        final var sb = new StringBuilder();
+        sb.append("{\"jsonrpc\":\"2.0\",\"id\":").append(id)
+          .append(",\"result\":{\"tools\":[");
+
+        final var defs = getToolDefinitions();
+        var first = true;
+        for (final var entry : defs.entrySet()) {
+            if (!first) sb.append(',');
+            first = false;
+            sb.append(toolSchema(entry.getKey(), entry.getValue()));
         }
 
-        for (final var pair : argumentString.split("\\s+")) {
-            final var equalsIndex = pair.indexOf('=');
-            if (equalsIndex > 0) {
-                final var key = pair.substring(0, equalsIndex);
-                final var value = pair.substring(equalsIndex + 1);
-                arguments.put(key, value);
-            }
+        sb.append("]}}");
+        return sb.toString();
+    }
+
+    /**
+     * Builds a minimal MCP tool schema JSON object.
+     *
+     * @param name        the tool name
+     * @param description the tool description
+     * @return the JSON schema fragment
+     */
+    private static String toolSchema(final String name, final String description) {
+        return String.format(
+                "{\"name\":\"%s\",\"description\":\"%s\"," +
+                "\"inputSchema\":{\"type\":\"object\",\"properties\":{},\"additionalProperties\":true}}",
+                name, escapeJson(description));
+    }
+
+    /**
+     * Handles the MCP {@code tools/call} request by dispatching to the tool handler.
+     *
+     * @param id      the JSON-RPC request id
+     * @param message the full raw JSON-RPC message
+     * @return a JSON-RPC response containing the tool result
+     */
+    private String handleToolsCall(final String id, final String message) {
+        final var params   = JsonExtractor.block(message, "params").orElse(null);
+        final var toolName = params == null ? null
+                : JsonExtractor.string(params, "name").orElse(null);
+
+        if (toolName == null || toolName.isBlank()) {
+            return jsonRpcError(id, -32602, "tools/call missing required param: name");
         }
 
-        return arguments;
+        final Map<String, String> arguments = params == null
+                ? Map.of()
+                : JsonExtractor.block(params, "arguments")
+                        .map(JsonExtractor::extractArgumentMap)
+                        .orElse(Map.of());
+
+        final ToolResponse result = toolHandler.handleToolCall(toolName, arguments);
+        final String text = escapeJson(result.text());
+
+        return String.format(
+                "{\"jsonrpc\":\"2.0\",\"id\":%s,\"result\":{\"content\":[" +
+                "{\"type\":\"text\",\"text\":\"%s\"}]}}",
+                id, text);
+    }
+
+    /**
+     * Handles any unrecognised JSON-RPC method.
+     *
+     * @param id     the JSON-RPC request id
+     * @param method the unknown method name
+     * @return a JSON-RPC method-not-found error
+     */
+    private static String handleUnknownMethod(final String id, final String method) {
+        return jsonRpcError(id, -32601, "Method not found: " + method);
+    }
+
+    /**
+     * Builds a JSON-RPC 2.0 error response.
+     *
+     * @param id      the request id
+     * @param code    the JSON-RPC error code
+     * @param message the human-readable error message
+     * @return the serialised JSON-RPC error object
+     */
+    private static String jsonRpcError(final String id, final int code, final String message) {
+        return String.format(
+                "{\"jsonrpc\":\"2.0\",\"id\":%s,\"error\":{\"code\":%d,\"message\":\"%s\"}}",
+                id, code, escapeJson(message));
+    }
+
+    /**
+     * Escapes a string so it can be safely embedded inside a JSON string literal.
+     *
+     * @param raw the raw string
+     * @return the JSON-safe escaped string
+     */
+    private static String escapeJson(final String raw) {
+        if (raw == null) return "";
+        return raw.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+                  .replace("\r", "\\r").replace("\t", "\\t");
     }
 
     /**
@@ -279,26 +410,29 @@ public class AtlassianServer {
      * @param server the server instance
      */
     private static void printToolList(final AtlassianServer server) {
+        final var defs = server.getToolDefinitions();
         System.out.println("Atlassian MCP Server v" + SERVER_VERSION
-                + " — Available Tools (" + server.getToolDefinitions().size() + ")\n");
+                + " — Available Tools (" + defs.size() + ")\n");
 
-        System.out.println("=== Jira ===");
-        server.getToolDefinitions().entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith("jira_"))
-                .forEach(entry -> System.out.println(
-                        "  " + entry.getKey() + "\n    " + entry.getValue() + "\n"));
+        System.out.println("=== Jira (11) ===");
+        defs.entrySet().stream()
+                .filter(e -> e.getKey().startsWith("jira_"))
+                .forEach(e -> System.out.println("  " + e.getKey() + "\n    " + e.getValue() + "\n"));
 
-        System.out.println("=== Confluence ===");
-        server.getToolDefinitions().entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith("confluence_"))
-                .forEach(entry -> System.out.println(
-                        "  " + entry.getKey() + "\n    " + entry.getValue() + "\n"));
+        System.out.println("=== Confluence (7) ===");
+        defs.entrySet().stream()
+                .filter(e -> e.getKey().startsWith("confluence_"))
+                .forEach(e -> System.out.println("  " + e.getKey() + "\n    " + e.getValue() + "\n"));
 
-        System.out.println("=== Bitbucket ===");
-        server.getToolDefinitions().entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith("bitbucket_"))
-                .forEach(entry -> System.out.println(
-                        "  " + entry.getKey() + "\n    " + entry.getValue() + "\n"));
+        System.out.println("=== Bitbucket (8) ===");
+        defs.entrySet().stream()
+                .filter(e -> e.getKey().startsWith("bitbucket_"))
+                .forEach(e -> System.out.println("  " + e.getKey() + "\n    " + e.getValue() + "\n"));
+
+        System.out.println("=== Cross-product (1) ===");
+        defs.entrySet().stream()
+                .filter(e -> e.getKey().startsWith("atlassian_"))
+                .forEach(e -> System.out.println("  " + e.getKey() + "\n    " + e.getValue() + "\n"));
     }
 
     /**

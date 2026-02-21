@@ -3,8 +3,10 @@ package server.atlassian.handler;
 import server.atlassian.client.JiraClient;
 import server.atlassian.model.AtlassianProduct;
 import server.atlassian.model.ToolResponse;
+import server.atlassian.util.JsonExtractor;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -65,7 +67,8 @@ public class JiraHandler {
 
         try {
             final var response = jiraClient.searchIssues(jql, maxResults);
-            return ToolResponse.success(AtlassianProduct.JIRA, "jira_search_issues", response);
+            return ToolResponse.success(AtlassianProduct.JIRA, "jira_search_issues",
+                    formatIssueListFromJson(response));
         } catch (IOException | InterruptedException exception) {
             LOGGER.log(Level.WARNING, "Jira search failed", exception);
             return ToolResponse.error(AtlassianProduct.JIRA, "jira_search_issues",
@@ -88,7 +91,8 @@ public class JiraHandler {
 
         try {
             final var response = jiraClient.getIssue(issueKey);
-            return ToolResponse.success(AtlassianProduct.JIRA, "jira_get_issue", response);
+            return ToolResponse.success(AtlassianProduct.JIRA, "jira_get_issue",
+                    formatIssueFromJson(response));
         } catch (IOException | InterruptedException exception) {
             LOGGER.log(Level.WARNING, "Failed to get issue: " + issueKey, exception);
             return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_issue",
@@ -229,6 +233,236 @@ public class JiraHandler {
             return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_sprint",
                     "Failed to get sprint: " + exception.getMessage());
         }
+    }
+
+    /**
+     * Adds a comment to a Jira issue.
+     *
+     * @param arguments the tool arguments ({@code issueKey}, {@code comment})
+     * @return the tool response
+     */
+    public ToolResponse addComment(final Map<String, String> arguments) {
+        final var issueKey = arguments.get("issueKey");
+        final var comment = arguments.get("comment");
+
+        if (issueKey == null || issueKey.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_add_comment",
+                    "Missing required argument: 'issueKey'");
+        }
+        if (comment == null || comment.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_add_comment",
+                    "Missing required argument: 'comment'");
+        }
+
+        try {
+            final var response = jiraClient.addComment(issueKey, comment);
+            final var commentId = JsonExtractor.stringOrDefault(response, "id", "?");
+            return ToolResponse.success(AtlassianProduct.JIRA, "jira_add_comment",
+                    "Comment added to " + issueKey + " (id: " + commentId + ").");
+        } catch (IOException | InterruptedException exception) {
+            LOGGER.log(Level.WARNING, "Failed to add comment to: " + issueKey, exception);
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_add_comment",
+                    "Failed to add comment: " + exception.getMessage());
+        }
+    }
+
+    /**
+     * Gets comments on a Jira issue.
+     *
+     * @param arguments the tool arguments ({@code issueKey}, optional {@code maxResults})
+     * @return the tool response with comments
+     */
+    public ToolResponse getComments(final Map<String, String> arguments) {
+        final var issueKey = arguments.get("issueKey");
+        if (issueKey == null || issueKey.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_comments",
+                    "Missing required argument: 'issueKey'");
+        }
+
+        final int maxResults = parseMaxResults(arguments.get("maxResults"));
+
+        try {
+            final var response = jiraClient.getComments(issueKey, maxResults);
+            return ToolResponse.success(AtlassianProduct.JIRA, "jira_get_comments",
+                    formatCommentsFromJson(issueKey, response));
+        } catch (IOException | InterruptedException exception) {
+            LOGGER.log(Level.WARNING, "Failed to get comments for: " + issueKey, exception);
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_comments",
+                    "Failed to get comments: " + exception.getMessage());
+        }
+    }
+
+    /**
+     * Assigns a Jira issue to a user.
+     *
+     * @param arguments the tool arguments ({@code issueKey}, {@code accountId})
+     * @return the tool response
+     */
+    public ToolResponse assignIssue(final Map<String, String> arguments) {
+        final var issueKey = arguments.get("issueKey");
+        if (issueKey == null || issueKey.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_assign_issue",
+                    "Missing required argument: 'issueKey'");
+        }
+
+        // accountId is optional — null means unassign
+        final var accountId = arguments.get("accountId");
+
+        try {
+            jiraClient.assignIssue(issueKey, accountId);
+            final var msg = (accountId == null || accountId.isBlank())
+                    ? issueKey + " unassigned."
+                    : issueKey + " assigned to accountId: " + accountId;
+            return ToolResponse.success(AtlassianProduct.JIRA, "jira_assign_issue", msg);
+        } catch (IOException | InterruptedException exception) {
+            LOGGER.log(Level.WARNING, "Failed to assign issue: " + issueKey, exception);
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_assign_issue",
+                    "Failed to assign issue: " + exception.getMessage());
+        }
+    }
+
+    /**
+     * Gets issues in the active sprint for a board.
+     *
+     * @param arguments the tool arguments ({@code boardId}, optional {@code maxResults})
+     * @return the tool response with sprint issues
+     */
+    public ToolResponse getSprintIssues(final Map<String, String> arguments) {
+        final var boardIdStr = arguments.get("boardId");
+        if (boardIdStr == null || boardIdStr.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_sprint_issues",
+                    "Missing required argument: 'boardId'");
+        }
+
+        try {
+            final int boardId = Integer.parseInt(boardIdStr);
+            final int maxResults = parseMaxResults(arguments.get("maxResults"));
+            final var response = jiraClient.getSprintIssues(boardId, maxResults);
+            return ToolResponse.success(AtlassianProduct.JIRA, "jira_get_sprint_issues",
+                    formatIssueListFromJson(response));
+        } catch (NumberFormatException numberException) {
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_sprint_issues",
+                    "Invalid boardId — must be a number: " + boardIdStr);
+        } catch (IOException | InterruptedException exception) {
+            LOGGER.log(Level.WARNING, "Failed to get sprint issues for board " + boardIdStr, exception);
+            return ToolResponse.error(AtlassianProduct.JIRA, "jira_get_sprint_issues",
+                    "Failed to get sprint issues: " + exception.getMessage());
+        }
+    }
+
+    // ── Formatter helpers ────────────────────────────────────────────────────
+
+    /**
+     * Parses a Jira issue JSON response into a formatted markdown string.
+     */
+    private String formatIssueFromJson(final String json) {
+        final var key = JsonExtractor.stringOrDefault(json, "key", "?");
+        final var fields = JsonExtractor.block(json, "fields").orElse("{}");
+
+        final var summary     = JsonExtractor.stringOrDefault(fields, "summary", "");
+        final var descBlock   = JsonExtractor.block(fields, "description").orElse("");
+        final var description = descBlock.isBlank() ? "" : JsonExtractor.extractAdfText(descBlock);
+        final var issueType   = JsonExtractor.navigate(fields, "issuetype", "name").orElse("-");
+        final var status      = JsonExtractor.navigate(fields, "status", "name").orElse("-");
+        final var statusCat   = JsonExtractor.navigate(fields, "status", "statusCategory", "name").orElse("");
+        final var priority    = JsonExtractor.navigate(fields, "priority", "name").orElse("-");
+        final var assignee    = JsonExtractor.isNull(fields, "assignee") ? "Unassigned"
+                : JsonExtractor.navigate(fields, "assignee", "displayName").orElse("Unassigned");
+        final var reporter    = JsonExtractor.navigate(fields, "reporter", "displayName").orElse("-");
+        final var projectKey  = JsonExtractor.navigate(fields, "project", "key").orElse("-");
+        final var labels      = JsonExtractor.stringList(fields, "labels");
+        final var created     = JsonExtractor.stringOrDefault(fields, "created", "-");
+        final var updated     = JsonExtractor.stringOrDefault(fields, "updated", "-");
+
+        final var sb = new StringBuilder();
+        sb.append("## ").append(key).append(" — ").append(summary).append("\n\n");
+        sb.append("**Status:** ").append(status);
+        if (!statusCat.isBlank()) sb.append(" (").append(statusCat).append(")");
+        sb.append("\n");
+        sb.append("**Type:** ").append(issueType).append("\n");
+        sb.append("**Priority:** ").append(priority).append("\n");
+        sb.append("**Assignee:** ").append(assignee).append("\n");
+        sb.append("**Reporter:** ").append(reporter).append("\n");
+        sb.append("**Project:** ").append(projectKey).append("\n");
+        if (!labels.isEmpty()) {
+            sb.append("**Labels:** ").append(String.join(", ", labels)).append("\n");
+        }
+        sb.append("**Created:** ").append(created).append("\n");
+        sb.append("**Updated:** ").append(updated).append("\n");
+        if (!description.isBlank()) {
+            sb.append("\n### Description\n\n").append(description).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Parses a Jira search response (list of issues) into a formatted markdown table.
+     */
+    private String formatIssueListFromJson(final String json) {
+        final int total = JsonExtractor.intValue(json, "total", 0);
+        final var issues = JsonExtractor.arrayBlocks(json, "issues");
+
+        if (issues.isEmpty()) {
+            return "No issues found.";
+        }
+
+        final var sb = new StringBuilder();
+        sb.append("## Issues (").append(total).append(" total, showing ")
+          .append(issues.size()).append(")\n\n");
+        sb.append("| Key | Summary | Status | Type | Assignee |\n");
+        sb.append("|-----|---------|--------|------|----------|\n");
+
+        for (final var issue : issues) {
+            final var k = JsonExtractor.stringOrDefault(issue, "key", "?");
+            final var f = JsonExtractor.block(issue, "fields").orElse("{}");
+            final var sum    = truncate(JsonExtractor.stringOrDefault(f, "summary", ""), 50);
+            final var stat   = JsonExtractor.navigate(f, "status", "name").orElse("-");
+            final var type   = JsonExtractor.navigate(f, "issuetype", "name").orElse("-");
+            final var assign = JsonExtractor.isNull(f, "assignee") ? "-"
+                    : JsonExtractor.navigate(f, "assignee", "displayName").orElse("-");
+            sb.append("| ").append(k)
+              .append(" | ").append(sum)
+              .append(" | ").append(stat)
+              .append(" | ").append(type)
+              .append(" | ").append(assign)
+              .append(" |\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Formats the comments on a Jira issue as readable markdown.
+     */
+    private String formatCommentsFromJson(final String issueKey, final String json) {
+        final var comments = JsonExtractor.arrayBlocks(json, "comments");
+        if (comments.isEmpty()) {
+            return issueKey + " has no comments.";
+        }
+
+        final var sb = new StringBuilder();
+        sb.append("## Comments on ").append(issueKey)
+          .append(" (").append(comments.size()).append(")\n\n");
+
+        for (final var comment : comments) {
+            final var author  = JsonExtractor.navigate(comment, "author", "displayName").orElse("?");
+            final var created = JsonExtractor.stringOrDefault(comment, "created", "");
+            final var bodyBlock = JsonExtractor.block(comment, "body").orElse("");
+            final var text = bodyBlock.isBlank() ? "" : JsonExtractor.extractAdfText(bodyBlock);
+
+            sb.append("**").append(author).append("** — ").append(created).append("\n");
+            if (!text.isBlank()) sb.append(text).append("\n");
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Truncates text to a maximum length with ellipsis.
+     */
+    private String truncate(final String text, final int maxLength) {
+        if (text == null) return "";
+        if (text.length() <= maxLength) return text;
+        return text.substring(0, maxLength - 3) + "...";
     }
 
     /**

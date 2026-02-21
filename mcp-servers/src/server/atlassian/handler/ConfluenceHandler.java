@@ -3,6 +3,7 @@ package server.atlassian.handler;
 import server.atlassian.client.ConfluenceClient;
 import server.atlassian.model.AtlassianProduct;
 import server.atlassian.model.ToolResponse;
+import server.atlassian.util.JsonExtractor;
 
 import java.io.IOException;
 import java.util.Map;
@@ -64,7 +65,8 @@ public class ConfluenceHandler {
 
         try {
             final var response = confluenceClient.searchPages(cql, maxResults);
-            return ToolResponse.success(AtlassianProduct.CONFLUENCE, "confluence_search", response);
+            return ToolResponse.success(AtlassianProduct.CONFLUENCE, "confluence_search",
+                    formatPageListFromJson(response));
         } catch (IOException | InterruptedException exception) {
             LOGGER.log(Level.WARNING, "Confluence search failed", exception);
             return ToolResponse.error(AtlassianProduct.CONFLUENCE, "confluence_search",
@@ -87,7 +89,8 @@ public class ConfluenceHandler {
 
         try {
             final var response = confluenceClient.getPage(pageId);
-            return ToolResponse.success(AtlassianProduct.CONFLUENCE, "confluence_get_page", response);
+            return ToolResponse.success(AtlassianProduct.CONFLUENCE, "confluence_get_page",
+                    formatPageFromJson(response));
         } catch (IOException | InterruptedException exception) {
             LOGGER.log(Level.WARNING, "Failed to get page: " + pageId, exception);
             return ToolResponse.error(AtlassianProduct.CONFLUENCE, "confluence_get_page",
@@ -216,6 +219,157 @@ public class ConfluenceHandler {
                 .replace("\n", "\\n")
                 .replace("\r", "\\r")
                 .replace("\t", "\\t");
+    }
+
+    /**
+     * Gets child pages of a Confluence page.
+     *
+     * @param arguments the tool arguments ({@code pageId}, optional {@code maxResults})
+     * @return the tool response with child page list
+     */
+    public ToolResponse getPageChildren(final Map<String, String> arguments) {
+        final var pageId = arguments.get("pageId");
+        if (pageId == null || pageId.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.CONFLUENCE, "confluence_get_page_children",
+                    "Missing required argument: 'pageId'");
+        }
+
+        final int maxResults = parseMaxResults(arguments.get("maxResults"));
+
+        try {
+            final var response = confluenceClient.getPageChildren(pageId, maxResults);
+            return ToolResponse.success(AtlassianProduct.CONFLUENCE,
+                    "confluence_get_page_children", formatPageListFromJson(response));
+        } catch (IOException | InterruptedException exception) {
+            LOGGER.log(Level.WARNING, "Failed to get children of page: " + pageId, exception);
+            return ToolResponse.error(AtlassianProduct.CONFLUENCE, "confluence_get_page_children",
+                    "Failed to get page children: " + exception.getMessage());
+        }
+    }
+
+    /**
+     * Deletes a Confluence page.
+     *
+     * @param arguments the tool arguments ({@code pageId})
+     * @return the tool response
+     */
+    public ToolResponse deletePage(final Map<String, String> arguments) {
+        final var pageId = arguments.get("pageId");
+        if (pageId == null || pageId.isBlank()) {
+            return ToolResponse.error(AtlassianProduct.CONFLUENCE, "confluence_delete_page",
+                    "Missing required argument: 'pageId'");
+        }
+
+        try {
+            confluenceClient.deletePage(pageId);
+            return ToolResponse.success(AtlassianProduct.CONFLUENCE,
+                    "confluence_delete_page", "Page " + pageId + " deleted successfully.");
+        } catch (IOException | InterruptedException exception) {
+            LOGGER.log(Level.WARNING, "Failed to delete page: " + pageId, exception);
+            return ToolResponse.error(AtlassianProduct.CONFLUENCE, "confluence_delete_page",
+                    "Failed to delete page: " + exception.getMessage());
+        }
+    }
+
+    // ── Formatter helpers ────────────────────────────────────────────────────
+
+    /**
+     * Parses a Confluence page JSON response into a formatted markdown string.
+     */
+    private String formatPageFromJson(final String json) {
+        final var id      = JsonExtractor.stringOrDefault(json, "id", "?");
+        final var title   = JsonExtractor.stringOrDefault(json, "title", "");
+        final var status  = JsonExtractor.stringOrDefault(json, "status", "");
+        final var spaceKey = JsonExtractor.navigate(json, "space", "key").orElse(
+                             JsonExtractor.navigate(json, "spaceId").orElse("-"));
+        final var author  = JsonExtractor.navigate(json, "authorId").or(() ->
+                            JsonExtractor.navigate(json, "version", "createdBy", "displayName"))
+                            .orElse("-");
+        final var version = JsonExtractor.intValue(json, "version", 0);
+        final var updated = JsonExtractor.navigate(json, "version", "createdAt")
+                            .or(() -> JsonExtractor.string(json, "lastModifiedDate"))
+                            .orElse("-");
+        final var webUrl  = JsonExtractor.navigate(json, "_links", "webui").orElse(
+                            JsonExtractor.navigate(json, "links", "webUi").orElse(""));
+
+        // Extract body content
+        final var bodyBlock = JsonExtractor.navigateBlock(json, "body", "storage")
+                .or(() -> JsonExtractor.navigateBlock(json, "body", "view"))
+                .orElse("");
+        final var bodyHtml = bodyBlock.isBlank() ? ""
+                : JsonExtractor.stringOrDefault(bodyBlock, "value", "");
+        final var bodyText = stripHtml(bodyHtml);
+
+        final var sb = new StringBuilder();
+        sb.append("## ").append(title).append("\n\n");
+        sb.append("**ID:** ").append(id).append("\n");
+        sb.append("**Space:** ").append(spaceKey).append("\n");
+        sb.append("**Status:** ").append(status).append("\n");
+        if (!author.equals("-")) sb.append("**Author:** ").append(author).append("\n");
+        if (version > 0) sb.append("**Version:** ").append(version).append("\n");
+        sb.append("**Updated:** ").append(updated).append("\n");
+        if (!webUrl.isBlank()) sb.append("**URL:** ").append(webUrl).append("\n");
+        if (!bodyText.isBlank()) {
+            sb.append("\n### Content\n\n").append(bodyText).append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Parses a Confluence search response into a formatted markdown table.
+     */
+    private String formatPageListFromJson(final String json) {
+        // v1 API returns "results", v2 API returns "results" as well
+        final var results = JsonExtractor.arrayBlocks(json, "results");
+        final int total = JsonExtractor.intValue(json, "totalSize",
+                JsonExtractor.intValue(json, "size", results.size()));
+
+        if (results.isEmpty()) {
+            return "No pages found.";
+        }
+
+        final var sb = new StringBuilder();
+        sb.append("## Pages (").append(total).append(" total, showing ")
+          .append(results.size()).append(")\n\n");
+        sb.append("| ID | Title | Space | Updated |\n");
+        sb.append("|----|-------|-------|---------|\n");
+
+        for (final var page : results) {
+            final var id      = JsonExtractor.stringOrDefault(page, "id", "?");
+            final var title   = truncate(JsonExtractor.stringOrDefault(page, "title", ""), 40);
+            final var spaceKey = JsonExtractor.navigate(page, "space", "key").orElse(
+                                  JsonExtractor.stringOrDefault(page, "spaceId", "-"));
+            final var updated = JsonExtractor.navigate(page, "version", "when")
+                                .or(() -> JsonExtractor.string(page, "lastModifiedDate"))
+                                .orElse("-");
+            sb.append("| ").append(id)
+              .append(" | ").append(title)
+              .append(" | ").append(spaceKey)
+              .append(" | ").append(updated)
+              .append(" |\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Strips HTML tags and decodes common entities.
+     */
+    private String stripHtml(final String html) {
+        if (html == null || html.isBlank()) return "";
+        return html.replaceAll("<[^>]+>", "")
+                .replace("&amp;", "&").replace("&lt;", "<")
+                .replace("&gt;", ">").replace("&quot;", "\"")
+                .replace("&#39;", "'").replace("&nbsp;", " ")
+                .replaceAll("\\s{2,}", " ").trim();
+    }
+
+    /**
+     * Truncates text to a maximum length with ellipsis.
+     */
+    private String truncate(final String text, final int maxLength) {
+        if (text == null) return "";
+        if (text.length() <= maxLength) return text;
+        return text.substring(0, maxLength - 3) + "...";
     }
 
     /**

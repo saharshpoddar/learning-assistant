@@ -115,4 +115,55 @@ public class ConfluenceClient {
         LOGGER.info("Listing Confluence spaces");
         return restClient.get(path);
     }
+
+    /**
+     * Gets the child pages of a parent page.
+     *
+     * @param pageId     the parent page ID
+     * @param maxResults maximum number of child pages to return
+     * @return the raw JSON response with child pages
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String getPageChildren(final String pageId, final int maxResults)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(pageId, "Page ID must not be null");
+        final var path = API_V2_BASE + "/pages/" + pageId + "/children?limit=" + maxResults;
+        LOGGER.info("Getting children of Confluence page: " + pageId);
+        return restClient.get(path);
+    }
+
+    /**
+     * Deletes a Confluence page.
+     *
+     * <p><strong>Warning:</strong> This operation is irreversible.
+     *
+     * @param pageId the page ID to delete
+     * @return the raw response (usually empty for 204)
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String deletePage(final String pageId)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(pageId, "Page ID must not be null");
+        final var path = API_V2_BASE + "/pages/" + pageId;
+        LOGGER.info("Deleting Confluence page: " + pageId);
+        return restClient.delete(path);
+    }
+
+    /**
+     * Gets all labels attached to a page.
+     *
+     * @param pageId the page ID
+     * @return the raw JSON response with labels
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String getPageLabels(final String pageId)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(pageId, "Page ID must not be null");
+        final var path = API_V1_BASE + "/content/" + pageId + "/label";
+        LOGGER.info("Getting labels for Confluence page: " + pageId);
+        return restClient.get(path);
+    }
 }

@@ -164,4 +164,138 @@ public class JiraClient {
         LOGGER.info("Getting active sprint for board " + boardId);
         return restClient.get(path);
     }
+
+    /**
+     * Gets all issues in the active sprint for a board.
+     *
+     * @param boardId    the agile board ID
+     * @param maxResults maximum number of results
+     * @return the raw JSON response with sprint issues
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String getSprintIssues(final int boardId, final int maxResults)
+            throws IOException, InterruptedException {
+        final var path = "/rest/agile/1.0/board/" + boardId
+                + "/issue?state=active&maxResults=" + maxResults;
+        LOGGER.info("Getting sprint issues for board " + boardId);
+        return restClient.get(path);
+    }
+
+    /**
+     * Adds a comment to an issue.
+     *
+     * @param issueKey   the issue key (e.g., "PROJ-123")
+     * @param commentBody the comment text (plain text — wrapped in ADF format)
+     * @return the raw JSON response with the created comment
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String addComment(final String issueKey, final String commentBody)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(issueKey, "Issue key must not be null");
+        Objects.requireNonNull(commentBody, "Comment body must not be null");
+        final var path = API_BASE + "/issue/" + issueKey + "/comment";
+        final var body = """
+                {
+                  "body": {
+                    "type": "doc",
+                    "version": 1,
+                    "content": [{
+                      "type": "paragraph",
+                      "content": [{ "type": "text", "text": %s }]
+                    }]
+                  }
+                }
+                """.formatted(toJsonString(commentBody));
+        LOGGER.info("Adding comment to issue: " + issueKey);
+        return restClient.post(path, body);
+    }
+
+    /**
+     * Gets the comments for an issue.
+     *
+     * @param issueKey   the issue key
+     * @param maxResults maximum number of comments to return
+     * @return the raw JSON response with comments
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String getComments(final String issueKey, final int maxResults)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(issueKey, "Issue key must not be null");
+        final var path = API_BASE + "/issue/" + issueKey + "/comment?maxResults=" + maxResults;
+        LOGGER.info("Getting comments for issue: " + issueKey);
+        return restClient.get(path);
+    }
+
+    /**
+     * Assigns an issue to a user.
+     *
+     * @param issueKey  the issue key
+     * @param accountId the account ID of the user to assign (null to unassign)
+     * @return the raw JSON response
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String assignIssue(final String issueKey, final String accountId)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(issueKey, "Issue key must not be null");
+        final var path = API_BASE + "/issue/" + issueKey + "/assignee";
+        final var body = accountId == null
+                ? "{\"accountId\": null}"
+                : "{\"accountId\": " + toJsonString(accountId) + "}";
+        LOGGER.info("Assigning issue " + issueKey + " to " + accountId);
+        return restClient.put(path, body);
+    }
+
+    /**
+     * Deletes a Jira issue.
+     *
+     * <p><strong>Warning:</strong> This operation is irreversible.
+     * Subtasks are not automatically deleted.
+     *
+     * @param issueKey the issue key (e.g., "PROJ-123")
+     * @return the raw response (usually empty)
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String deleteIssue(final String issueKey)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(issueKey, "Issue key must not be null");
+        final var path = API_BASE + "/issue/" + issueKey;
+        LOGGER.info("Deleting Jira issue: " + issueKey);
+        return restClient.delete(path);
+    }
+
+    /**
+     * Searches for Jira users matching a query string.
+     *
+     * @param query      the query string (display name, email, or username fragment)
+     * @param maxResults maximum number of results
+     * @return the raw JSON response with matched users
+     * @throws IOException          if the API call fails
+     * @throws InterruptedException if the call is interrupted
+     */
+    public String searchUsers(final String query, final int maxResults)
+            throws IOException, InterruptedException {
+        Objects.requireNonNull(query, "Query must not be null");
+        final var encoded = java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
+        final var path = API_BASE + "/user/search?query=" + encoded + "&maxResults=" + maxResults;
+        LOGGER.info("Searching Jira users: " + query);
+        return restClient.get(path);
+    }
+
+    /**
+     * Wraps a string value in JSON quotes with proper escaping.
+     */
+    private String toJsonString(final String value) {
+        if (value == null) return "null";
+        return "\"" + value
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t") + "\"";
+    }
 }
