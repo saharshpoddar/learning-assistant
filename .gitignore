@@ -106,14 +106,14 @@ mcp-servers/user-config/servers/**/*.local.properties
 mcp-servers/build.env.local
 
 # =============================================================================
-# AI-Generated Content (ai/ directory)
+# Brain workspace (brain/ directory) -- personal knowledge management
 # =============================================================================
-# ai/scratch/  -- session-scoped throwaway (never committed)
-# ai/local/    -- local persistent between sessions (never committed)
-# ai/saved/    -- curated, committed to the repo (NOT listed here)
+# brain/inbox/   -- session-scoped throwaway (never committed)
+# brain/notes/   -- local persistent between sessions (never committed)
+# brain/archive/ -- curated, committed to the repo (NOT listed here)
 
-ai/scratch/
-ai/local/
+brain/inbox/
+brain/notes/
 
 # =============================================================================
 # OS Generated Files

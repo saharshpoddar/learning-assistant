@@ -1,32 +1,32 @@
 <#
 .SYNOPSIS
-    ai -- AI content workspace dispatcher.
+    brain -- personal knowledge workspace dispatcher.
 
 .DESCRIPTION
-    Manages the ai/ directory: create notes, promote between tiers, save to repo,
+    Manages the brain/ directory: create notes, promote between tiers, save to repo,
     search by frontmatter tags, list contents, and clear scratch.
 
     Run from any location -- all paths resolve relative to the repo root.
 
 .COMMANDS
     new       Create a new note with frontmatter template
-    save      Promote a file to saved/ with project+date hierarchy, tag prompting, and git commit
-    promote   Move a file between tiers (scratch -> local -> saved)
+    publish   Publish a file to archive/ with project+date hierarchy, tagging, and git commit
+    move      Move a file between tiers (inbox -> notes -> archive)
     search    Search notes by content or frontmatter (tag, project, kind, date)
     list      List notes with frontmatter summary
-    clear     Clear files from scratch/
+    clear     Clear files from inbox/
     status    Show tier summary
     help      Show this help
 
 .EXAMPLE
-    .\ai\scripts\ai.ps1 new
-    .\ai\scripts\ai.ps1 new --tier local --project mcp-servers --title "SSE transport notes"
-    .\ai\scripts\ai.ps1 save ai\scratch\draft.md --project mcp-servers
-    .\ai\scripts\ai.ps1 search java --tag generics
-    .\ai\scripts\ai.ps1 search --project mcp-servers --kind decision
-    .\ai\scripts\ai.ps1 list --tier saved --project mcp-servers
-    .\ai\scripts\ai.ps1 clear --force
-    .\ai\scripts\ai.ps1 status
+    .\brain\scripts\brain.ps1 new
+    .\brain\scripts\brain.ps1 new --tier inbox --project mcp-servers --title "SSE transport notes"
+    .\brain\scripts\brain.ps1 publish brain\inbox\draft.md --project mcp-servers
+    .\brain\scripts\brain.ps1 search java --tag generics
+    .\brain\scripts\brain.ps1 search --project mcp-servers --kind decision
+    .\brain\scripts\brain.ps1 list --tier archive --project mcp-servers
+    .\brain\scripts\brain.ps1 clear --force
+    .\brain\scripts\brain.ps1 status
 #>
 
 [CmdletBinding(PositionalBinding = $false)]
@@ -37,7 +37,7 @@ param(
     [Parameter(Position = 1)]
     [string]$Arg1 = "",      # file path for save/promote, query for search
 
-    [string]$Tier     = "",  # scratch | local | saved
+    [string]$Tier     = "",  # inbox | notes | archive
     [string]$Project  = "",  # project bucket
     [string]$Title    = "",  # note title for 'new'
     [string]$Kind     = "",  # note | decision | session | resource | snippet | ref
@@ -55,11 +55,11 @@ $ErrorActionPreference = "Stop"
 # ── Resolve repo root ──────────────────────────────────────────────────────────
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot  = Split-Path -Parent (Split-Path -Parent $ScriptDir)
-$AiRoot    = Join-Path $RepoRoot "ai"
+$BrainRoot    = Join-Path $RepoRoot "brain"
 
 # ── Valid values ───────────────────────────────────────────────────────────────
 $ValidKinds   = @("note", "decision", "session", "resource", "snippet", "ref")
-$ValidTiers   = @("scratch", "local", "saved")
+$ValidTiers   = @("inbox", "notes", "archive")
 $ValidStatus  = @("draft", "final", "archived")
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -140,10 +140,10 @@ function Make-Slug([string]$Text) {
 }
 
 function Get-TierDir([string]$TierName) {
-    Join-Path $AiRoot $TierName
+    Join-Path $BrainRoot $TierName
 }
 
-function Get-AllNotes([string[]]$Tiers = @("scratch","local","saved")) {
+function Get-AllNotes([string[]]$Tiers = @("inbox","notes","archive")) {
     $notes = @()
     foreach ($tier in $Tiers) {
         $dir = Get-TierDir $tier
@@ -175,19 +175,19 @@ function Open-Editor([string]$FilePath) {
 
 function Invoke-Help {
     Write-Host ""
-    Write-Host "ai -- AI content workspace" -ForegroundColor Cyan
+    Write-Host "brain -- personal knowledge workspace" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "USAGE" -ForegroundColor Yellow
-    Write-Host "  .\ai\scripts\ai.ps1 <command> [options]"
+    Write-Host "  .\brain\scripts\brain.ps1 <command> [options]"
     Write-Host ""
     Write-Host "COMMANDS" -ForegroundColor Yellow
     $cmds = @(
         @("new",     "Create a new note with frontmatter template"),
-        @("save",    "Promote a file to saved/ with project+date hierarchy, tagging, and git commit"),
-        @("promote", "Move a file between tiers  (scratch -> local -> saved)"),
+        @("publish", "Publish a file to archive/ with project+date hierarchy, tagging, and git commit"),
+        @("move",    "Move a file between tiers  (inbox -> notes -> archive)"),
         @("search",  "Search notes by frontmatter (--tag, --project, --kind, --date) or full-text"),
         @("list",    "List notes with frontmatter summary"),
-        @("clear",   "Clear files from scratch/"),
+        @("clear",   "Clear files from inbox/"),
         @("status",  "Show tier summary (file counts and recent files)"),
         @("help",    "Show this help")
     )
@@ -197,7 +197,7 @@ function Invoke-Help {
     Write-Host ""
     Write-Host "OPTIONS (not all apply to every command)" -ForegroundColor Yellow
     $opts = @(
-        @("--tier",    "scratch | local | saved"),
+        @("--tier",    "inbox | notes | archive"),
         @("--project", "project bucket name  (e.g. mcp-servers, java, general)"),
         @("--title",   "note title for 'new'"),
         @("--kind",    "note | decision | session | resource | snippet | ref"),
@@ -213,16 +213,16 @@ function Invoke-Help {
     }
     Write-Host ""
     Write-Host "EXAMPLES" -ForegroundColor Yellow
-    Write-Host "  .\ai\scripts\ai.ps1 new"
-    Write-Host "  .\ai\scripts\ai.ps1 new --tier local --project mcp-servers --title `"SSE transport`""
-    Write-Host "  .\ai\scripts\ai.ps1 save ai\scratch\draft.md --project mcp-servers"
-    Write-Host "  .\ai\scripts\ai.ps1 search java --tag generics --tier saved"
-    Write-Host "  .\ai\scripts\ai.ps1 list --tier saved --project mcp-servers"
-    Write-Host "  .\ai\scripts\ai.ps1 clear --force"
-    Write-Host "  .\ai\scripts\ai.ps1 status"
+    Write-Host "  .\brain\scripts\brain.ps1 new"
+    Write-Host "  .\brain\scripts\brain.ps1 new --tier inbox --project mcp-servers --title `"SSE transport`""
+    Write-Host "  .\brain\scripts\brain.ps1 publish brain\inbox\draft.md --project mcp-servers"
+    Write-Host "  .\brain\scripts\brain.ps1 search java --tag generics --tier archive"
+    Write-Host "  .\brain\scripts\brain.ps1 list --tier archive --project mcp-servers"
+    Write-Host "  .\brain\scripts\brain.ps1 clear --force"
+    Write-Host "  .\brain\scripts\brain.ps1 status"
     Write-Host ""
-    Write-Host "ALIASES  (after dot-sourcing ai-module.psm1)" -ForegroundColor Yellow
-    Write-Host "  ai-new, ai-save, ai-search, ai-list, ai-clear, ai-status"
+    Write-Host "ALIASES  (after dot-sourcing brain-module.psm1)" -ForegroundColor Yellow
+    Write-Host "  brain, brain-new, brain-publish, brain-move, brain-search, brain-list, brain-clear, brain-status"
     Write-Host ""
 }
 
@@ -231,7 +231,7 @@ function Invoke-Help {
 function Invoke-New {
     Write-Header "Create new note"
 
-    $tier    = if ($Tier)    { $Tier }    else { Prompt-Input "Tier (scratch/local)" "scratch" }
+    $tier    = if ($Tier)    { $Tier }    else { Prompt-Input "Tier (inbox/notes/archive)" "inbox" }
     $project = if ($Project) { $Project } else { Prompt-Input "Project" "general" }
     $title   = if ($Title)   { $Title }   else { Prompt-Input "Title" "untitled" }
     $kind    = if ($Kind)    { $Kind }    else { Prompt-Input "Kind ($(($ValidKinds -join '|')))" "note" }
@@ -275,7 +275,7 @@ source: copilot
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir | Out-Null }
     Set-Content $destPath -Value $template -Encoding UTF8
 
-    Write-Ok "Created: ai/$tier/$filename"
+    Write-Ok "Created: brain/$tier/$filename"
 
     if (-not $NoEdit) {
         $open = if ($Force) { $true } else { Prompt-Confirm "Open in editor?" $true }
@@ -283,22 +283,22 @@ source: copilot
     }
 }
 
-# ── Command: save ─────────────────────────────────────────────────────────────
+# ── Command: publish ──────────────────────────────────────────────────────────
 
-function Invoke-Save {
+function Invoke-Publish {
     Write-Header "Save note to repo"
 
     $sourcePath = $Arg1
     if (-not $sourcePath) {
-        $sourcePath = Prompt-Input "Source file (relative to ai/ or absolute)"
+        $sourcePath = Prompt-Input "Source file (relative to brain/ or absolute)"
     }
 
     # Resolve path
     if (-not [System.IO.Path]::IsPathRooted($sourcePath)) {
-        $tryAi   = Join-Path $AiRoot $sourcePath
-        $tryCwd  = Join-Path (Get-Location) $sourcePath
-        if     (Test-Path $tryAi)  { $sourcePath = $tryAi }
-        elseif (Test-Path $tryCwd) { $sourcePath = $tryCwd }
+        $tryBrain = Join-Path $BrainRoot $sourcePath
+        $tryCwd   = Join-Path (Get-Location) $sourcePath
+        if     (Test-Path $tryBrain) { $sourcePath = $tryBrain }
+        elseif (Test-Path $tryCwd)   { $sourcePath = $tryCwd }
         else   { Write-Err "File not found: $sourcePath" }
     }
     if (-not (Test-Path $sourcePath)) { Write-Err "File not found: $sourcePath" }
@@ -348,14 +348,14 @@ function Invoke-Save {
     $fm["tags"]    = $finalTags
     $fm["status"]  = $statusVal
 
-    # Destination: saved/<project>/<YYYY-MM>/filename
+    # Destination: archive/<project>/<YYYY-MM>/filename
     $yearMonth = if ($fm["date"] -match '(\d{4}-\d{2})') { $Matches[1] } else { (Get-Date).ToString("yyyy-MM") }
     $filename  = Split-Path $sourcePath -Leaf
-    $destDir   = Join-Path $AiRoot "saved\$project\$yearMonth"
+    $destDir   = Join-Path $BrainRoot "archive\$project\$yearMonth"
     $destPath  = Join-Path $destDir $filename
 
     Write-Host ""
-    Write-Host "  Destination: ai/saved/$project/$yearMonth/$filename" -ForegroundColor Cyan
+    Write-Host "  Destination: brain/archive/$project/$yearMonth/$filename" -ForegroundColor Cyan
 
     if (-not $Force) {
         if (-not (Prompt-Confirm "Proceed?" $true)) {
@@ -367,7 +367,7 @@ function Invoke-Save {
     # Write updated frontmatter to source first
     Set-Frontmatter $sourcePath $fm
 
-    # Move to saved/
+    # Move to archive/
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
     if ((Test-Path $destPath) -and ($sourcePath -ne $destPath)) {
         if (-not $Force) {
@@ -378,10 +378,10 @@ function Invoke-Save {
         }
     }
     Move-Item $sourcePath $destPath -Force
-    Write-Ok "Moved: ai/saved/$project/$yearMonth/$filename"
+    Write-Ok "Moved: brain/archive/$project/$yearMonth/$filename"
 
     # Git operations
-    $gitRelPath = "ai/saved/$project/$yearMonth/$filename" -replace '\\', '/'
+    $gitRelPath = "brain/archive/$project/$yearMonth/$filename" -replace '\\', '/'
 
     Push-Location $RepoRoot
     try {
@@ -392,35 +392,35 @@ function Invoke-Save {
         if ($doCommit) {
             $tagStr      = if ($finalTags) { " [$($finalTags -join ', ')]" } else { "" }
             $commitTitle = $filename -replace '\.md$', '' -replace '^\d{4}-\d{2}-\d{2}_', ''
-            $commitMsg   = "Save: $commitTitle$tagStr`n`nProject: $project  Kind: $kind  Status: $statusVal`n`n-- created by gpt"
+            $commitMsg   = "brain: publish $commitTitle$tagStr`n`nProject: $project  Kind: $kind  Status: $statusVal`n`n-- created by gpt"
             git commit -m $commitMsg | Out-Null
             Write-Ok "Committed."
         } else {
-            Write-Info "Run: git commit -m `"Save: $filename`""
+            Write-Info "Run: git commit -m `"brain: publish $filename`""
         }
     } finally {
         Pop-Location
     }
 }
 
-# ── Command: promote ──────────────────────────────────────────────────────────
+# ── Command: move ────────────────────────────────────────────────────────────────
 
-function Invoke-Promote {
+function Invoke-Move {
     Write-Header "Promote file between tiers"
 
     $sourcePath = $Arg1
-    if (-not $sourcePath) { $sourcePath = Prompt-Input "Source (relative to ai/)" }
-    $targetTier = if ($Tier) { $Tier } else { Prompt-Input "Target tier (local|saved)" "local" }
+    if (-not $sourcePath) { $sourcePath = Prompt-Input "Source (relative to brain/)" }
+    $targetTier = if ($Tier) { $Tier } else { Prompt-Input "Target tier (notes|archive)" "notes" }
     $subDir     = if ($Project) { $Project } else { Prompt-Input "Subdirectory (optional, Enter for none)" "" }
 
     if (-not [System.IO.Path]::IsPathRooted($sourcePath)) {
-        $tryAi = Join-Path $AiRoot $sourcePath
-        if (Test-Path $tryAi) { $sourcePath = $tryAi }
+        $tryBrain = Join-Path $BrainRoot $sourcePath
+        if (Test-Path $tryBrain) { $sourcePath = $tryBrain }
         else { Write-Err "File not found: $sourcePath" }
     }
 
     $filename = Split-Path $sourcePath -Leaf
-    $destDir  = if ($subDir) { Join-Path $AiRoot "$targetTier\$subDir" } else { Join-Path $AiRoot $targetTier }
+    $destDir  = if ($subDir) { Join-Path $BrainRoot "$targetTier\$subDir" } else { Join-Path $BrainRoot $targetTier }
     $destPath = Join-Path $destDir $filename
 
     if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
@@ -433,14 +433,14 @@ function Invoke-Promote {
     }
 
     Move-Item $sourcePath $destPath -Force
-    $aiRelSrc  = $sourcePath.Substring($AiRoot.Length + 1)
-    $aiRelDest = $destPath.Substring($AiRoot.Length + 1)
-    Write-Ok "Moved: ai/$aiRelSrc -> ai/$aiRelDest"
+    $aiRelSrc  = $sourcePath.Substring($BrainRoot.Length + 1)
+    $aiRelDest = $destPath.Substring($BrainRoot.Length + 1)
+    Write-Ok "Moved: brain/$aiRelSrc -> brain/$aiRelDest"
 
-    if ($targetTier -eq "saved") {
+    if ($targetTier -eq "archive") {
         Push-Location $RepoRoot
         try {
-            $gitPath = "ai/$aiRelDest" -replace '\\', '/'
+            $gitPath = "brain/$aiRelDest" -replace '\\', '/'
             git add $gitPath 2>&1 | Out-Null
             Write-Ok "Staged: $gitPath"
             Write-Info "Run 'git commit' when ready."
@@ -455,10 +455,10 @@ function Invoke-Promote {
 function Invoke-Search {
     $query = $Arg1
 
-    $tiers = if ($Tier) { @($Tier) } else { @("scratch","local","saved") }
+    $tiers = if ($Tier) { @($Tier) } else { @("inbox","notes","archive") }
     $notes = Get-AllNotes $tiers
 
-    $results = $notes | Where-Object {
+    $results = @($notes | Where-Object {
         $fm = $_.Fm
         $match = $true
 
@@ -496,7 +496,7 @@ function Invoke-Search {
         }
 
         $match
-    }
+    })
 
     Write-Header "Search results"
 
@@ -535,10 +535,10 @@ function Invoke-Search {
 # ── Command: list ──────────────────────────────────────────────────────────────
 
 function Invoke-List {
-    $tiers = if ($Tier) { @($Tier) } else { @("scratch","local","saved") }
+    $tiers = if ($Tier) { @($Tier) } else { @("inbox","notes","archive") }
     $notes = Get-AllNotes $tiers
 
-    $filtered = $notes | Where-Object {
+    $filtered = @($notes | Where-Object {
         $fm   = $_.Fm
         $keep = $true
         if ($Project -and ($fm -and $fm["project"] -ne $Project)) { $keep = $false }
@@ -548,7 +548,7 @@ function Invoke-List {
         }
         if ($Kind -and ($fm -and $fm["kind"] -ne $Kind)) { $keep = $false }
         $keep
-    }
+    })
 
     if (-not $filtered) {
         Write-Warn "No notes found."
@@ -575,21 +575,21 @@ function Invoke-List {
 # ── Command: clear ─────────────────────────────────────────────────────────────
 
 function Invoke-Clear {
-    $scratchDir = Get-TierDir "scratch"
-    if (-not (Test-Path $scratchDir)) { Write-Warn "scratch/ does not exist."; return }
+    $scratchDir = Get-TierDir "inbox"
+    if (-not (Test-Path $scratchDir)) { Write-Warn "inbox/ does not exist."; return }
 
-    $files = Get-ChildItem $scratchDir -Recurse -File | Where-Object { $_.Name -ne "README.md" }
+    $files = @(Get-ChildItem $scratchDir -Recurse -File | Where-Object { $_.Name -ne "README.md" })
 
-    if ($files.Count -eq 0) { Write-Ok "scratch/ is already empty."; return }
+    if ($files.Count -eq 0) { Write-Ok "inbox/ is already empty."; return }
 
-    Write-Header "Clear scratch/"
+    Write-Header "Clear inbox/"
     $files | ForEach-Object { Write-Info $_.FullName.Substring($scratchDir.Length + 1) }
     Write-Host ""
 
     $doDelete = if ($Force) { $true } else { Prompt-Confirm "Delete these $($files.Count) file(s)?" $false }
     if ($doDelete) {
         $files | Remove-Item -Force
-        Write-Ok "Cleared $($files.Count) file(s) from scratch/."
+        Write-Ok "Cleared $($files.Count) file(s) from inbox/."
     } else {
         Write-Warn "Cancelled."
     }
@@ -598,16 +598,16 @@ function Invoke-Clear {
 # ── Command: status ────────────────────────────────────────────────────────────
 
 function Invoke-Status {
-    Write-Header "ai/ workspace status"
+    Write-Header "brain/ workspace status"
 
-    foreach ($tier in @("scratch","local","saved")) {
+    foreach ($tier in @("inbox","notes","archive")) {
         $dir   = Get-TierDir $tier
-        $gitStatus = if ($tier -eq "saved") { "[tracked]" } else { "[gitignored]" }
+        $gitStatus = if ($tier -eq "archive") { "[tracked]" } else { "[gitignored]" }
         if (-not (Test-Path $dir)) {
             Write-Info ("  {0,-10} {1}  (does not exist)" -f $tier, $gitStatus)
             continue
         }
-        $files = Get-ChildItem $dir -Recurse -Filter "*.md" | Where-Object { $_.Name -ne "README.md" }
+        $files = @(Get-ChildItem $dir -Recurse -Filter "*.md" | Where-Object { $_.Name -ne "README.md" })
         Write-Host ("  {0,-10} {1}  {2} note(s)" -f $tier, $gitStatus, $files.Count) -ForegroundColor White
         $recent = $files | Sort-Object LastWriteTime -Descending | Select-Object -First 3
         foreach ($f in $recent) {
@@ -619,7 +619,7 @@ function Invoke-Status {
     Write-Host ""
     Push-Location $RepoRoot
     try {
-        $staged = git diff --cached --name-only -- "ai/" 2>&1
+        $staged = git diff --cached --name-only -- "brain/" 2>&1
         if ($staged) {
             Write-Host "  Staged (ready to commit):" -ForegroundColor Yellow
             $staged | ForEach-Object { Write-Host "    $_" -ForegroundColor Yellow }
@@ -633,8 +633,8 @@ function Invoke-Status {
 
 switch ($Command.ToLower()) {
     "new"     { Invoke-New }
-    "save"    { Invoke-Save }
-    "promote" { Invoke-Promote }
+    "publish" { Invoke-Publish }
+    "move"    { Invoke-Move }
     "search"  { Invoke-Search }
     "list"    { Invoke-List }
     "clear"   { Invoke-Clear }

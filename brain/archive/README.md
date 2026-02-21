@@ -1,4 +1,4 @@
-# ai/saved/ -- Committed Reference
+# brain/archive/ -- Published Reference
 
 **Tracked by git. Pushed to the repo. Permanent.**
 
@@ -10,10 +10,10 @@ another machine, or something worth having in the project history.
 ## Hierarchy
 
 Notes are organised by **project bucket** then **month**. Created automatically
-by `ai save` -- you never create folders manually.
+by `brain publish` -- you never create folders manually.
 
 ```
-saved/
+archive/
   <project>/
     <YYYY-MM>/
       YYYY-MM-DD_slug.md
@@ -33,22 +33,22 @@ Common ones: `mcp-servers`, `java`, `learning-assistant`, `general`.
 
 ---
 
-## Saving a Note
+## Publishing a Note
 
 ```powershell
 # Interactive (asks for project, confirms tags, commits)
-.\ai\scripts\ai.ps1 save ai\scratch\draft.md
+.\brain\scripts\brain.ps1 publish brain\inbox\draft.md
 
 # With options
-.\ai\scripts\ai.ps1 save ai\scratch\draft.md --project mcp-servers --commit
+.\brain\scripts\brain.ps1 publish brain\inbox\draft.md --project mcp-servers --commit
 ```
 
-The save workflow:
+The publish workflow:
 1. Shows current frontmatter
 2. Asks which project bucket
 3. Suggests tags (from existing frontmatter + filename keywords)
 4. You confirm or adjust
-5. Updates frontmatter, moves file to `saved/<project>/<YYYY-MM>/`
+5. Updates frontmatter, moves file to `archive/<project>/<YYYY-MM>/`
 6. Runs `git add` + `git commit`
 
 ---
@@ -73,7 +73,7 @@ source: copilot | manual | mcp
 ## Commit Message Format
 
 ```
-Save: <topic-slug> [tag1, tag2, tag3]
+brain: publish <topic-slug> [tag1, tag2, tag3]
 
 Project: <project>  Kind: <kind>  Status: final
 
@@ -82,12 +82,12 @@ Project: <project>  Kind: <kind>  Status: final
 
 ---
 
-## Search Saved Notes
+## Search Archive Notes
 
 ```powershell
-.\ai\scripts\ai.ps1 list --tier saved
-.\ai\scripts\ai.ps1 list --tier saved --project mcp-servers
-.\ai\scripts\ai.ps1 search generics --tier saved
-.\ai\scripts\ai.ps1 search --kind decision --tier saved
-.\ai\scripts\ai.ps1 search --date 2026-02 --tier saved
+.\brain\scripts\brain.ps1 list --tier archive
+.\brain\scripts\brain.ps1 list --tier archive --project mcp-servers
+.\brain\scripts\brain.ps1 search generics --tier archive
+.\brain\scripts\brain.ps1 search --kind decision --tier archive
+.\brain\scripts\brain.ps1 search --date 2026-02 --tier archive
 ```

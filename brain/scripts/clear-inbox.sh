@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# clear-scratch.sh -- Clear files from ai/scratch/ (preserves README.md)
+# clear-inbox.sh -- Clear files from brain/inbox/ (preserves README.md)
 #
 # Usage:
-#   ./ai/scripts/clear-scratch.sh              Preview only -- lists files, no delete
-#   ./ai/scripts/clear-scratch.sh --confirm    List then prompt before deleting
-#   ./ai/scripts/clear-scratch.sh --force      Delete without prompting
+#   ./brain/scripts/clear-inbox.sh              Preview only -- lists files, no delete
+#   ./brain/scripts/clear-inbox.sh --confirm    List then prompt before deleting
+#   ./brain/scripts/clear-inbox.sh --force      Delete without prompting
 #
 # Run from any location -- resolves path relative to this script's directory.
 
@@ -12,7 +12,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SCRATCH_DIR="$REPO_ROOT/ai/scratch"
+INBOX_DIR="$REPO_ROOT/brain/inbox"
 
 MODE="preview"
 for arg in "$@"; do
@@ -30,28 +30,28 @@ for arg in "$@"; do
     esac
 done
 
-if [[ ! -d "$SCRATCH_DIR" ]]; then
-    echo "scratch/ does not exist: $SCRATCH_DIR"
+if [[ ! -d "$INBOX_DIR" ]]; then
+    echo "inbox/ does not exist: $INBOX_DIR"
     exit 0
 fi
 
-mapfile -t FILES < <(find "$SCRATCH_DIR" -type f ! -name "README.md")
+mapfile -t FILES < <(find "$INBOX_DIR" -type f ! -name "README.md")
 
 if [[ ${#FILES[@]} -eq 0 ]]; then
-    echo "scratch/ is already empty."
+    echo "inbox/ is already empty."
     exit 0
 fi
 
 echo ""
-echo "Files in ai/scratch/:"
+echo "Files in brain/inbox/:"
 for f in "${FILES[@]}"; do
-    echo "  ${f#"$SCRATCH_DIR/"}"
+    echo "  ${f#"$INBOX_DIR/"}"
 done
 echo ""
 
 if [[ "$MODE" == "force" ]]; then
     for f in "${FILES[@]}"; do rm -f "$f"; done
-    echo "Cleared ${#FILES[@]} file(s) from scratch/."
+    echo "Cleared ${#FILES[@]} file(s) from inbox/."
     exit 0
 fi
 
@@ -59,7 +59,7 @@ if [[ "$MODE" == "confirm" ]]; then
     read -r -p "Delete these ${#FILES[@]} file(s)? [y/N] " answer
     if [[ "$answer" =~ ^[yY] ]]; then
         for f in "${FILES[@]}"; do rm -f "$f"; done
-        echo "Cleared ${#FILES[@]} file(s) from scratch/."
+        echo "Cleared ${#FILES[@]} file(s) from inbox/."
     else
         echo "Cancelled."
     fi

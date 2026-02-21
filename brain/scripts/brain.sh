@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# ai -- AI content workspace dispatcher
+# brain -- personal knowledge workspace dispatcher
 #
-# Usage: ./ai/scripts/ai.sh <command> [options]
+# Usage: ./brain/scripts/brain.sh <command> [options]
 #
 # Commands:
 #   new       Create a new note with frontmatter template
-#   save      Promote a file to saved/ with project+date hierarchy, tagging, git commit
-#   promote   Move a file between tiers (scratch -> local -> saved)
+#   publish   Promote to archive/ with project+date hierarchy, tagging, git commit
+#   move      Move a file between tiers (inbox -> notes -> archive)
 #   search    Search notes by frontmatter or full text
 #   list      List notes with frontmatter summary
-#   clear     Clear files from scratch/
+#   clear     Clear files from inbox/
 #   status    Show tier summary
 #   help      Show this help
 #
 # Options:
-#   --tier     scratch | local | saved
+#   --tier     inbox | notes | archive
 #   --project  project bucket name
 #   --title    note title for 'new'
 #   --kind     note | decision | session | resource | snippet | ref
@@ -26,22 +26,22 @@
 #   --no-edit  don't open editor after creating note
 #
 # Examples:
-#   ./ai/scripts/ai.sh new
-#   ./ai/scripts/ai.sh new --tier local --project mcp-servers --title "SSE transport"
-#   ./ai/scripts/ai.sh save ai/scratch/draft.md --project mcp-servers
-#   ./ai/scripts/ai.sh search java --tag generics
-#   ./ai/scripts/ai.sh list --tier saved --project mcp-servers
-#   ./ai/scripts/ai.sh clear --force
-#   ./ai/scripts/ai.sh status
+#   ./brain/scripts/brain.sh new
+#   ./brain/scripts/brain.sh new --tier inbox --project mcp-servers --title "SSE transport"
+#   ./brain/scripts/brain.sh publish brain/inbox/draft.md --project mcp-servers
+#   ./brain/scripts/brain.sh search java --tag generics
+#   ./brain/scripts/brain.sh list --tier archive --project mcp-servers
+#   ./brain/scripts/brain.sh clear --force
+#   ./brain/scripts/brain.sh status
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-AI_ROOT="$REPO_ROOT/ai"
+BRAIN_ROOT="$REPO_ROOT/brain"
 
 VALID_KINDS=("note" "decision" "session" "resource" "snippet" "ref")
-VALID_TIERS=("scratch" "local" "saved")
+VALID_TIERS=("inbox" "notes" "archive")
 VALID_STATUS=("draft" "final" "archived")
 
 # ── Colours ────────────────────────────────────────────────────────────────────
@@ -134,18 +134,17 @@ open_editor() {
 
 resolve_source() {
     local src="$1"
-    if [[ -f "$src" ]]; then               echo "$src";          return; fi
-    if [[ -f "$AI_ROOT/$src" ]];  then     echo "$AI_ROOT/$src"; return; fi
-    if [[ -f "$PWD/$src" ]];      then     echo "$PWD/$src";     return; fi
+    if [[ -f "$src" ]]; then               echo "$src";               return; fi
+    if [[ -f "$BRAIN_ROOT/$src" ]];  then  echo "$BRAIN_ROOT/$src"; return; fi
+    if [[ -f "$PWD/$src" ]];         then  echo "$PWD/$src";       return; fi
     err "File not found: $src"
 }
 
 get_notes() {
     local tiers=("$@")
-    [[ ${#tiers[@]} -eq 0 ]] && tiers=("scratch" "local" "saved")
+    [[ ${#tiers[@]} -eq 0 ]] && tiers=("inbox" "notes" "archive")
     for tier in "${tiers[@]}"; do
-        local dir="$AI_ROOT/$tier"
-        [[ -d "$dir" ]] || continue
+        local dir="$BRAIN_ROOT/$tier"
         find "$dir" -name "*.md" ! -name "README.md" | while read -r f; do
             echo "$tier|$f"
         done
@@ -156,25 +155,25 @@ get_notes() {
 
 cmd_help() {
     echo
-    echo -e "${CYAN}ai -- AI content workspace${RESET}"
+    echo -e "${CYAN}brain -- personal knowledge workspace${RESET}"
     echo
     echo -e "${YELLOW}USAGE${RESET}"
-    echo "  ./ai/scripts/ai.sh <command> [options]"
+    echo "  ./brain/scripts/brain.sh <command> [options]"
     echo
     echo -e "${YELLOW}COMMANDS${RESET}"
     printf "  %-10s %s\n" \
         "new"     "Create a new note with frontmatter template" \
-        "save"    "Promote to saved/ with project+date hierarchy, tagging, git commit" \
-        "promote" "Move a file between tiers (scratch -> local -> saved)" \
+        "publish" "Promote to archive/ with project+date hierarchy, tagging, git commit" \
+        "move"    "Move a file between tiers (inbox -> notes -> archive)" \
         "search"  "Search notes by frontmatter (--tag, --project, --kind, --date) or text" \
         "list"    "List notes with frontmatter summary" \
-        "clear"   "Clear files from scratch/" \
+        "clear"   "Clear files from inbox/" \
         "status"  "Show tier summary" \
         "help"    "Show this help"
     echo
     echo -e "${YELLOW}OPTIONS${RESET}"
     printf "  %-12s %s\n" \
-        "--tier"    "scratch | local | saved" \
+        "--tier"    "inbox | notes | archive" \
         "--project" "project bucket name (e.g. mcp-servers, java, general)" \
         "--title"   "note title for 'new'" \
         "--kind"    "note | decision | session | resource | snippet | ref" \
@@ -186,16 +185,16 @@ cmd_help() {
         "--no-edit" "don't open editor after creating note"
     echo
     echo -e "${YELLOW}EXAMPLES${RESET}"
-    echo "  ./ai/scripts/ai.sh new"
-    echo "  ./ai/scripts/ai.sh new --tier local --project mcp-servers --title \"SSE transport\""
-    echo "  ./ai/scripts/ai.sh save ai/scratch/draft.md --project mcp-servers"
-    echo "  ./ai/scripts/ai.sh search java --tag generics --tier saved"
-    echo "  ./ai/scripts/ai.sh list --tier saved --project mcp-servers"
-    echo "  ./ai/scripts/ai.sh clear --force"
-    echo "  ./ai/scripts/ai.sh status"
+    echo "  ./brain/scripts/brain.sh new"
+    echo "  ./brain/scripts/brain.sh new --tier inbox --project mcp-servers --title \"SSE transport\""
+    echo "  ./brain/scripts/brain.sh publish brain/inbox/draft.md --project mcp-servers"
+    echo "  ./brain/scripts/brain.sh search java --tag generics --tier archive"
+    echo "  ./brain/scripts/brain.sh list --tier archive --project mcp-servers"
+    echo "  ./brain/scripts/brain.sh clear --force"
+    echo "  ./brain/scripts/brain.sh status"
     echo
-    echo -e "${YELLOW}ALIASES  (after sourcing .ai-aliases.sh)${RESET}"
-    echo "  ai-new, ai-save, ai-search, ai-list, ai-clear, ai-status"
+    echo -e "${YELLOW}ALIASES  (after sourcing .brain-aliases.sh)${RESET}"
+    echo "  brain, brain-new, brain-publish, brain-move, brain-search, brain-list, brain-clear, brain-status"
     echo
 }
 
@@ -206,7 +205,7 @@ cmd_new() {
 
     local tier project title kind tags
     tier="${OPT_TIER:-}"
-    [[ -z "$tier" ]] && tier="$(prompt_input "Tier (scratch/local)" "scratch")"
+    [[ -z "$tier" ]] && tier="$(prompt_input "Tier (inbox/notes/archive)" "inbox")"
 
     project="${OPT_PROJECT:-}"
     [[ -z "$project" ]] && project="$(prompt_input "Project" "general")"
@@ -224,7 +223,7 @@ cmd_new() {
     today="$(date +%Y-%m-%d)"
     slug="$(make_slug "$title")"
     filename="${today}_${slug}.md"
-    dest_dir="$AI_ROOT/$tier"
+    dest_dir="$BRAIN_ROOT/$tier"
     dest_path="$dest_dir/$filename"
 
     if [[ -f "$dest_path" ]]; then
@@ -250,7 +249,7 @@ source: copilot
 <!-- Notes here -->
 EOF
 
-    ok "Created: ai/$tier/$filename"
+    ok "Created: brain/$tier/$filename"
 
     if [[ "$OPT_NO_EDIT" != "true" ]]; then
         local do_open=true
@@ -259,13 +258,13 @@ EOF
     fi
 }
 
-# ── Command: save ─────────────────────────────────────────────────────────────
+# ── Command: publish ─────────────────────────────────────────────────────────────
 
-cmd_save() {
+cmd_publish() {
     header "Save note to repo"
 
     local source_path="$ARG1"
-    [[ -z "$source_path" ]] && source_path="$(prompt_input "Source file (relative to ai/ or absolute)")"
+    [[ -z "$source_path" ]] && source_path="$(prompt_input "Source file (relative to brain/ or absolute)")"
     source_path="$(resolve_source "$source_path")"
 
     echo
@@ -323,9 +322,9 @@ cmd_save() {
     local year_month="${note_date:0:7}"
 
     local filename; filename="$(basename "$source_path")"
-    local dest_dir="$AI_ROOT/saved/$project/$year_month"
+    local dest_dir="$BRAIN_ROOT/archive/$project/$year_month"
     local dest_path="$dest_dir/$filename"
-    local git_rel="ai/saved/$project/$year_month/$filename"
+    local git_rel="brain/archive/$project/$year_month/$filename"
 
     echo
     echo -e "  ${CYAN}Destination: $git_rel${RESET}"
@@ -355,13 +354,13 @@ cmd_save() {
     ' "$source_path" > "$tmp"
     mv "$tmp" "$source_path"
 
-    # Move to saved/
+    # Move to archive/
     mkdir -p "$dest_dir"
     if [[ -f "$dest_path" && "$OPT_FORCE" != "true" ]]; then
         prompt_confirm "Destination exists. Overwrite?" false || { warn "Cancelled."; return; }
     fi
     mv "$source_path" "$dest_path"
-    ok "Moved: ai/saved/$project/$year_month/$filename"
+    ok "Moved: brain/archive/$project/$year_month/$filename"
 
     # Git
     cd "$REPO_ROOT"
@@ -373,7 +372,7 @@ cmd_save() {
 
     if [[ "$do_commit" == "true" ]]; then
         local slug_title="${filename%.md}"; slug_title="${slug_title#????-??-??_}"
-        local commit_msg="Save: $slug_title [$tag_input]
+        local commit_msg="brain: publish $slug_title [$tag_input]
 
 Project: $project  Kind: $kind  Status: $status_val
 
@@ -381,28 +380,28 @@ Project: $project  Kind: $kind  Status: $status_val
         git commit -m "$commit_msg"
         ok "Committed."
     else
-        info "Run: git commit -m \"Save: $filename\""
+        info "Run: git commit -m \"brain: publish $filename\""
     fi
 }
 
-# ── Command: promote ──────────────────────────────────────────────────────────
+# ── Command: move ──────────────────────────────────────────────────────────
 
-cmd_promote() {
+cmd_move() {
     header "Promote file between tiers"
 
     local source_path="$ARG1"
-    [[ -z "$source_path" ]] && source_path="$(prompt_input "Source (relative to ai/)")"
+    [[ -z "$source_path" ]] && source_path="$(prompt_input "Source (relative to brain/)")"
     source_path="$(resolve_source "$source_path")"
 
     local target_tier="${OPT_TIER:-}"
-    [[ -z "$target_tier" ]] && target_tier="$(prompt_input "Target tier (local|saved)" "local")"
+    [[ -z "$target_tier" ]] && target_tier="$(prompt_input "Target tier (notes|archive)" "notes")"
 
     local subdir="${OPT_PROJECT:-}"
     [[ -z "$subdir" && "$OPT_FORCE" != "true" ]] && subdir="$(prompt_input "Subdirectory (optional)" "")"
 
     local filename; filename="$(basename "$source_path")"
     local dest_dir
-    [[ -n "$subdir" ]] && dest_dir="$AI_ROOT/$target_tier/$subdir" || dest_dir="$AI_ROOT/$target_tier"
+    [[ -n "$subdir" ]] && dest_dir="$BRAIN_ROOT/$target_tier/$subdir" || dest_dir="$BRAIN_ROOT/$target_tier"
     local dest_path="$dest_dir/$filename"
 
     mkdir -p "$dest_dir"
@@ -411,11 +410,11 @@ cmd_promote() {
     fi
 
     mv "$source_path" "$dest_path"
-    ok "Moved: ai/$target_tier/$subdir${subdir:+/}$filename"
+    ok "Moved: brain/$target_tier/$subdir${subdir:+/}$filename"
 
-    if [[ "$target_tier" == "saved" ]]; then
+    if [[ "$target_tier" == "archive" ]]; then
         cd "$REPO_ROOT"
-        local git_rel="ai/$target_tier/${subdir:+$subdir/}$filename"
+        local git_rel="brain/$target_tier/${subdir:+$subdir/}$filename"
         git add "$git_rel" 2>/dev/null
         ok "Staged: $git_rel"
         info "Run 'git commit' when ready."
@@ -427,7 +426,7 @@ cmd_promote() {
 cmd_search() {
     local query="$ARG1"
 
-    local tiers=("scratch" "local" "saved")
+    local tiers=("inbox" "notes" "archive")
     [[ -n "$OPT_TIER" ]] && tiers=("$OPT_TIER")
 
     header "Search results"
@@ -462,7 +461,7 @@ cmd_search() {
         fi
 
         if [[ "$match" == "true" ]]; then
-            local rel="${filepath#"$AI_ROOT/$tier/"}"
+            local rel="${filepath#"$BRAIN_ROOT/$tier/"}"
             echo
             echo -e "  ${WHITE}[$tier] $rel${RESET}"
             local meta=()
@@ -482,7 +481,7 @@ cmd_search() {
 # ── Command: list ──────────────────────────────────────────────────────────────
 
 cmd_list() {
-    local tiers=("scratch" "local" "saved")
+    local tiers=("inbox" "notes" "archive")
     [[ -n "$OPT_TIER" ]] && tiers=("$OPT_TIER")
 
     local count=0 current_tier=""
@@ -497,7 +496,7 @@ cmd_list() {
         [[ -n "$OPT_TAG"     ]] && [[ "$fm_tags"    != *"$OPT_TAG"*   ]] && continue
 
         [[ "$tier" != "$current_tier" ]] && { header "$tier"; current_tier="$tier"; }
-        local rel="${filepath#"$AI_ROOT/$tier/"}"
+        local rel="${filepath#"$BRAIN_ROOT/$tier/"}"
         printf "  %-44s %-10s %-14s %s\n" "$rel" "${fm_kind:--}" "${fm_project:--}" "$fm_tags"
         count=$((count + 1))
     done < <(get_notes "${tiers[@]}" | sort)
@@ -509,13 +508,13 @@ cmd_list() {
 # ── Command: clear ─────────────────────────────────────────────────────────────
 
 cmd_clear() {
-    local scratch_dir="$AI_ROOT/scratch"
-    [[ -d "$scratch_dir" ]] || { warn "scratch/ does not exist."; return; }
+    local scratch_dir="$BRAIN_ROOT/inbox"
+    [[ -d "$scratch_dir" ]] || { warn "inbox/ does not exist."; return; }
 
     mapfile -t files < <(find "$scratch_dir" -type f ! -name "README.md")
-    [[ ${#files[@]} -eq 0 ]] && { ok "scratch/ is already empty."; return; }
+    [[ ${#files[@]} -eq 0 ]] && { ok "inbox/ is already empty."; return; }
 
-    header "Clear scratch/"
+    header "Clear inbox/"
     for f in "${files[@]}"; do info "${f#"$scratch_dir/"}"; done
     echo
 
@@ -525,7 +524,7 @@ cmd_clear() {
 
     if [[ "$do_delete" == "true" ]]; then
         for f in "${files[@]}"; do rm -f "$f"; done
-        ok "Cleared ${#files[@]} file(s) from scratch/."
+        ok "Cleared ${#files[@]} file(s) from inbox/."
     else
         warn "Cancelled."
     fi
@@ -534,12 +533,12 @@ cmd_clear() {
 # ── Command: status ────────────────────────────────────────────────────────────
 
 cmd_status() {
-    header "ai/ workspace status"
+    header "brain/ workspace status"
 
-    for tier in scratch local saved; do
-        local dir="$AI_ROOT/$tier"
+    for tier in inbox notes archive; do
+        local dir="$BRAIN_ROOT/$tier"
         local git_status="[gitignored]"
-        [[ "$tier" == "saved" ]] && git_status="[tracked]  "
+        [[ "$tier" == "archive" ]] && git_status="[tracked]  "
         if [[ ! -d "$dir" ]]; then
             info "  $(printf '%-10s' "$tier") $git_status  (does not exist)"
             continue
@@ -554,7 +553,7 @@ cmd_status() {
     done
 
     echo
-    local staged; staged="$(git -C "$REPO_ROOT" diff --cached --name-only -- ai/ 2>/dev/null || true)"
+    local staged; staged="$(git -C "$REPO_ROOT" diff --cached --name-only -- brain/ 2>/dev/null || true)"
     if [[ -n "$staged" ]]; then
         echo -e "  ${YELLOW}Staged (ready to commit):${RESET}"
         echo "$staged" | while read -r f; do echo -e "    ${YELLOW}$f${RESET}"; done
@@ -565,8 +564,8 @@ cmd_status() {
 
 case "$COMMAND" in
     new)     cmd_new ;;
-    save)    cmd_save ;;
-    promote) cmd_promote ;;
+    publish) cmd_publish ;;
+    move)    cmd_move ;;
     search)  cmd_search ;;
     list)    cmd_list ;;
     clear)   cmd_clear ;;
